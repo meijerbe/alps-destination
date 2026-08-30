@@ -317,6 +317,36 @@ table.matrix thead th.avgh{border-left:1px solid var(--line)}
 .selcard .acts button:hover{border-color:var(--slate)}
 .selcard .acts button.on{background:var(--rock);color:var(--mist);border-color:var(--rock)}
 
+/* ---------- dagschuif onder de kaart ---------- */
+.dayline{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  box-shadow:var(--shadow);padding:13px 16px 10px;margin-top:12px}
+.dayrow{display:flex;align-items:center;gap:10px}
+.dayslot{flex:1 1 auto;min-width:90px}
+.dayslot input[type=range]{width:100%;display:block;margin:0}
+.stepbtn{font-family:var(--mono);font-size:13px;line-height:1;background:transparent;color:var(--slate);
+  border:1px solid var(--line);border-radius:999px;width:30px;height:30px;flex:none;cursor:pointer;padding:0}
+.stepbtn:hover{border-color:var(--slate)}
+.stepbtn:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
+.stepbtn[disabled]{opacity:.3;cursor:default}
+.playbtn{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;color:var(--slate);border:1px solid var(--line);border-radius:999px;
+  padding:7px 13px;flex:none;cursor:pointer;white-space:nowrap}
+.playbtn:hover{border-color:var(--slate)}
+.playbtn[aria-pressed="true"]{background:var(--rock);color:var(--mist);border-color:var(--rock)}
+.dayticks{position:relative;height:13px;margin:5px 9px 0}
+.dayticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--mono);font-size:9px;opacity:.5}
+.dayticks span.on{opacity:1;color:var(--dry);font-weight:600}
+.dayticks span.we{opacity:.75}
+.daylabel{font-family:var(--mono);font-size:11.5px;margin-top:9px;color:var(--ink3);text-align:center}
+.daylabel b{font-family:var(--disp);font-size:16px;font-weight:600;color:var(--rock);letter-spacing:-.01em}
+.strip .cell.now{outline:2px solid var(--rock);outline-offset:1px;z-index:1}
+@media (max-width:560px){
+  .dayticks span{font-size:8px}
+  .dayrow{flex-wrap:wrap}
+  .playbtn{order:3}
+}
+
 /* ---------- ruwe data ---------- */
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
 @media (max-width:760px){.cards{grid-template-columns:1fr}}
@@ -493,6 +523,18 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
   <div class="mapwrap" id="mapwrap">
     <div id="mapsvg"></div>
     <div class="maptip" id="maptip"></div>
+  </div>
+  <div class="dayline">
+    <div class="dayrow">
+      <button type="button" class="stepbtn" id="dayprev" aria-label="Vorige dag">‹</button>
+      <div class="dayslot">
+        <input type="range" id="dayslider" min="-1" max="4" value="-1" step="1" aria-label="Welke dag" aria-describedby="daylabel">
+        <div class="dayticks" id="dayticks"></div>
+      </div>
+      <button type="button" class="stepbtn" id="daynext" aria-label="Volgende dag">›</button>
+      <button type="button" class="playbtn" id="dayplay" aria-pressed="false">Speel af</button>
+    </div>
+    <p class="daylabel" id="daylabel">—</p>
   </div>
   <div class="mapfoot">
     <div class="legend" style="margin:0"><span id="legLo">nat</span><span class="bar"></span><span id="legHi">droog</span></div>
@@ -691,7 +733,7 @@ const CACHE_TTL = 30 * 60 * 1000;   // Open-Meteo ververst ~elk uur
 
 let state = {profile:"bike", days:5, drive:10, start:0, tab:"map", metric:"score",
              data:null, raw:null, foehnRaw:null, fromCache:false, fetchedAt:null,
-             open:null, sel:null, view:null, dataPlace:null, dataDay:0};
+             open:null, sel:null, view:null, day:-1, dataPlace:null, dataDay:0};
 let packDone = new Set();
 let lastView = null;
 
@@ -847,11 +889,13 @@ function readUrlState(){
   if(TABS.includes(q.get("t"))) state.tab = q.get("t");
   if(METRICS[q.get("m")]) state.metric = q.get("m");
   if(q.get("g") && REGIONS.some(r=>r.n === q.get("g"))) state.sel = q.get("g");
+  const k = +q.get("k"); if(q.get("k") !== null && k >= 0 && k <= 9) state.day = Math.round(k);
 }
 function writeUrlState(){
   const q = new URLSearchParams({p:state.profile, d:state.days, r:state.drive, s:state.start,
                                  m:state.metric, t:state.tab});
   if(state.sel) q.set("g", state.sel);
+  if(state.day >= 0) q.set("k", state.day);
   history.replaceState(null, "", "#" + q);
 }
 
@@ -1038,13 +1082,64 @@ const METRIC_NOTE = {
   frz:"de hoogte van het vriespunt — laag betekent sneeuw op de hoge routes"
 };
 
+/* welke waarde kleurt de kaart: één dag, of het gemiddelde over de periode */
+function metricValue(p, M){
+  const d = state.day >= 0 ? p.per[state.day] : null;
+  return d ? M.val(d) : p.per.reduce((a,x)=>a+M.val(x),0)/p.per.length;
+}
+
+let playTimer = null;
+function stopPlay(){
+  if(!playTimer) return;
+  clearInterval(playTimer); playTimer = null;
+  $("dayplay").setAttribute("aria-pressed","false");
+  $("dayplay").textContent = "Speel af";
+}
+function startPlay(){
+  stopPlay();
+  if(state.day < 0) state.day = 0;
+  $("dayplay").setAttribute("aria-pressed","true");
+  $("dayplay").textContent = "Stop";
+  playTimer = setInterval(()=>{
+    const n = lastView ? lastView.n : 1;
+    state.day = state.day + 1 >= n ? 0 : state.day + 1;
+    writeUrlState();
+    render();
+  }, 1100);
+}
+
+function syncDay(v){
+  state.day = state.day >= v.n ? v.n - 1 : Math.max(-1, state.day);
+  const sl = $("dayslider");
+  sl.max = String(v.n - 1);
+  sl.value = String(state.day);
+  $("dayprev").disabled = state.day < 0;
+  $("daynext").disabled = state.day >= v.n - 1;
+  const stops = ["gem"].concat(v.dates.map(d=>DAYS[dow(d)]));
+  $("dayticks").innerHTML = stops.map((txt,i)=>{
+    const day = i - 1;
+    const cls = day===state.day ? "on" : (day>=0 && dow(v.dates[day])>=5 ? "we" : "");
+    return `<span class="${cls}" style="left:${(i/(stops.length-1)*100).toFixed(3)}%">${txt}</span>`;
+  }).join("");
+  if(state.day < 0){
+    $("daylabel").innerHTML = `<b>Gemiddeld over ${v.n} dagen</b> — schuif naar rechts voor één dag tegelijk, `
+      + `of druk op afspelen om het weer over de Alpen te zien trekken.`;
+  }else{
+    const d = v.dates[state.day];
+    const f = v.foehn[state.day];
+    $("daylabel").innerHTML = `<b>${DAYS[dow(d)]} ${dm(d)}</b>`
+      + (f ? ` — föhn ${f.diff>=0?"+":""}${f.diff.toFixed(1)} hPa, `
+           + (f.diff > 2.5 ? "zuidkant in de luwte" : f.diff < -2.5 ? "noordkant in de luwte" : "vlak drukveld") : "")
+      + ` · dag ${state.day+1} van ${v.n}`;
+  }
+}
+
 function renderMap(v){
   const M = METRICS[state.metric];
   const by = {}; v.all.forEach(p=>by[p.n]=p);
-  const mean = p => p.per.reduce((a,d)=>a+M.val(d),0)/p.per.length;
   const sel = selectedRegion(v);
 
-  const vals = REGIONS.map(rg=>{ const p=by[rg.n]; return p ? mean(p) : null; });
+  const vals = REGIONS.map(rg=>{ const p=by[rg.n]; return p ? metricValue(p, M) : null; });
   const fills = vals.map(x => x==null ? "#8a9aa0" : scoreColor(M.good(x)));
 
   const rects = MAP.runs.map(r=>{
@@ -1086,11 +1181,16 @@ function renderMap(v){
     </svg>`;
 
   const a = v.dates[0], b = v.dates[v.n-1];
+  const wat = state.metric === "score" ? "de score voor " + PROFILE_LABEL[state.profile].toLowerCase() : M.label;
+  const wanneer = state.day >= 0
+    ? `op ${DAYS[dow(v.dates[state.day])]} ${dm(v.dates[state.day])}`
+    : `gemiddeld over ${v.n} dagen — ${DAYS[dow(a)]} ${dm(a)} t/m ${DAYS[dow(b)]} ${dm(b)}`;
   $("mapsub").textContent =
-    `${REGIONS.length} regio's in de Alpenboog, gekleurd naar ${state.metric === "score" ? "de score voor " + PROFILE_LABEL[state.profile].toLowerCase() : M.label}, `
-    + `gemiddeld over ${v.n} dagen — ${DAYS[dow(a)]} ${dm(a)} t/m ${DAYS[dow(b)]} ${dm(b)}. `
+    `${REGIONS.length} regio's in de Alpenboog, gekleurd naar ${wat}, ${wanneer}. `
     + `Klik een regio om hem vast te zetten; de paklijst rekent daarna met die regio.`;
-  $("mapnote").innerHTML = `Kleur = ${esc(METRIC_NOTE[state.metric])}. Weggezakte regio's vallen buiten je rijtijd. `
+  $("mapnote").innerHTML = `Kleur = ${esc(METRIC_NOTE[state.metric])}`
+    + (state.day >= 0 ? ` op die ene dag — de ranglijst en de kerncijfers blijven over de hele periode rekenen` : "")
+    + `. Weggezakte regio's vallen buiten je rijtijd. `
     + `De vlakken zijn schematisch — elke cel hoort bij het dichtstbijzijnde regiomiddelpunt, het is geen grenskaart.`;
 }
 
@@ -1120,8 +1220,8 @@ function renderSelCard(v){
           <div class="scorelabel">score</div>
         </div>
       </div>
-      <div class="strip">${p.per.map(d=>
-        `<div class="cell" style="background:${scoreColor(d.s)}" title="${d.date}: score ${fmt(d.s)}, ${d.rain.toFixed(1)} mm"><span>${d.rain >= 9.5 ? fmt(d.rain) : d.rain.toFixed(1)}</span></div>`).join("")}</div>
+      <div class="strip">${p.per.map((d,i)=>
+        `<div class="cell${i===state.day?" now":""}" style="background:${scoreColor(d.s)}" title="${d.date}: score ${fmt(d.s)}, ${d.rain.toFixed(1)} mm"><span>${d.rain >= 9.5 ? fmt(d.rain) : d.rain.toFixed(1)}</span></div>`).join("")}</div>
       <div class="striplabels">${p.per.map(d=>`<div class="${dow(d.date)>=5?"we":""}">${DAYS[dow(d.date)]}</div>`).join("")}</div>
       <div class="facts">${facts.map(x=>`<div><div class="k">${x[0]}</div><div class="v">${x[1]}</div></div>`).join("")}</div>
       <p class="whynote" style="margin-top:14px">Beste aaneengesloten venster: <strong>${DAYS[dow(wd.from)]} ${dm(wd.from)} – ${DAYS[dow(wd.to)]} ${dm(wd.to)}</strong> (score ${fmt(wd.avg)}).</p>
@@ -1613,6 +1713,7 @@ function renderPack(v){
 /* ---------- alles ---------- */
 function render(){
   const v = lastView = derive();
+  syncDay(v);
   renderKpis(v);
   renderMap(v);
   renderSelCard(v);
@@ -1629,6 +1730,7 @@ function render(){
    7. Interactie
 ================================================================== */
 function showTab(t){
+  if(t !== "map") stopPlay();
   state.tab = t;
   TABS.forEach(x=>{
     const on = x === t;
@@ -1657,6 +1759,7 @@ $("profile").addEventListener("click", e=>{
   });
 });
 $("days").addEventListener("input", e=>{
+  stopPlay();
   state.days = +e.target.value;
   $("daysval").textContent = state.days + " dagen";
   writeUrlState();
@@ -1732,6 +1835,7 @@ function fillStart(){
   }).join("");
 }
 $("start").addEventListener("change", e=>{
+  stopPlay();
   state.start = +e.target.value;
   writeUrlState();
   if(state.data) render();
@@ -1746,7 +1850,8 @@ $("mapwrap").addEventListener("pointermove", e=>{
   const p = i < 0 || !lastView ? null : lastView.all.find(x=>x.n === REGIONS[i].n);
   if(!p){ tip.classList.remove("on"); return; }
   const rg = REGIONS[i], M = METRICS[state.metric];
-  const mean = p.per.reduce((a,d)=>a+M.val(d),0)/p.per.length;
+  const mean = metricValue(p, M);
+  const d0 = state.day >= 0 ? p.per[state.day] : null;
   const box = $("mapwrap").getBoundingClientRect();
   tip.style.left = (e.clientX - box.left) + "px";
   tip.style.top  = (e.clientY - box.top) + "px";
@@ -1757,7 +1862,9 @@ $("mapwrap").addEventListener("pointermove", e=>{
     + `${esc(rg.r)}, ${esc(COUNTRY[rg.c]||rg.c)} · ${driveTxt(rg)}<br>`
     + head
     + (p.far ? " · buiten rijtijd" : (p.rank ? " · nr " + p.rank : "")) + `<br>`
-    + `${p.rainSum.toFixed(1)} mm · ${p.sunAvg.toFixed(1)} u zon/dag · ${p.dryDays}/${p.per.length} droog`;
+    + (d0
+        ? `${d0.rain.toFixed(1)} mm · ${(d0.sun/3600).toFixed(1)} u zon · ${fmt(d0.tmax)} °C · wind ${fmt(d0.wind)}`
+        : `${p.rainSum.toFixed(1)} mm · ${p.sunAvg.toFixed(1)} u zon/dag · ${p.dryDays}/${p.per.length} droog`);
   tip.classList.add("on");
 });
 $("mapwrap").addEventListener("pointerleave", ()=>tip.classList.remove("on"));
@@ -1797,6 +1904,19 @@ function syncMetric(){
   ["metric","mapmetric"].forEach(id =>
     [...$(id).children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === state.metric))));
 }
+
+function setDay(d){
+  state.day = d;
+  writeUrlState();
+  if(state.data) render();
+}
+$("dayslider").addEventListener("input", e=>{ stopPlay(); setDay(+e.target.value); });
+$("dayprev").addEventListener("click", ()=>{ stopPlay(); setDay(Math.max(-1, state.day-1)); });
+$("daynext").addEventListener("click", ()=>{
+  stopPlay();
+  setDay(Math.min((lastView ? lastView.n : 1) - 1, state.day + 1));
+});
+$("dayplay").addEventListener("click", ()=>{ playTimer ? stopPlay() : startPlay(); });
 
 $("dataplace").addEventListener("change", e=>{ state.dataPlace = e.target.value; if(state.data) render(); });
 $("dataday").addEventListener("change", e=>{ state.dataDay = +e.target.value; if(state.data) render(); });

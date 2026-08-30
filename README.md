@@ -14,6 +14,12 @@ regio om hem vast te zetten; de rest van het dashboard rekent daarna met die keu
 je rijtijd zakken weg in plaats van te verdwijnen, zodat je ziet wat je laat liggen. Te kleuren op
 score, neerslag, zon, temperatuur, wind of vriespunt — oranje is altijd gunstig, blauw altijd niet.
 
+Onder de kaart zit een schuif voor de dag. Helemaal links staat het gemiddelde over de hele
+periode; schuif naar rechts en de kaart kleurt één dag tegelijk, met de föhnstand van die dag
+erbij. De afspeelknop loopt de dagen af, zodat je een front over de Alpen ziet trekken. In
+dagstand blijven de ranglijst en de kerncijfers over de hele periode rekenen — alleen de kaart
+zoomt in op die ene dag.
+
 **Lijstje** — dezelfde regio's als rangschikking, met de föhnmeter erboven en per regio een
 opbouw van de score: welk onderdeel de score trekt en welk onderdeel hem tegenhoudt.
 
@@ -35,12 +41,13 @@ Profiel, vooruitkijkperiode, maximale rijtijd, vertrekdag, kleurmetriek, tabblad
 regio staan allemaal in de hash. Een specifieke weergave is dus te bookmarken of te appen:
 
 ```
-/#p=hike&d=7&r=4&s=2&m=sun&g=Dolomieten&t=map
+/#p=hike&d=7&r=4&s=2&m=sun&k=1&g=Dolomieten&t=map
 ```
 
 `p` = `bike` | `hike` | `chill`, `d` = 2–10 dagen, `r` = 1–10 uur rijden (10 = alles),
 `s` = vertrekdag als index in de voorspelling, `m` = `score` | `rain` | `sun` | `tmax` | `wind` | `frz`,
-`g` = regionaam, `t` = `map` | `rank` | `matrix` | `pack` | `data`.
+`g` = regionaam, `k` = dag binnen de periode (weglaten voor het gemiddelde),
+`t` = `map` | `rank` | `matrix` | `pack` | `data`.
 
 ## Deployen op Vercel
 
