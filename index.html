@@ -417,7 +417,8 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sink);padding:1px 
 .empty{font-family:var(--mono);font-size:12px;padding:24px 0;opacity:.7}
 .toast{
   position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
-  background:var(--rock);color:var(--mist);font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  max-width:min(90vw,480px);text-align:center;white-space:pre-line;
+  background:var(--rock);color:var(--mist);font-family:var(--mono);font-size:11px;letter-spacing:.03em;line-height:1.5;
   padding:9px 16px;border-radius:12px;opacity:0;transition:opacity .25s ease;pointer-events:none;z-index:10
 }
 .toast.on{opacity:1}
@@ -1739,6 +1740,17 @@ try{ me = localStorage.getItem(ME_KEY); }catch{}
 
 const rowKey = (item_key, scope) => item_key + "|" + scope;
 const getRow = (item_key, scope) => supaRows.get(rowKey(item_key, scope)) || {checked:false, comment:"", updated_by:null, updated_at:null};
+
+// leesbare samenvatting van een Supabase/PostgREST-fout, voor in de toast —
+// zodat "kan geen verbinding maken" wordt wat het écht is: een RLS-afwijzing,
+// een verkeerde sleutel, een CORS-blokkade, …
+function supaErrText(err){
+  if(!err) return "onbekende fout";
+  const bits = [err.message || String(err)];
+  if(err.hint) bits.push("hint: " + err.hint);
+  if(err.code) bits.push("code " + err.code);
+  return bits.join(" · ");
+}
 const isChecked = (key, scope) => supaEnabled ? !!getRow(key, scope).checked : packDone.has(key + "|" + scope);
 
 function slug(s){
@@ -1774,7 +1786,8 @@ async function loadPackState(){
     supaReady = true;
   }catch(err){
     supaReady = false;
-    toast("Paklijst-sync niet bereikbaar — vinkjes blijven lokaal");
+    console.error("[paklijst] laden mislukt:", err);
+    toast("Paklijst-sync niet bereikbaar — vinkjes blijven lokaal\n" + supaErrText(err), 5000);
   }
 }
 
@@ -1793,11 +1806,22 @@ async function setPackState(item_key, scope, patch){
   const next = {...cur, ...patch, trip:TRIP_ID, item_key, scope, updated_by: me, updated_at: new Date().toISOString()};
   supaRows.set(rowKey(item_key, scope), next);
   applyRowToDom(item_key, scope, next);
+  // Alleen sturen wat we echt wijzigen. Twee redenen:
+  // 1. `next` kan een `id` bevatten (uit een select of realtime-echo) en die
+  //    kolom is `generated always as identity` — een expliciete waarde wijst
+  //    Postgres af met 428C9, waardoor elke tweede klik op een item faalde.
+  // 2. bij een upsert zet PostgREST alleen de meegestuurde kolommen; laten we
+  //    `comment` weg, dan blijft een bestaande notitie staan in plaats van
+  //    overschreven te worden met null als onze lokale kopie nog leeg is.
+  const payload = {trip: TRIP_ID, item_key, scope, updated_by: me, updated_at: next.updated_at};
+  if("checked" in patch) payload.checked = !!patch.checked;
+  if("comment" in patch) payload.comment = patch.comment || null;
   try{
-    const {error} = await sb.from("packing_state").upsert(next, {onConflict:"trip,item_key,scope"});
+    const {error} = await sb.from("packing_state").upsert(payload, {onConflict:"trip,item_key,scope"});
     if(error) throw error;
   }catch(err){
-    toast("Opslaan mislukt — check je verbinding");
+    console.error("[paklijst] opslaan mislukt:", err);
+    toast("Opslaan mislukt\n" + supaErrText(err), 5000);
   }
 }
 
@@ -1876,7 +1900,6 @@ function renderPack(v){
     grid.innerHTML = `<p class="empty">Geen bestemming geselecteerd — schuif de rijtijd omhoog.</p>`;
     $("packsub").textContent = "—";
     $("packcount").textContent = "";
-    state.view = null;
     return;
   }
   const c = packContext(v);
@@ -1905,7 +1928,6 @@ function renderPack(v){
     + (supaEnabled
         ? `Vinkjes en notities staan gedeeld voor jullie allebei${supaReady?"":" — sync lukt nu niet, dit ververst zodra dat weer kan"}.`
         : `Vinkjes en notities blijven in deze browser — koppel Supabase (zie README) om ze te delen.`);
-  state.view = {groups};
   updatePackProgress();
 }
 
@@ -1932,7 +1954,7 @@ function showTab(t){
   if(t !== "map") stopPlay();
   state.tab = t;
   if(t !== "pack") state.dashTab = t;
-  if(t === "pack" && supaEnabled) loadPackState().then(()=>{ if(lastView) renderPack(lastView); });
+  if(t === "pack" && supaEnabled && lastView) loadPackState().then(()=>renderPack(lastView));
   TABS.forEach(x=>{ $("panel-" + x).hidden = (x !== t); });
   DASH_TABS.forEach(x=>{
     const on = x === t;
@@ -2008,9 +2030,24 @@ $("toplevel").addEventListener("keydown", e=>{
   showTab(onPack ? (state.dashTab || "map") : "pack");
   $(onPack ? "top-dash" : "top-pack").focus();
 });
+// Notities slaan tijdens het typen op (afgeremd), niet pas bij het verlaten
+// van het veld — anders raak je een net getikte notitie kwijt als je de tab
+// sluit of je telefoon wegzet zonder ergens anders te tikken.
+const noteTimers = new Map();
+function flushNote(key, value){
+  clearTimeout(noteTimers.get(key));
+  noteTimers.delete(key);
+  setNote(key, value.trim());
+}
+$("packgrid").addEventListener("input", e=>{
+  const note = e.target.closest(".pi-note"); if(!note) return;
+  const key = note.dataset.key;
+  clearTimeout(noteTimers.get(key));
+  noteTimers.set(key, setTimeout(()=>flushNote(key, note.value), 700));
+});
 $("packgrid").addEventListener("change", e=>{
   const note = e.target.closest(".pi-note");
-  if(note){ setNote(note.dataset.key, note.value.trim()); return; }
+  if(note){ flushNote(note.dataset.key, note.value); return; }
   const cb = e.target.closest("input[type=checkbox]"); if(!cb) return;
   const key = cb.dataset.key, scope = cb.dataset.scope;
   if(supaEnabled){ setPackState(key, scope, {checked: cb.checked}); return; }
@@ -2020,21 +2057,43 @@ $("packgrid").addEventListener("change", e=>{
 });
 
 let toastTimer;
-function toast(msg){
+function toast(msg, ms){
   const el = $("toast");
   el.textContent = msg;
   el.classList.add("on");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.classList.remove("on"), 2200);
+  toastTimer = setTimeout(()=>el.classList.remove("on"), ms || 2200);
 }
 
-$("packreset").addEventListener("click", ()=>{
-  if(supaEnabled && !confirm("Alle vinkjes voor jullie allebei wissen? Dit kan niet ongedaan gemaakt worden.")) return;
-  document.querySelectorAll("#packgrid input[type=checkbox]:checked").forEach(cb=>{
-    cb.checked = false;
-    cb.dispatchEvent(new Event("change", {bubbles:true}));
+$("packreset").addEventListener("click", async ()=>{
+  const boxes = [...document.querySelectorAll("#packgrid input[type=checkbox]:checked")];
+  if(!boxes.length){ toast("Er stond nog niets aangevinkt"); return; }
+  if(supaEnabled && !confirm(`${boxes.length} vinkjes wissen, voor jullie allebei? Dit kan niet ongedaan gemaakt worden.`)) return;
+
+  const stamp = new Date().toISOString();
+  boxes.forEach(cb=>{ cb.checked = false; });
+  updatePackProgress();
+
+  if(!supaEnabled){
+    boxes.forEach(cb=>packDone.delete(cb.dataset.key + "|" + cb.dataset.scope));
+    savePack();
+    toast("Vinkjes gewist");
+    return;
+  }
+  // in één verzoek in plaats van tientallen losse
+  const rows = boxes.map(cb=>{
+    const {key, scope} = cb.dataset;
+    supaRows.set(rowKey(key, scope), {...getRow(key, scope), checked:false, updated_by:me, updated_at:stamp});
+    return {trip:TRIP_ID, item_key:key, scope, checked:false, updated_by:me, updated_at:stamp};
   });
-  toast("Vinkjes gewist");
+  try{
+    const {error} = await sb.from("packing_state").upsert(rows, {onConflict:"trip,item_key,scope"});
+    if(error) throw error;
+    toast("Vinkjes gewist");
+  }catch(err){
+    console.error("[paklijst] wissen mislukt:", err);
+    toast("Wissen mislukt\n" + supaErrText(err), 5000);
+  }
 });
 $("packprint").addEventListener("click", ()=>window.print());
 $("packcopy").addEventListener("click", async ()=>{
