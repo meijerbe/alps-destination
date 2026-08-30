@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Basiskamp — waar is het droog in de Alpen</title>
+<meta name="description" content="Rangschikt kandidaat-basiskampen in de Alpen op fiets-, hike- en zwemweer, met een föhnmeter op basis van het luchtdrukverschil Innsbruck − Bolzano.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#EDF1F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1519" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Basiskamp — waar is het droog in de Alpen">
+<meta property="og:description" content="Kandidaat-basiskampen in de Alpen, gerangschikt op fiets-, hike- en zwemweer. Met föhnmeter.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230F2027'/%3E%3Cpath d='M3 26 L12 9 L18 19 L21 14 L29 26 Z' fill='%23E0742F'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.open-meteo.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mist:#EDF1F2;
+  --paper:#F7F9F9;
+  --rock:#0F2027;
+  --slate:#1B4B5A;
+  --dry:#E0742F;
+  --wet:#2E7EA0;
+  --err:#A8321E;
+  --ink2:#33474F;
+  --ink3:#44585F;
+  --ink4:#5A6B71;
+  --line:rgba(15,32,39,.14);
+  --hair:rgba(15,32,39,.06);
+  --rule:rgba(27,75,90,.045);
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --disp:"Barlow Condensed",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --mist:#0F1519;
+    --paper:#151E23;
+    --rock:#E7EDEF;
+    --slate:#8FB6C4;
+    --wet:#5FB4D8;
+    --err:#FF8B72;
+    --ink2:#B3C3C9;
+    --ink3:#9DAFB6;
+    --ink4:#8B9DA4;
+    --line:rgba(231,237,239,.16);
+    --hair:rgba(231,237,239,.07);
+    --rule:rgba(143,182,196,.05);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--mist);
+  color:var(--rock);
+  font-family:var(--body);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 46px,var(--rule) 46px,var(--rule) 47px);
+}
+.wrap{max-width:960px;margin:0 auto;padding:28px 18px 64px}
+
+/* ---------- header ---------- */
+.topline{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:0 0 10px}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--slate);opacity:.85;margin:0
+}
+.refresh{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  background:transparent;color:var(--slate);border:1px solid var(--line);border-radius:2px;
+  padding:5px 10px;cursor:pointer;white-space:nowrap
+}
+.refresh:hover{border-color:var(--slate)}
+.refresh:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
+.refresh[disabled]{opacity:.4;cursor:progress}
+h1{
+  font-family:var(--disp);font-weight:600;font-size:clamp(38px,9vw,64px);
+  line-height:.95;letter-spacing:-.01em;margin:0 0 12px;text-transform:uppercase
+}
+.lede{max-width:52ch;margin:0 0 28px;color:var(--ink2)}
+
+/* ---------- controls ---------- */
+.controls{
+  display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;
+  padding:16px 0 20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:26px
+}
+.ctl{display:flex;flex-direction:column;gap:7px}
+.ctl > .lab{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.seg{display:flex;border:1px solid var(--rock);border-radius:2px;overflow:hidden}
+.seg button{
+  font-family:var(--body);font-size:13px;font-weight:500;
+  background:transparent;color:var(--rock);border:0;padding:7px 13px;cursor:pointer;
+  border-right:1px solid var(--line)
+}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--rock);color:var(--mist)}
+.seg button:focus-visible{outline:2px solid var(--dry);outline-offset:-2px}
+input[type=range]{width:170px;accent-color:var(--slate)}
+.rangeval{font-family:var(--mono);font-size:12px}
+
+/* ---------- föhn gauge ---------- */
+.gauge{
+  background:var(--paper);border:1px solid var(--line);border-radius:3px;
+  padding:18px 20px;margin-bottom:30px
+}
+.gauge h2{font-family:var(--disp);text-transform:uppercase;letter-spacing:.02em;font-size:20px;margin:0 0 4px;font-weight:600}
+.gauge .sub{font-size:13px;color:var(--ink3);margin:0 0 16px}
+.scale{position:relative;height:44px;margin:0 4px}
+.scale .axis{position:absolute;top:22px;left:0;right:0;height:1px;background:var(--line)}
+.scale .zero{position:absolute;top:12px;bottom:6px;left:50%;width:1px;background:var(--rock);opacity:.35}
+.needle{
+  position:absolute;top:8px;width:2px;height:28px;background:var(--rock);
+  transition:left .5s cubic-bezier(.2,.7,.3,1)
+}
+.needle::after{
+  content:"";position:absolute;top:-5px;left:-4px;width:10px;height:10px;
+  background:var(--rock);border-radius:50%
+}
+.scalelabels{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin-top:2px}
+.verdict{margin-top:14px;font-size:14px;padding-top:12px;border-top:1px solid var(--line)}
+.verdict strong{font-weight:600}
+
+/* ---------- ranking ---------- */
+h2.section{font-family:var(--disp);text-transform:uppercase;font-size:22px;font-weight:600;margin:0 0 4px}
+.sectionsub{font-size:13px;color:var(--ink3);margin:0 0 16px}
+.row{
+  display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:center;
+  padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;
+  background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;font:inherit;color:inherit
+}
+.row:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
+.rank{font-family:var(--mono);font-size:13px;opacity:.55}
+.name{font-family:var(--disp);font-size:23px;font-weight:500;line-height:1.05;text-transform:uppercase}
+.meta{font-family:var(--mono);font-size:11px;opacity:.65;margin-top:2px}
+.score{font-family:var(--mono);font-size:26px;font-weight:600;text-align:right;line-height:1}
+.scorelabel{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.55;text-align:right}
+
+/* day strip = signature element */
+.strip{display:flex;gap:2px;margin-top:8px;height:22px}
+.cell{flex:1;border-radius:1px;position:relative;min-width:6px}
+.cell span{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;color:#fff;opacity:.9
+}
+.striplabels{display:flex;gap:2px;margin-top:3px}
+.striplabels div{flex:1;font-family:var(--mono);font-size:9px;text-align:center;opacity:.55;min-width:6px}
+
+.detail{padding:4px 0 18px;font-size:13px;overflow-x:auto}
+.detail table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;min-width:420px}
+.detail th{text-align:right;font-weight:400;opacity:.6;padding:5px 6px;border-bottom:1px solid var(--line);letter-spacing:.04em}
+.detail th:first-child{text-align:left}
+.detail td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--hair)}
+.detail td:first-child{text-align:left}
+.snow{color:var(--wet);font-weight:600}
+
+.status{font-family:var(--mono);font-size:12px;padding:30px 0;opacity:.7}
+.status.err{color:var(--err);opacity:1}
+.status button{
+  font-family:var(--mono);font-size:11px;margin-left:10px;padding:4px 9px;cursor:pointer;
+  background:transparent;color:inherit;border:1px solid currentColor;border-radius:2px
+}
+.empty{font-family:var(--mono);font-size:12px;padding:24px 0;opacity:.7}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink4)}
+footer a{color:var(--slate)}
+@media (max-width:560px){
+  .row{grid-template-columns:22px 1fr auto;gap:9px}
+  .name{font-size:20px}
+  .score{font-size:22px}
+  .controls{gap:16px}
+  .cell span{display:none}
+  .scalelabels{font-size:9px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topline">
+  <p class="eyebrow" id="eyebrow">Laden…</p>
+  <button class="refresh" id="refresh" type="button" title="Nieuwe data ophalen bij Open-Meteo">Ververs</button>
+</div>
+<h1>Waar zetten<br>we de tent</h1>
+<p class="lede">Rangschikt kandidaat-basiskampen in de Alpen op fiets-, hike- en zwemweer. De föhnmeter eronder laat zien welke kant van de hoofdkam vandaag in de luwte ligt.</p>
+
+<div class="controls">
+  <div class="ctl">
+    <span class="lab" id="lab-profile">Waar gaat het om</span>
+    <div class="seg" id="profile" role="group" aria-labelledby="lab-profile">
+      <button type="button" data-p="bike" aria-pressed="true">Racefiets</button>
+      <button type="button" data-p="hike" aria-pressed="false">Hiken</button>
+      <button type="button" data-p="chill" aria-pressed="false">Meer</button>
+    </div>
+  </div>
+  <div class="ctl">
+    <label class="lab" for="days">Vooruitkijken</label>
+    <input type="range" id="days" min="2" max="10" value="5" aria-describedby="daysval">
+    <span class="rangeval" id="daysval">5 dagen</span>
+  </div>
+  <div class="ctl">
+    <label class="lab" for="drive">Rijtijd vanaf Mayrhofen</label>
+    <input type="range" id="drive" min="1" max="9" value="9" aria-describedby="driveval">
+    <span class="rangeval" id="driveval">alles</span>
+  </div>
+</div>
+
+<section class="gauge">
+  <h2>Föhnmeter</h2>
+  <p class="sub">Luchtdrukverschil Innsbruck − Bolzano. Hoge druk noordelijk duwt de lucht zuidwaarts over de kam: zuidkant klaart op. Andersom regent het zuidelijk en is Tirol droog.</p>
+  <div class="scale">
+    <div class="axis"></div>
+    <div class="zero"></div>
+    <div class="needle" id="needle" style="left:50%"></div>
+  </div>
+  <div class="scalelabels">
+    <div>← Südföhn · noord droog</div>
+    <div>Nordföhn · zuid droog →</div>
+  </div>
+  <p class="verdict" id="verdict">—</p>
+</section>
+
+<h2 class="section">Rangschikking</h2>
+<p class="sectionsub" id="sectionsub">—</p>
+<div id="list"></div>
+<p class="status" id="status">Weerdata ophalen…</p>
+
+<noscript>
+  <p class="status err">Deze pagina haalt zijn weerdata live op met JavaScript. Zet JavaScript aan om de rangschikking te zien.</p>
+</noscript>
+
+<footer>
+  Data: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), best-match model, geen API-sleutel nodig.
+  Score is een hulpmiddel, geen voorspelling — check bij twijfel de kaarten zelf.
+</footer>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   Bestemmingen. `drive` = rijtijd vanaf Mayrhofen in uren (schatting),
+   `side` is puur informatief: welke kant van de hoofdkam.
+------------------------------------------------------------------- */
+const PLACES = [
+  {n:"Mayrhofen",     r:"Zillertal, AT",     lat:47.162, lon:11.859, drive:0,   side:"noord"},
+  {n:"Brixen",        r:"Eisacktal, IT",     lat:46.715, lon:11.657, drive:1.5, side:"zuid"},
+  {n:"Sölden",        r:"Ötztal, AT",        lat:46.968, lon:11.008, drive:1.5, side:"noord"},
+  {n:"Lienz",         r:"Osttirol, AT",      lat:46.830, lon:12.769, drive:2.5, side:"zuid"},
+  {n:"Schlanders",    r:"Vinschgau, IT",     lat:46.628, lon:10.771, drive:2.5, side:"zuid"},
+  {n:"Scuol",         r:"Unterengadin, CH",  lat:46.797, lon:10.298, drive:3,   side:"inneralpine"},
+  {n:"Livigno",       r:"Alta Valtellina, IT", lat:46.538, lon:10.135, drive:3.5, side:"inneralpine"},
+  {n:"Bormio",        r:"Valtellina, IT",    lat:46.468, lon:10.372, drive:3.5, side:"zuid"},
+  {n:"Cortina",       r:"Dolomieten, IT",    lat:46.540, lon:12.136, drive:3.5, side:"zuid"},
+  {n:"Sils Maria",    r:"Oberengadin, CH",   lat:46.430, lon:9.760,  drive:4,   side:"inneralpine"},
+  {n:"Locarno",       r:"Ticino, CH",        lat:46.171, lon:8.799,  drive:4.5, side:"zuid"},
+  {n:"Kranjska Gora", r:"Julische Alpen, SI",lat:46.484, lon:13.786, drive:5,   side:"zuid"},
+  {n:"Aosta",         r:"Valle d'Aosta, IT", lat:45.735, lon:7.313,  drive:6,   side:"zuid"},
+  {n:"Briançon",      r:"Queyras, FR",       lat:44.899, lon:6.641,  drive:7.5, side:"zuid"}
+];
+
+const WEIGHTS = {
+  bike:  {dry:.34, prob:.18, sun:.20, wind:.18, temp:.10, snow:.00},
+  hike:  {dry:.34, prob:.18, sun:.18, wind:.06, temp:.10, snow:.14},
+  chill: {dry:.26, prob:.16, sun:.28, wind:.08, temp:.22, snow:.00}
+};
+
+const PROFILES = ["bike","hike","chill"];
+const CACHE_KEY = "basiskamp:v1";
+const CACHE_TTL = 30 * 60 * 1000;   // Open-Meteo ververst ~elk uur
+
+let state = {profile:"bike", days:5, drive:9, data:null, fetchedAt:null, open:null};
+
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const fmt = n => n==null||Number.isNaN(n) ? "–" : Math.round(n);
+const $ = id => document.getElementById(id);
+
+/* ---------- score ---------- */
+function dayScore(d, w){
+  const dry   = clamp(100 - d.rain*13, 0, 100);
+  const prob  = clamp(100 - (d.prob ?? 40), 0, 100);
+  const sun   = clamp((d.sun/Math.max(d.daylight,1))*115, 0, 100);
+  const wind  = clamp(100 - Math.max(0, d.wind-14)*3.2, 0, 100);
+  const temp  = clamp(100 - Math.abs(d.tmax-21)*6.5, 0, 100);
+  // vriespunt onder 2600 m = sneeuw op de hoge routes
+  const snow  = clamp((d.frz-1900)/9, 0, 100);
+  return dry*w.dry + prob*w.prob + sun*w.sun + wind*w.wind + temp*w.temp + snow*w.snow;
+}
+
+const darkMode = () => window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+function scoreColor(s){
+  // continue schaal nat → droog, zoals een kaartlegenda
+  const t = clamp(s,0,100)/100;
+  const wet = darkMode() ? [44,104,130] : [46,126,160];
+  const dryc = [224,116,47];
+  const c = wet.map((v,i)=>Math.round(v+(dryc[i]-v)*t));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+/* ---------- data ---------- */
+async function getJSON(url, tries = 3){
+  for(let attempt = 1; ; attempt++){
+    try{
+      const res = await fetch(url, {signal: AbortSignal.timeout(15000)});
+      if(!res.ok) throw new Error("Open-Meteo antwoordde met status " + res.status);
+      return await res.json();
+    }catch(err){
+      if(attempt >= tries) throw err;
+      await new Promise(r => setTimeout(r, 400 * 2 ** (attempt - 1)));
+    }
+  }
+}
+
+async function load(){
+  const lats = PLACES.map(p=>p.lat).join(",");
+  const lons = PLACES.map(p=>p.lon).join(",");
+  const url = "https://api.open-meteo.com/v1/forecast"
+    + `?latitude=${lats}&longitude=${lons}`
+    + "&daily=precipitation_sum,precipitation_probability_max,sunshine_duration,daylight_duration,"
+    + "temperature_2m_max,wind_speed_10m_max,weather_code"
+    + "&hourly=freezing_level_height"
+    + "&timezone=Europe%2FBerlin&forecast_days=10";
+
+  // Innsbruck (574 m) en Bolzano (262 m)
+  const foehnUrl = "https://api.open-meteo.com/v1/forecast"
+    + "?latitude=47.267,46.498&longitude=11.393,11.354"
+    + "&hourly=pressure_msl&timezone=Europe%2FBerlin&forecast_days=10";
+
+  const [raw, foehnRaw] = await Promise.all([getJSON(url), getJSON(foehnUrl)]);
+  const arr  = Array.isArray(raw) ? raw : [raw];
+  const fArr = Array.isArray(foehnRaw) ? foehnRaw : [foehnRaw];
+
+  const places = arr.map((o,i)=>{
+    const D = o.daily, H = o.hourly;
+    // vriespuntniveau per dag: laagste uurwaarde van die dag
+    const frzByDate = {};
+    H.time.forEach((t,h)=>{
+      const v = H.freezing_level_height[h];
+      if(v == null) return;
+      const d = t.slice(0,10);
+      frzByDate[d] = frzByDate[d] == null ? v : Math.min(frzByDate[d], v);
+    });
+    const days = D.time.map((date,k)=>({
+      date,
+      rain: D.precipitation_sum[k] ?? 0,
+      prob: D.precipitation_probability_max[k],
+      sun:  D.sunshine_duration[k] ?? 0,
+      daylight: D.daylight_duration[k] ?? 45000,
+      tmax: D.temperature_2m_max[k] ?? 15,
+      wind: D.wind_speed_10m_max[k] ?? 0,
+      frz:  frzByDate[date] ?? 3500
+    }));
+    return {...PLACES[i], days};
+  });
+
+  // föhn: dagelijks gemiddeld drukverschil noord − zuid
+  const north = fArr[0].hourly, south = fArr[1].hourly;
+  const byDate = {};
+  north.time.forEach((t,i)=>{
+    const a = north.pressure_msl[i], b = south.pressure_msl[i];
+    if(a == null || b == null) return;
+    (byDate[t.slice(0,10)] ||= []).push(a - b);
+  });
+  const foehn = Object.entries(byDate)
+    .sort((a,b)=>a[0] < b[0] ? -1 : 1)
+    .map(([date,v])=>({date, diff: v.reduce((x,y)=>x+y,0)/v.length}));
+
+  return {places, foehn};
+}
+
+function readCache(){
+  try{
+    const hit = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
+    if(!hit || Date.now() - hit.t > CACHE_TTL) return null;
+    if(hit.places !== PLACES.length) return null;   // lijst gewijzigd → opnieuw ophalen
+    return hit;
+  }catch{ return null; }
+}
+function writeCache(data){
+  try{ sessionStorage.setItem(CACHE_KEY, JSON.stringify({t:Date.now(), places:PLACES.length, data})); }catch{}
+}
+
+/* ---------- deelbare URL ---------- */
+function readUrlState(){
+  const q = new URLSearchParams(location.hash.replace(/^#/, ""));
+  if(PROFILES.includes(q.get("p"))) state.profile = q.get("p");
+  const d = +q.get("d"); if(d >= 2 && d <= 10) state.days = Math.round(d);
+  const r = +q.get("r"); if(r >= 1 && r <= 9) state.drive = Math.round(r);
+}
+function writeUrlState(){
+  const q = new URLSearchParams({p:state.profile, d:state.days, r:state.drive});
+  history.replaceState(null, "", "#" + q);
+}
+
+/* ---------- render ---------- */
+function renderFoehn(n){
+  const win = state.data.foehn.slice(0, n);
+  if(!win.length){ $("verdict").textContent = "Geen drukdata beschikbaar."; return; }
+  const avg = win.reduce((a,b)=>a+b.diff,0)/win.length;
+  $("needle").style.left = clamp(50 + avg*5.5, 3, 97) + "%";   // ±9 hPa vult de schaal
+
+  const signed = (avg >= 0 ? "+" : "") + avg.toFixed(1);
+  let verdict;
+  if(avg > 2.5)       verdict = `<strong>Nordföhn-signaal (${signed} hPa gemiddeld).</strong> Hogere druk noordelijk: de zuidkant — Vinschgau, Engadin, Dolomieten — ligt in de luwte en klaart waarschijnlijk op. Tirol vangt de bewolking.`;
+  else if(avg < -2.5) verdict = `<strong>Südföhn-signaal (${signed} hPa gemiddeld).</strong> Aanvoer vanuit het zuiden: stuwingsregen aan de zuidrand, terwijl Tirol juist droog en warm wordt. Blijf dan noordelijk.`;
+  else                verdict = `<strong>Vlak drukveld (${signed} hPa).</strong> Geen duidelijke föhnsturing. Beide kanten hebben ongeveer gelijke kansen — de lokale scores hieronder wegen dan zwaarder dan de grote lijn.`;
+  $("verdict").innerHTML = verdict;
+}
+
+function render(){
+  const {places} = state.data;
+  const w = WEIGHTS[state.profile];
+  const n = Math.min(state.days, places[0].days.length);
+
+  renderFoehn(n);
+
+  const scored = places
+    .filter(p => p.drive <= state.drive)
+    .map(p=>{
+      const per = p.days.slice(0,n).map(d=>({...d, s:dayScore(d,w)}));
+      return {...p, per, total: per.reduce((a,b)=>a+b.s,0)/per.length};
+    })
+    .sort((a,b)=>b.total-a.total);
+
+  const labels = ["ma","di","wo","do","vr","za","zo"];
+  const list = $("list");
+  list.innerHTML = "";
+
+  if(!scored.length){
+    list.innerHTML = `<p class="empty">Geen bestemmingen binnen ${state.drive} u rijden. Schuif de rijtijd omhoog.</p>`;
+  }
+
+  scored.forEach((p,i)=>{
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "row";
+    btn.setAttribute("aria-expanded", state.open===p.n ? "true" : "false");
+    const strip = p.per.map(d=>
+      `<div class="cell" style="background:${scoreColor(d.s)}" title="${d.date}: score ${fmt(d.s)}, ${d.rain.toFixed(1)} mm"><span>${fmt(d.rain)}</span></div>`
+    ).join("");
+    const stripLabels = p.per.map(d=>{
+      const dt = new Date(d.date+"T12:00");
+      return `<div>${labels[(dt.getDay()+6)%7]}</div>`;
+    }).join("");
+
+    btn.innerHTML = `
+      <div class="rank">${String(i+1).padStart(2,"0")}</div>
+      <div>
+        <div class="name">${p.n}</div>
+        <div class="meta">${p.r} · ${p.drive===0?"basis":p.drive+" u rijden"} · ${p.side}</div>
+        <div class="strip">${strip}</div>
+        <div class="striplabels">${stripLabels}</div>
+      </div>
+      <div>
+        <div class="score">${fmt(p.total)}</div>
+        <div class="scorelabel">score</div>
+      </div>`;
+    btn.addEventListener("click", ()=>{
+      state.open = state.open===p.n ? null : p.n;
+      render();
+    });
+    list.appendChild(btn);
+
+    if(state.open===p.n){
+      const det = document.createElement("div");
+      det.className = "detail";
+      det.innerHTML = `
+        <table>
+          <thead><tr>
+            <th>dag</th><th>mm</th><th>kans</th><th>zon</th><th>max</th><th>wind</th><th>0°C</th><th>score</th>
+          </tr></thead>
+          <tbody>
+          ${p.per.map(d=>`
+            <tr>
+              <td>${d.date.slice(8,10)}-${d.date.slice(5,7)}</td>
+              <td>${d.rain.toFixed(1)}</td>
+              <td>${fmt(d.prob)}%</td>
+              <td>${(d.sun/3600).toFixed(1)}u</td>
+              <td>${fmt(d.tmax)}°</td>
+              <td>${fmt(d.wind)}</td>
+              <td class="${d.frz<2600?"snow":""}">${fmt(d.frz)}m</td>
+              <td>${fmt(d.s)}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>`;
+      list.appendChild(det);
+    }
+  });
+
+  const dates = places[0].days;
+  const first = dates[0].date, last = dates[n-1].date;
+  const dm = s => s.slice(8,10) + "-" + s.slice(5,7);
+  $("sectionsub").textContent =
+    `${scored.length} bestemmingen, gewogen over ${n} dagen (${dm(first)} t/m ${dm(last)}). Getal in de balk = mm neerslag.`;
+  $("eyebrow").textContent =
+    "Bijgewerkt " + new Date(state.fetchedAt).toLocaleString("nl-NL",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+}
+
+/* ---------- controls ---------- */
+$("profile").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  state.profile = b.dataset.p;
+  [...e.currentTarget.children].forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
+  writeUrlState();
+  if(state.data) render();
+});
+$("days").addEventListener("input", e=>{
+  state.days = +e.target.value;
+  $("daysval").textContent = state.days + " dagen";
+  writeUrlState();
+  if(state.data) render();
+});
+$("drive").addEventListener("input", e=>{
+  state.drive = +e.target.value;
+  $("driveval").textContent = state.drive>=9 ? "alles" : "max " + state.drive + " u";
+  writeUrlState();
+  if(state.data) render();
+});
+$("refresh").addEventListener("click", ()=>boot({force:true}));
+
+function syncControls(){
+  $("days").value = state.days;
+  $("daysval").textContent = state.days + " dagen";
+  $("drive").value = state.drive;
+  $("driveval").textContent = state.drive>=9 ? "alles" : "max " + state.drive + " u";
+  [...$("profile").children].forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.p===state.profile)));
+}
+
+/* ---------- boot ---------- */
+async function boot({force=false} = {}){
+  const st = $("status"), rf = $("refresh");
+  const cached = force ? null : readCache();
+  if(cached){
+    state.data = cached.data;
+    state.fetchedAt = cached.t;
+    st.style.display = "none";
+    render();
+    return;
+  }
+  rf.disabled = true;
+  st.className = "status";
+  st.style.display = "";
+  st.textContent = "Weerdata ophalen…";
+  $("eyebrow").textContent = "Laden…";
+  try{
+    state.data = await load();
+    state.fetchedAt = Date.now();
+    writeCache(state.data);
+    st.style.display = "none";
+    render();
+  }catch(err){
+    st.className = "status err";
+    st.textContent = "Ophalen mislukt: " + (err.message || err) + ".";
+    const again = document.createElement("button");
+    again.type = "button";
+    again.textContent = "Opnieuw";
+    again.addEventListener("click", ()=>boot({force:true}));
+    st.appendChild(again);
+    $("eyebrow").textContent = "Geen verbinding";
+  }finally{
+    rf.disabled = false;
+  }
+}
+
+readUrlState();
+syncControls();
+boot();
+</script>
+</body>
+</html>
