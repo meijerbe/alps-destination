@@ -1,0 +1,13 @@
+{
+  "name": "ab-op-reis-tests",
+  "private": true,
+  "description": "Browsertests voor A&B op reis. Staat bewust apart van de site zelf, zodat de root geen package.json heeft en Vercel index.html gewoon statisch blijft serveren.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}
