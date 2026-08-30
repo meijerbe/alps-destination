@@ -1,9 +1,46 @@
-# Basiskamp
+# A&B op reis
 
-Eén statisch bestand dat kandidaat-basiskampen in de Alpen rangschikt op fiets-, hike- en
-zwemweer, plus een föhnmeter op basis van het luchtdrukverschil Innsbruck − Bolzano.
+Ons weerdashboard voor de Alpen. Eén statisch bestand dat 32 Alpenregio's op een kaart zet en
+kleurt naar het weer voor een actieve vakantie — fietsen, hiken of aan het water hangen —
+zodat we kunnen bepalen waar we heen gaan als het Mayrhofen-weekend erop zit.
 
 Geen build-stap, geen dependencies, geen API-sleutel. `index.html` is de hele app.
+
+## Wat er in zit
+
+**Kaart** — de Alpenboog als rasterkaart, opgedeeld in 32 regio's. Elke cel hoort bij het
+dichtstbijzijnde regiomiddelpunt (Voronoi), geknipt op een grove omtrek van de Alpen. Klik een
+regio om hem vast te zetten; de rest van het dashboard rekent daarna met die keuze. Regio's buiten
+je rijtijd zakken weg in plaats van te verdwijnen, zodat je ziet wat je laat liggen. Te kleuren op
+score, neerslag, zon, temperatuur, wind of vriespunt — oranje is altijd gunstig, blauw altijd niet.
+
+**Lijstje** — dezelfde regio's als rangschikking, met de föhnmeter erboven en per regio een
+opbouw van de score: welk onderdeel de score trekt en welk onderdeel hem tegenhoudt.
+
+**Per dag** — alle regio's tegen alle dagen in één matrix, voor als je zoekt naar een gat in de
+buien in plaats van naar een goede week.
+
+**Paklijst** — beweegt mee met het profiel én met de verwachting voor de gekozen regio. Zakt het
+vriespunt, dan verschijnen muts en handschoenen; gaat het waaien, dan de stormharingen. Regels met
+het label *weer* staan er alleen in omdat de voorspelling erom vraagt. Vinkjes blijven in je eigen
+browser bewaard.
+
+**Onder de motorkap** — de twee API-verzoeken die de pagina doet, de onbewerkte dagwaarden zoals
+Open-Meteo ze teruggeeft, en de hele rekensom van ruwe waarde via normalisatie en weging naar de
+dagscore. Plus de kanttekeningen bij die bewerking.
+
+## Instellingen zitten in de URL
+
+Profiel, vooruitkijkperiode, maximale rijtijd, vertrekdag, kleurmetriek, tabblad en de gekozen
+regio staan allemaal in de hash. Een specifieke weergave is dus te bookmarken of te appen:
+
+```
+/#p=hike&d=7&r=4&s=2&m=sun&g=Dolomieten&t=map
+```
+
+`p` = `bike` | `hike` | `chill`, `d` = 2–10 dagen, `r` = 1–10 uur rijden (10 = alles),
+`s` = vertrekdag als index in de voorspelling, `m` = `score` | `rain` | `sun` | `tmax` | `wind` | `frz`,
+`g` = regionaam, `t` = `map` | `rank` | `matrix` | `pack` | `data`.
 
 ## Deployen op Vercel
 
@@ -14,7 +51,7 @@ Geen build-stap, geen dependencies, geen API-sleutel. `index.html` is de hele ap
    Output Directory op de root (`./`).
 3. Deploy. Vercel serveert `index.html` en pikt `vercel.json` op voor de headers.
 
-Elke push naar `main` levert daarna een productie-deploy op, elke andere branch een preview.
+Elke push naar `main` levert een productie-deploy op, elke andere branch een preview.
 
 **Via de CLI**
 
@@ -26,14 +63,14 @@ vercel --prod   # productie
 
 ### vercel.json
 
-`cleanUrls` en `trailingSlash` houden de URL's schoon, `index.html` krijgt
-`must-revalidate` zodat een nieuwe deploy meteen zichtbaar is, en er staat een
-Content-Security-Policy die precies drie externe hosts toestaat: Google Fonts (css),
-`fonts.gstatic.com` (de fontbestanden) en `api.open-meteo.com` (de data).
+`cleanUrls` en `trailingSlash` houden de URL's schoon, `index.html` krijgt `must-revalidate` zodat
+een nieuwe deploy meteen zichtbaar is, en er staat een Content-Security-Policy die precies drie
+externe hosts toestaat: Google Fonts (css), `fonts.gstatic.com` (de fontbestanden) en
+`api.open-meteo.com` (de data).
 
-> Zet je Vercel Web Analytics of Speed Insights aan, dan injecteert Vercel een script
-> vanaf `/_vercel/insights/…`. Voeg in dat geval `'self'` toe aan `script-src` en
-> `connect-src` in `vercel.json`, anders blokkeert de CSP het.
+> Zet je Vercel Web Analytics of Speed Insights aan, dan injecteert Vercel een script vanaf
+> `/_vercel/insights/…`. Voeg in dat geval `'self'` toe aan `script-src` en `connect-src` in
+> `vercel.json`, anders blokkeert de CSP het.
 
 ## Lokaal testen
 
@@ -41,46 +78,38 @@ Content-Security-Policy die precies drie externe hosts toestaat: Google Fonts (c
 python3 -m http.server 8000
 ```
 
-en open <http://localhost:8000>. Het bestand direct openen via `file://` werkt ook,
-zolang je browser de fetch naar Open-Meteo toestaat.
+en open <http://localhost:8000>.
 
 ## Aanpassen
 
 Alles zit bovenin het `<script>`-blok van `index.html`.
 
-- **Bestemmingen** — de array `PLACES`. `drive` is de rijtijd vanaf Mayrhofen in uren
-  (met de hand geschat, dus corrigeer gerust), `side` is puur informatief.
-- **Weging** — `WEIGHTS`, per profiel (racefiets / hiken / meer) de weging van droogte,
-  neerslagkans, zon, wind, temperatuur en vriespuntniveau. Sommeert per profiel naar 1.
-- **Scorecurves** — de functie `dayScore`. Bijvoorbeeld `rain*13` bepaalt hoe hard
-  neerslag doorwerkt: 0 mm = 100 punten, ~7,7 mm = 0.
-- **Föhngevoeligheid** — `50 + avg*5.5` bepaalt de naalduitslag; de drempels voor de
-  tekstuitleg staan op ±2,5 hPa.
-- **Cache** — `CACHE_TTL` (30 min) bepaalt hoe lang een resultaat in `sessionStorage`
-  blijft staan. De knop *Ververs* omzeilt de cache altijd.
-
-Verander je `PLACES`, dan vervalt de cache automatisch zodra het aantal bestemmingen
-wijzigt (zie `readCache`).
-
-## Deelbare instellingen
-
-Profiel, aantal dagen en maximale rijtijd staan in de URL-hash, dus een specifieke
-weergave is te bookmarken of te appen:
-
-```
-/#p=hike&d=7&r=4     hiken, 7 dagen vooruit, max 4 uur rijden
-```
-
-`p` is `bike` | `hike` | `chill`, `d` is 2–10, `r` is 1–9 (9 = alles).
+- **Regio's** — de array `REGIONS`. `lat`/`lon` is het punt waarvoor het weer wordt opgehaald én
+  het middelpunt waar de kaart de cellen omheen legt; `drive` is de rijtijd vanaf Mayrhofen in uren
+  (met de hand geschat, dus corrigeer gerust); `s` is een kortere naam voor op de kaart; `side` is
+  puur informatief. Een regio toevoegen of verplaatsen hertekent de kaart vanzelf.
+- **Omtrek van de Alpen** — `ARC`, een grove polygoon in lon/lat. Alleen bedoeld om het raster af
+  te knippen, het is geen grens.
+- **Rastergrofte** — `GEO.latStep`. Kleiner = fijnere kaart en meer SVG.
+- **Weging** — `WEIGHTS`, per profiel de weging van droogte, neerslagkans, zon, wind, temperatuur
+  en vriespuntniveau. Sommeert per profiel naar 1.
+- **Scorecurves** — de functie `dayParts`. Het tabblad *Onder de motorkap* laat elke curve met
+  formule en al zien, dus daar zie je meteen wat een aanpassing doet.
+- **Paklijst** — de array `PACK`. Een regel met `when` verschijnt alleen als de verwachting eraan
+  voldoet, `why` legt in één zin uit waarom hij er staat.
+- **Cache** — `CACHE_TTL` (30 min) bepaalt hoe lang een resultaat in `sessionStorage` blijft staan.
+  De knop *Ververs* omzeilt de cache altijd.
 
 ## Databron
 
-Open-Meteo forecast API, best-match model, 10 dagen vooruit, geen API-sleutel.
-Gratis tot 10.000 calls per dag voor niet-commercieel gebruik; data onder CC BY 4.0.
-De app doet twee requests per koude load — daarna komt het uit de sessie-cache.
+Open-Meteo forecast API, best-match model, 10 dagen vooruit, geen API-sleutel. Gratis tot 10.000
+calls per dag voor niet-commercieel gebruik; data onder CC BY 4.0. De app doet twee requests per
+koude load — één voor alle 32 regio's samen, één voor de twee drukstations — en haalt daarna alles
+uit de sessie-cache.
 
-## Kanttekening bij de föhnmeter
+## Kanttekeningen
 
-Het drukverschil gebruikt naar zeeniveau herleide druk voor twee stations op
-verschillende hoogte (Innsbruck 574 m, Bolzano 262 m). De absolute waarde heeft daardoor
-een bias; de dag-tot-dag verandering en het teken zijn het signaal.
+De belangrijkste staan in de app zelf, op het tabblad *Onder de motorkap*. Kort samengevat: de
+föhnmeter gebruikt naar zeeniveau herleide druk voor twee stations op verschillende hoogte, dus
+alleen het teken en de verandering zijn het signaal; de rastercel van het model is grover dan een
+Alpendal; en één meetpunt per regio is precies dat — een steekproef, geen dekking.
