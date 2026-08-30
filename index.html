@@ -3,52 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Basiskamp — waar is het droog in de Alpen</title>
-<meta name="description" content="Rangschikt kandidaat-basiskampen in de Alpen op fiets-, hike- en zwemweer, met een föhnmeter op basis van het luchtdrukverschil Innsbruck − Bolzano.">
+<title>A&amp;B op reis — waar zetten we de tent</title>
+<meta name="description" content="A&amp;B op reis — ons weerdashboard voor de Alpen. 32 regio's op de kaart, gekleurd naar fiets-, hike- en zwemweer, met föhnmeter, dagmatrix en een paklijst die meebeweegt met de verwachting.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#EDF1F2" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0F1519" media="(prefers-color-scheme: dark)">
-<meta property="og:title" content="Basiskamp — waar is het droog in de Alpen">
-<meta property="og:description" content="Kandidaat-basiskampen in de Alpen, gerangschikt op fiets-, hike- en zwemweer. Met föhnmeter.">
+<meta name="theme-color" content="#FAF4EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#181410" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="A&amp;B op reis — waar zetten we de tent">
+<meta property="og:description" content="32 Alpenregio's op een kaart, gekleurd naar het weer voor een actieve vakantie. Met föhnmeter, dagmatrix en meebewegende paklijst.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230F2027'/%3E%3Cpath d='M3 26 L12 9 L18 19 L21 14 L29 26 Z' fill='%23E0742F'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23FAF4EA'/%3E%3Ccircle cx='23.5' cy='9' r='3.6' fill='%23E08A33'/%3E%3Cpath d='M2 25 L11 11 L17 20 L20 16 L30 25 Z' fill='%233D6B5C'/%3E%3Cpath d='M8 27 L14 15 L20 27 Z' fill='%23E08A33'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://api.open-meteo.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"></noscript>
 <style>
 :root{
-  --mist:#EDF1F2;
-  --paper:#F7F9F9;
-  --rock:#0F2027;
-  --slate:#1B4B5A;
-  --dry:#E0742F;
-  --wet:#2E7EA0;
-  --err:#A8321E;
-  --ink2:#33474F;
-  --ink3:#44585F;
-  --ink4:#5A6B71;
-  --line:rgba(15,32,39,.14);
-  --hair:rgba(15,32,39,.06);
-  --rule:rgba(27,75,90,.045);
+  --mist:#FAF4EA;          /* warm papier */
+  --paper:#FFFCF6;
+  --rock:#2B2318;          /* inkt */
+  --slate:#3D6B5C;         /* dennengroen, voor links en kleine accenten */
+  --dry:#E08A33;           /* zon */
+  --wet:#3E8FA8;           /* regen */
+  --err:#B4462F;
+  --ink2:#544636;
+  --ink3:#665949;
+  --ink4:#7A6C5B;
+  --line:rgba(43,35,24,.15);
+  --hair:rgba(43,35,24,.07);
+  --rule:rgba(61,107,92,.05);
+  --sink:rgba(43,35,24,.04);
+  --shadow:0 1px 2px rgba(43,35,24,.05), 0 10px 24px -16px rgba(43,35,24,.45);
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --disp:"Barlow Condensed",system-ui,sans-serif;
-  --body:"Inter",system-ui,-apple-system,sans-serif;
+  --disp:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Nunito",system-ui,-apple-system,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --mist:#0F1519;
-    --paper:#151E23;
-    --rock:#E7EDEF;
-    --slate:#8FB6C4;
-    --wet:#5FB4D8;
-    --err:#FF8B72;
-    --ink2:#B3C3C9;
-    --ink3:#9DAFB6;
-    --ink4:#8B9DA4;
-    --line:rgba(231,237,239,.16);
-    --hair:rgba(231,237,239,.07);
-    --rule:rgba(143,182,196,.05);
+    --mist:#181410;
+    --paper:#221C15;
+    --rock:#F3EADC;
+    --slate:#82BBA4;
+    --dry:#E89A4A;
+    --wet:#5FB0CC;
+    --err:#FF9077;
+    --ink2:#CBBEAD;
+    --ink3:#B3A695;
+    --ink4:#9C8F7E;
+    --line:rgba(243,234,220,.17);
+    --hair:rgba(243,234,220,.08);
+    --rule:rgba(130,187,164,.05);
+    --sink:rgba(243,234,220,.045);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 24px -16px rgba(0,0,0,.8);
   }
 }
 *{box-sizing:border-box}
@@ -62,7 +69,8 @@ body{
   -webkit-font-smoothing:antialiased;
   background-image:repeating-linear-gradient(0deg,transparent,transparent 46px,var(--rule) 46px,var(--rule) 47px);
 }
-.wrap{max-width:960px;margin:0 auto;padding:28px 18px 64px}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 18px 64px}
+[hidden]{display:none!important}
 
 /* ---------- header ---------- */
 .topline{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:0 0 10px}
@@ -72,30 +80,35 @@ body{
 }
 .refresh{
   font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
-  background:transparent;color:var(--slate);border:1px solid var(--line);border-radius:2px;
+  background:transparent;color:var(--slate);border:1px solid var(--line);border-radius:8px;
   padding:5px 10px;cursor:pointer;white-space:nowrap
 }
 .refresh:hover{border-color:var(--slate)}
 .refresh:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
 .refresh[disabled]{opacity:.4;cursor:progress}
 h1{
-  font-family:var(--disp);font-weight:600;font-size:clamp(38px,9vw,64px);
-  line-height:.95;letter-spacing:-.01em;margin:0 0 12px;text-transform:uppercase
+  font-family:var(--disp);font-weight:700;font-size:clamp(36px,7.5vw,58px);
+  line-height:1;letter-spacing:-.025em;margin:0
 }
-.lede{max-width:52ch;margin:0 0 28px;color:var(--ink2)}
+.tagline{font-family:var(--disp);font-weight:600;font-size:clamp(17px,2.6vw,21px);
+  font-style:italic;color:var(--ink3);margin:6px 0 0}
+.hero{position:relative;border-radius:16px;overflow:hidden;margin:0 0 22px;box-shadow:var(--shadow)}
+.hero .scene{display:block;width:100%;height:clamp(120px,20vw,180px)}
+.hero .herotext{padding:18px 22px 20px;background:var(--paper)}
+.lede{max-width:62ch;margin:0 0 26px;color:var(--ink2)}
 
 /* ---------- controls ---------- */
 .controls{
   display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;
-  padding:16px 0 20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:26px
+  padding:16px 0 20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:22px
 }
 .ctl{display:flex;flex-direction:column;gap:7px}
-.ctl > .lab{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
-.seg{display:flex;border:1px solid var(--rock);border-radius:2px;overflow:hidden}
+.lab{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--paper);box-shadow:var(--shadow)}
 .seg button{
-  font-family:var(--body);font-size:13px;font-weight:500;
+  font-family:var(--body);font-size:13px;font-weight:600;
   background:transparent;color:var(--rock);border:0;padding:7px 13px;cursor:pointer;
-  border-right:1px solid var(--line)
+  border-right:1px solid var(--line);white-space:nowrap
 }
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--rock);color:var(--mist)}
@@ -103,16 +116,41 @@ h1{
 input[type=range]{width:170px;accent-color:var(--slate)}
 .rangeval{font-family:var(--mono);font-size:12px}
 
+/* ---------- kpi strip ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:26px}
+.kpi{
+  background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 15px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:3px;min-width:0
+}
+.kpi .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.6}
+.kpi .v{font-family:var(--disp);font-size:25px;font-weight:600;line-height:1.08;letter-spacing:-.01em;
+  overflow-wrap:anywhere}
+.kpi .n{font-family:var(--mono);font-size:11px;color:var(--ink3);line-height:1.35}
+.kpi .bignum{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--dry)}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}
+.tabs button{
+  font-family:var(--body);font-size:15px;font-weight:700;letter-spacing:.005em;
+  background:none;border:0;border-bottom:2px solid transparent;color:var(--rock);opacity:.45;
+  padding:6px 16px 8px;cursor:pointer;white-space:nowrap;margin-bottom:-1px
+}
+.tabs button:first-child{padding-left:0}
+.tabs button[aria-selected="true"]{opacity:1;border-bottom-color:var(--dry)}
+.tabs button:focus-visible{outline:2px solid var(--dry);outline-offset:-2px}
+.tabs .count{font-family:var(--mono);font-size:10px;font-weight:400;opacity:.6;margin-left:6px;text-transform:none}
+
 /* ---------- föhn gauge ---------- */
 .gauge{
-  background:var(--paper);border:1px solid var(--line);border-radius:3px;
+  background:var(--paper);border:1px solid var(--line);border-radius:12px;
   padding:18px 20px;margin-bottom:30px
-}
-.gauge h2{font-family:var(--disp);text-transform:uppercase;letter-spacing:.02em;font-size:20px;margin:0 0 4px;font-weight:600}
-.gauge .sub{font-size:13px;color:var(--ink3);margin:0 0 16px}
+;box-shadow:var(--shadow)}
+.gauge h2{font-family:var(--disp);letter-spacing:-.01em;font-size:23px;margin:0 0 4px;font-weight:600}
+.gauge .sub{font-size:13px;color:var(--ink3);margin:0 0 16px;max-width:80ch}
 .scale{position:relative;height:44px;margin:0 4px}
 .scale .axis{position:absolute;top:22px;left:0;right:0;height:1px;background:var(--line)}
 .scale .zero{position:absolute;top:12px;bottom:6px;left:50%;width:1px;background:var(--rock);opacity:.35}
+.scale .band{position:absolute;top:20px;height:5px;opacity:.35;border-radius:12px}
 .needle{
   position:absolute;top:8px;width:2px;height:28px;background:var(--rock);
   transition:left .5s cubic-bezier(.2,.7,.3,1)
@@ -124,58 +162,230 @@ input[type=range]{width:170px;accent-color:var(--slate)}
 .scalelabels{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin-top:2px}
 .verdict{margin-top:14px;font-size:14px;padding-top:12px;border-top:1px solid var(--line)}
 .verdict strong{font-weight:600}
+.foehnstrip{display:flex;gap:2px;margin-top:14px}
+.foehnstrip div{flex:1;text-align:center;font-family:var(--mono);font-size:9.5px;padding:4px 1px;border-radius:1px;color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.4)}
+
+/* ---------- section chrome ---------- */
+h2.section{font-family:var(--disp);font-size:27px;font-weight:600;letter-spacing:-.015em;margin:0 0 5px}
+.sectionsub{font-size:13px;color:var(--ink3);margin:0 0 16px;max-width:80ch}
 
 /* ---------- ranking ---------- */
-h2.section{font-family:var(--disp);text-transform:uppercase;font-size:22px;font-weight:600;margin:0 0 4px}
-.sectionsub{font-size:13px;color:var(--ink3);margin:0 0 16px}
 .row{
   display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:center;
   padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;
   background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;font:inherit;color:inherit
 }
+.row:hover{background:var(--sink)}
 .row:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
 .rank{font-family:var(--mono);font-size:13px;opacity:.55}
-.name{font-family:var(--disp);font-size:23px;font-weight:500;line-height:1.05;text-transform:uppercase}
+.name{font-family:var(--disp);font-size:24px;font-weight:600;line-height:1.1;letter-spacing:-.01em}
 .meta{font-family:var(--mono);font-size:11px;opacity:.65;margin-top:2px}
+.tag{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid var(--line);border-radius:8px;padding:1px 5px;margin-left:6px;opacity:.8;white-space:nowrap}
+.tag.best{border-color:var(--dry);color:var(--dry);opacity:1}
 .score{font-family:var(--mono);font-size:26px;font-weight:600;text-align:right;line-height:1}
 .scorelabel{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.55;text-align:right}
+.delta{font-family:var(--mono);font-size:10px;text-align:right;opacity:.6;margin-top:3px}
 
 /* day strip = signature element */
-.strip{display:flex;gap:2px;margin-top:8px;height:22px}
-.cell{flex:1;border-radius:1px;position:relative;min-width:6px}
+.strip{display:flex;gap:2px;margin-top:8px;height:24px}
+.cell{flex:1;border-radius:1px;position:relative;min-width:0}
 .cell span{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:9px;color:#fff;opacity:.9
+  font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.45)
 }
 .striplabels{display:flex;gap:2px;margin-top:3px}
-.striplabels div{flex:1;font-family:var(--mono);font-size:9px;text-align:center;opacity:.55;min-width:6px}
+.striplabels div{flex:1;font-family:var(--mono);font-size:9px;text-align:center;opacity:.55;min-width:0}
+.striplabels div.we{opacity:.9;font-weight:600;color:var(--slate)}
 
-.detail{padding:4px 0 18px;font-size:13px;overflow-x:auto}
-.detail table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;min-width:420px}
+.detail{padding:2px 0 20px}
+.detail table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;min-width:430px}
 .detail th{text-align:right;font-weight:400;opacity:.6;padding:5px 6px;border-bottom:1px solid var(--line);letter-spacing:.04em}
 .detail th:first-child{text-align:left}
 .detail td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--hair)}
 .detail td:first-child{text-align:left}
+.scroller{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .snow{color:var(--wet);font-weight:600}
+
+/* score breakdown */
+.why{margin:14px 0 4px}
+.whytitle{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin-bottom:6px}
+.whybar{display:flex;height:14px;background:var(--sink);border-radius:8px;overflow:hidden}
+.whybar i{display:block;height:100%}
+.whylegend{display:flex;flex-wrap:wrap;gap:10px;margin-top:7px;font-family:var(--mono);font-size:10px;opacity:.85}
+.whylegend span{display:inline-flex;align-items:center;gap:5px}
+.whylegend b{width:8px;height:8px;border-radius:1px;display:inline-block}
+.whynote{font-size:12.5px;color:var(--ink3);margin:9px 0 0;max-width:80ch}
+
+/* ---------- legend ---------- */
+.legend{display:flex;align-items:center;gap:10px;margin:18px 0 0;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
+.legend .bar{flex:0 0 auto;width:clamp(90px,18vw,170px);height:9px;border-radius:999px;
+  background:linear-gradient(90deg,rgb(62,143,168),rgb(224,138,51))}
+
+/* ---------- matrix ---------- */
+.mwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper);box-shadow:var(--shadow)}
+table.matrix{border-collapse:separate;border-spacing:0;width:100%;min-width:640px;font-family:var(--mono);font-size:11px}
+table.matrix th,table.matrix td{padding:0;border-bottom:1px solid var(--hair)}
+table.matrix thead th{
+  position:sticky;top:0;z-index:2;background:var(--paper);
+  font-weight:400;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;
+  padding:9px 4px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap
+}
+table.matrix thead th.we{color:var(--slate);opacity:1;font-weight:600}
+table.matrix tbody th{
+  position:sticky;left:0;z-index:1;background:var(--paper);
+  text-align:left;padding:7px 12px 7px 13px;border-right:1px solid var(--line);white-space:nowrap
+}
+table.matrix tbody th b{font-family:var(--disp);font-size:16px;font-weight:600;display:block;line-height:1.15}
+table.matrix tbody th em{font-style:normal;font-size:9.5px;opacity:.6}
+table.matrix tbody tr:hover th,table.matrix tbody tr:hover td{background-color:var(--sink)}
+table.matrix td.m{text-align:center;font-weight:600;font-size:11.5px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);
+  padding:9px 4px;min-width:44px;border-right:1px solid rgba(255,255,255,.12)}
+table.matrix td.avg{text-align:center;font-weight:600;font-size:12.5px;padding:9px 10px;border-left:1px solid var(--line);white-space:nowrap}
+table.matrix thead th.avgh{border-left:1px solid var(--line)}
+.mnote{font-family:var(--mono);font-size:10.5px;opacity:.65;margin:10px 0 0;line-height:1.6}
+
+/* ---------- paklijst ---------- */
+.packhead{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.progress{flex:1 1 220px;min-width:180px}
+.progress .track{height:6px;background:var(--sink);border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.progress .fill{height:100%;background:var(--dry);transition:width .3s ease}
+.progress .txt{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.65;margin-top:6px}
+.packbtns{display:flex;gap:8px}
+.packbtns button{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;color:var(--slate);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer
+}
+.packbtns button:hover{border-color:var(--slate)}
+.packbtns button:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
+.packgrid{columns:2;column-gap:26px}
+@media (max-width:700px){.packgrid{columns:1}}
+.packgroup{break-inside:avoid;margin:0 0 22px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px 6px;box-shadow:var(--shadow)}
+.packgroup h3{font-family:var(--disp);font-size:20px;font-weight:600;margin:0 0 9px;letter-spacing:-.01em}
+.packgroup ul{list-style:none;margin:0;padding:0}
+.packgroup li{border-bottom:1px solid var(--hair);padding:0}
+.packgroup li:last-child{border-bottom:0}
+.packgroup label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer;font-size:13.5px;line-height:1.4}
+.packgroup input{margin:2px 0 0;accent-color:var(--dry);width:15px;height:15px;flex:none}
+.packgroup input:checked ~ .it{opacity:.42;text-decoration:line-through}
+.packgroup .it{min-width:0}
+.packgroup .wy{display:block;font-family:var(--mono);font-size:10px;color:var(--dry);opacity:.9;margin-top:2px;text-decoration:none}
+.packgroup .cond{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  border:1px solid var(--dry);color:var(--dry);border-radius:8px;padding:0 4px;margin-left:6px;white-space:nowrap}
+
+/* ---------- kaart ---------- */
+.mapwrap{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:var(--shadow)}
+.mapwrap svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.mapwrap svg rect.c{stroke:none;cursor:pointer}
+.mapwrap svg rect.c.far{opacity:.2}
+.mapwrap svg path.borders{fill:none;stroke:var(--paper);stroke-width:1.1;opacity:.55;pointer-events:none}
+.mapwrap svg path.arc{fill:none;stroke:var(--rock);stroke-width:1.2;opacity:.28;pointer-events:none}
+.mapwrap svg path.selring{fill:none;stroke:var(--rock);stroke-width:3;pointer-events:none}
+.mapwrap svg text.lb{font-family:var(--mono);font-size:8.5px;fill:#fff;paint-order:stroke;
+  stroke:rgba(0,0,0,.55);stroke-width:2.2;stroke-linejoin:round;pointer-events:none;text-anchor:middle;letter-spacing:.02em}
+.mapwrap svg text.lb.far{opacity:.35}
+.mapwrap svg .base circle{fill:var(--rock);stroke:#fff;stroke-width:1.4}
+.mapwrap svg .base text{font-family:var(--mono);font-size:8.5px;fill:var(--rock);paint-order:stroke;
+  stroke:var(--paper);stroke-width:2.4;stroke-linejoin:round;text-anchor:middle}
+.maptip{
+  position:absolute;pointer-events:none;z-index:3;background:var(--rock);color:var(--mist);
+  font-family:var(--mono);font-size:10.5px;line-height:1.55;padding:8px 10px;border-radius:12px;
+  transform:translate(-50%,-115%);white-space:nowrap;opacity:0;transition:opacity .12s ease
+}
+.maptip.on{opacity:1}
+.maptip b{font-family:var(--disp);font-size:16px;font-weight:600;display:block;letter-spacing:-.01em}
+.maptip i{font-style:normal;color:var(--dry)}
+.mapfoot{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;justify-content:space-between;margin-top:14px}
+.mapfoot .legend{flex:0 0 auto}
+.mapfoot .mnote{flex:1 1 300px}
+.pick2{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;margin-bottom:16px}
+
+.selcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:18px;box-shadow:var(--shadow)}
+.selcard .top{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
+.selcard h3{font-family:var(--disp);font-size:29px;font-weight:600;letter-spacing:-.015em;margin:0;line-height:1.05}
+.selcard .sc{font-family:var(--mono);font-size:24px;font-weight:600}
+.selcard .meta{font-family:var(--mono);font-size:11px;opacity:.7;margin:5px 0 0}
+.selcard .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:14px}
+.selcard .facts div{border-left:2px solid var(--line);padding-left:9px}
+.selcard .facts .k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
+.selcard .facts .v{font-family:var(--mono);font-size:14px;font-weight:600;margin-top:2px}
+.selcard .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.selcard .acts button{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;color:var(--slate);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer}
+.selcard .acts button:hover{border-color:var(--slate)}
+.selcard .acts button.on{background:var(--rock);color:var(--mist);border-color:var(--rock)}
+
+/* ---------- ruwe data ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+@media (max-width:760px){.cards{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:13px 14px;box-shadow:var(--shadow)}
+.card .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin-bottom:5px}
+.card .v{font-family:var(--mono);font-size:13px;font-weight:600;line-height:1.35}
+.card .n{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-top:4px;line-height:1.55}
+h3.sub{font-family:var(--disp);font-size:21px;font-weight:600;letter-spacing:-.01em;margin:30px 0 6px}
+p.subnote{font-size:13px;color:var(--ink3);margin:0 0 13px;max-width:82ch}
+.req{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.req .t{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.6;margin-bottom:7px}
+.req code{font-family:var(--mono);font-size:10.5px;line-height:1.75;word-break:break-all;display:block;color:var(--ink2)}
+.req code b{color:var(--dry);font-weight:600}
+.req code i{font-style:normal;opacity:.45}
+.req .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+.req .acts a,.req .acts button{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;color:var(--slate);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer;text-decoration:none}
+.req .acts a:hover,.req .acts button:hover{border-color:var(--slate)}
+table.dt{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;min-width:720px}
+table.dt th{text-align:right;font-weight:400;opacity:.6;padding:6px 7px;border-bottom:1px solid var(--line);letter-spacing:.04em;white-space:nowrap;vertical-align:bottom}
+table.dt th:first-child{text-align:left}
+table.dt td{text-align:right;padding:6px 7px;border-bottom:1px solid var(--hair);white-space:nowrap}
+table.dt td:first-child{text-align:left}
+table.dt tfoot td{border-bottom:0;border-top:1px solid var(--line);font-weight:600}
+table.dt td.form,table.dt td.txt{text-align:left;color:var(--ink3);font-size:10.5px;white-space:normal}
+table.dt tbody tr:hover td{background:var(--sink)}
+select.pick{font-family:var(--mono);font-size:12px;background:var(--paper);color:var(--rock);
+  border:1px solid var(--line);border-radius:8px;padding:6px 9px;max-width:min(100%,320px)}
+.caveats{font-size:13.5px;color:var(--ink2);max-width:84ch;padding-left:19px;margin:0}
+.caveats li{margin-bottom:9px}
+.caveats b{font-weight:600;color:var(--rock)}
+code{font-family:var(--mono);font-size:.92em;background:var(--sink);padding:1px 4px;border-radius:8px}
 
 .status{font-family:var(--mono);font-size:12px;padding:30px 0;opacity:.7}
 .status.err{color:var(--err);opacity:1}
 .status button{
   font-family:var(--mono);font-size:11px;margin-left:10px;padding:4px 9px;cursor:pointer;
-  background:transparent;color:inherit;border:1px solid currentColor;border-radius:2px
+  background:transparent;color:inherit;border:1px solid currentColor;border-radius:8px
 }
 .empty{font-family:var(--mono);font-size:12px;padding:24px 0;opacity:.7}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+  background:var(--rock);color:var(--mist);font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  padding:9px 16px;border-radius:12px;opacity:0;transition:opacity .25s ease;pointer-events:none;z-index:10
+}
+.toast.on{opacity:1}
 footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink4)}
 footer a{color:var(--slate)}
+
+@media (max-width:860px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+}
 @media (max-width:560px){
   .row{grid-template-columns:22px 1fr auto;gap:9px}
   .name{font-size:20px}
   .score{font-size:22px}
   .controls{gap:16px}
-  .cell span{display:none}
+  .cell span{font-size:8.5px}
+  .strip{height:22px;gap:1.5px}
+  .striplabels{gap:1.5px}
   .scalelabels{font-size:9px}
+  .tabs button{font-size:17px;padding:6px 12px 8px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{
+  .controls,.tabs,.kpis,.topline,.gauge,.packbtns,footer{display:none!important}
+  .packgrid{columns:2}
+  body{background:#fff}
+}
 </style>
 </head>
 <body>
@@ -185,8 +395,49 @@ footer a{color:var(--slate)}
   <p class="eyebrow" id="eyebrow">Laden…</p>
   <button class="refresh" id="refresh" type="button" title="Nieuwe data ophalen bij Open-Meteo">Ververs</button>
 </div>
-<h1>Waar zetten<br>we de tent</h1>
-<p class="lede">Rangschikt kandidaat-basiskampen in de Alpen op fiets-, hike- en zwemweer. De föhnmeter eronder laat zien welke kant van de hoofdkam vandaag in de luwte ligt.</p>
+
+<div class="hero">
+  <svg class="scene" viewBox="0 0 800 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="lucht" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#F6C88A"/><stop offset="1" stop-color="#FBE7CB"/>
+      </linearGradient>
+      <linearGradient id="ver" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#7FA8A8"/><stop offset="1" stop-color="#9BBCB6"/>
+      </linearGradient>
+    </defs>
+    <rect width="800" height="170" fill="url(#lucht)"/>
+    <circle cx="654" cy="42" r="21" fill="#F2A93B"/>
+    <path d="M0 122 L78 62 L128 100 L182 52 L246 122 Z" fill="url(#ver)"/>
+    <path d="M182 52 L206 70 L192 76 L176 70 Z" fill="#FFFDF6"/>
+    <path d="M210 128 L300 48 L352 92 L404 44 L486 128 Z" fill="#4E7F72"/>
+    <path d="M300 48 L322 66 L308 72 L286 68 Z" fill="#FFFDF6"/>
+    <path d="M404 44 L430 66 L414 72 L392 66 Z" fill="#FFFDF6"/>
+    <path d="M448 132 L536 66 L590 104 L644 62 L724 132 Z" fill="#3D6B5C"/>
+    <path d="M644 62 L666 80 L652 86 L630 80 Z" fill="#FFFDF6"/>
+    <path d="M700 130 L800 66 L800 130 Z" fill="#4E7F72"/>
+    <rect y="126" width="800" height="44" fill="#87A86A"/>
+    <path d="M0 138 Q 200 128 380 142 T 800 134" stroke="#C9B48A" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M0 138 Q 200 128 380 142 T 800 134" stroke="#FFFCF6" stroke-width="1.6" stroke-dasharray="9 11" fill="none"/>
+    <g transform="translate(96 128)">
+      <path d="M0 22 L20 -18 L40 22 Z" fill="#E08A33"/>
+      <path d="M20 -18 L20 22 L12 22 Z" fill="#C4732A"/>
+      <path d="M20 -18 L21 -30 L34 -26 L21 -22 Z" fill="#B4462F"/>
+    </g>
+    <g fill="#2F5A4C">
+      <path d="M560 150 l9 -26 l9 26 z"/><path d="M584 152 l7 -20 l7 20 z"/>
+      <path d="M300 152 l8 -22 l8 22 z"/><path d="M322 150 l6 -18 l6 18 z"/>
+    </g>
+  </svg>
+  <div class="herotext">
+    <h1>A&amp;B op reis</h1>
+    <p class="tagline">Waar zetten we de tent?</p>
+  </div>
+</div>
+
+<p class="lede">Ons weerdashboard voor de Alpen: 32 regio's, gerangschikt op fiets-, hike- en zwemweer.
+De kaart kleurt de streek waar het straks goed zit, de föhnmeter verklapt welke kant van de hoofdkam in de luwte ligt,
+en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen waar we heen gaan als het Mayrhofen-weekend erop zit.</p>
 
 <div class="controls">
   <div class="ctl">
@@ -204,62 +455,215 @@ footer a{color:var(--slate)}
   </div>
   <div class="ctl">
     <label class="lab" for="drive">Rijtijd vanaf Mayrhofen</label>
-    <input type="range" id="drive" min="1" max="9" value="9" aria-describedby="driveval">
+    <input type="range" id="drive" min="1" max="10" value="10" aria-describedby="driveval">
     <span class="rangeval" id="driveval">alles</span>
+  </div>
+  <div class="ctl">
+    <label class="lab" for="start">Vertrek</label>
+    <select class="pick" id="start"></select>
   </div>
 </div>
 
-<section class="gauge">
-  <h2>Föhnmeter</h2>
-  <p class="sub">Luchtdrukverschil Innsbruck − Bolzano. Hoge druk noordelijk duwt de lucht zuidwaarts over de kam: zuidkant klaart op. Andersom regent het zuidelijk en is Tirol droog.</p>
-  <div class="scale">
-    <div class="axis"></div>
-    <div class="zero"></div>
-    <div class="needle" id="needle" style="left:50%"></div>
+<div class="kpis" id="kpis" aria-live="polite"></div>
+
+<nav class="tabs" role="tablist" aria-label="Weergave">
+  <button type="button" role="tab" id="tab-map"    aria-controls="panel-map"    aria-selected="true"  data-t="map">Kaart</button>
+  <button type="button" role="tab" id="tab-rank"   aria-controls="panel-rank"   aria-selected="false" data-t="rank" tabindex="-1">Lijstje</button>
+  <button type="button" role="tab" id="tab-matrix" aria-controls="panel-matrix" aria-selected="false" data-t="matrix" tabindex="-1">Per dag</button>
+  <button type="button" role="tab" id="tab-pack"   aria-controls="panel-pack"   aria-selected="false" data-t="pack" tabindex="-1">Paklijst<span class="count" id="packcount"></span></button>
+  <button type="button" role="tab" id="tab-data"   aria-controls="panel-data"   aria-selected="false" data-t="data" tabindex="-1">Onder de motorkap</button>
+</nav>
+
+<section id="panel-map" role="tabpanel" aria-labelledby="tab-map" tabindex="0">
+  <h2 class="section">Waar is het goed weer</h2>
+  <p class="sectionsub" id="mapsub">—</p>
+  <div class="pick2">
+    <div class="ctl">
+      <span class="lab" id="lab-mapmetric">Kleur op</span>
+      <div class="seg" id="mapmetric" role="group" aria-labelledby="lab-mapmetric">
+        <button type="button" data-m="score" aria-pressed="true">Score</button>
+        <button type="button" data-m="rain" aria-pressed="false">Neerslag</button>
+        <button type="button" data-m="sun" aria-pressed="false">Zon</button>
+        <button type="button" data-m="tmax" aria-pressed="false">Temp</button>
+        <button type="button" data-m="wind" aria-pressed="false">Wind</button>
+        <button type="button" data-m="frz" aria-pressed="false">Vriespunt</button>
+      </div>
+    </div>
   </div>
-  <div class="scalelabels">
-    <div>← Südföhn · noord droog</div>
-    <div>Nordföhn · zuid droog →</div>
+  <div class="mapwrap" id="mapwrap">
+    <div id="mapsvg"></div>
+    <div class="maptip" id="maptip"></div>
   </div>
-  <p class="verdict" id="verdict">—</p>
+  <div class="mapfoot">
+    <div class="legend" style="margin:0"><span id="legLo">nat</span><span class="bar"></span><span id="legHi">droog</span></div>
+    <p class="mnote" style="margin:0" id="mapnote"></p>
+  </div>
+  <div id="selcard"></div>
 </section>
 
-<h2 class="section">Rangschikking</h2>
-<p class="sectionsub" id="sectionsub">—</p>
-<div id="list"></div>
+<section id="panel-rank" role="tabpanel" aria-labelledby="tab-rank" tabindex="0" hidden>
+  <div class="gauge">
+    <h2>Föhnmeter</h2>
+    <p class="sub">Luchtdrukverschil Innsbruck − Bolzano. Hoge druk noordelijk duwt de lucht zuidwaarts over de kam: zuidkant klaart op. Andersom regent het zuidelijk en is Tirol droog.</p>
+    <div class="scale">
+      <div class="axis"></div>
+      <div class="band" id="bandS" style="left:3%;width:25%;background:var(--wet)"></div>
+      <div class="band" id="bandN" style="right:3%;width:25%;background:var(--dry)"></div>
+      <div class="zero"></div>
+      <div class="needle" id="needle" style="left:50%"></div>
+    </div>
+    <div class="scalelabels">
+      <div>← Südföhn · noord droog</div>
+      <div>Nordföhn · zuid droog →</div>
+    </div>
+    <p class="verdict" id="verdict">—</p>
+    <div class="foehnstrip" id="foehnstrip"></div>
+  </div>
+
+  <h2 class="section">Rangschikking</h2>
+  <p class="sectionsub" id="sectionsub">—</p>
+  <div id="list"></div>
+  <div class="legend"><span>nat</span><span class="bar"></span><span>droog</span><span style="margin-left:6px;opacity:.8">· getal = mm neerslag · klik een rij voor de opbouw</span></div>
+</section>
+
+<section id="panel-matrix" role="tabpanel" aria-labelledby="tab-matrix" tabindex="0" hidden>
+  <h2 class="section">Dagmatrix</h2>
+  <p class="sectionsub" id="matrixsub">—</p>
+  <div class="ctl" style="margin-bottom:16px">
+    <span class="lab" id="lab-metric">Toon</span>
+    <div class="seg" id="metric" role="group" aria-labelledby="lab-metric">
+      <button type="button" data-m="score" aria-pressed="true">Score</button>
+      <button type="button" data-m="rain" aria-pressed="false">Neerslag</button>
+      <button type="button" data-m="sun" aria-pressed="false">Zon</button>
+      <button type="button" data-m="tmax" aria-pressed="false">Temp</button>
+      <button type="button" data-m="wind" aria-pressed="false">Wind</button>
+      <button type="button" data-m="frz" aria-pressed="false">Vriespunt</button>
+    </div>
+  </div>
+  <div class="mwrap"><table class="matrix" id="matrix"></table></div>
+  <p class="mnote" id="mnote"></p>
+  <div class="legend"><span>slecht</span><span class="bar"></span><span>goed</span></div>
+</section>
+
+<section id="panel-pack" role="tabpanel" aria-labelledby="tab-pack" tabindex="0" hidden>
+  <h2 class="section">Paklijst</h2>
+  <p class="sectionsub" id="packsub">—</p>
+  <div class="packhead">
+    <div class="progress">
+      <div class="track"><div class="fill" id="packfill" style="width:0%"></div></div>
+      <div class="txt" id="packtxt">0 van 0 ingepakt</div>
+    </div>
+    <div class="packbtns">
+      <button type="button" id="packcopy">Kopieer</button>
+      <button type="button" id="packprint">Print</button>
+      <button type="button" id="packreset">Reset vinkjes</button>
+    </div>
+  </div>
+  <div class="packgrid" id="packgrid"></div>
+</section>
+
+<section id="panel-data" role="tabpanel" aria-labelledby="tab-data" tabindex="0" hidden>
+  <h2 class="section">Ruwe data</h2>
+  <p class="sectionsub">Precies wat er binnenkomt bij Open-Meteo, en wat er daarna mee gebeurt. Zo is elke score na te rekenen in plaats van te moeten geloven.</p>
+
+  <div class="cards" id="datacards"></div>
+
+  <h3 class="sub">De twee verzoeken</h3>
+  <p class="subnote">Per koude load doet de pagina precies deze twee GET-requests, rechtstreeks vanuit je browser. Geen sleutel, geen server ertussen, niets dat buiten je eigen sessie wordt bewaard.</p>
+  <div id="reqs"></div>
+
+  <h3 class="sub">Wat de API teruggeeft</h3>
+  <p class="subnote">Onbewerkte dagwaarden in de eenheden van de API — let op dat zon en daglicht in secondes binnenkomen. Alleen het vriespuntniveau is al samengevat: dat komt per uur binnen, hier staat de laagste uurwaarde van die dag.</p>
+  <div class="ctl" style="margin-bottom:12px">
+    <label class="lab" for="dataplace">Regio</label>
+    <select class="pick" id="dataplace"></select>
+  </div>
+  <div class="scroller"><table class="dt" id="rawtable"></table></div>
+  <p class="mnote" id="rawmeta"></p>
+
+  <h3 class="sub">Van ruwe waarde naar score</h3>
+  <p class="subnote">Elke ruwe waarde gaat door een eigen curve naar een subscore van 0–100, wordt gewogen per profiel en opgeteld tot de dagscore. De rangschikking is daarna niets meer dan het gemiddelde van die dagscores.</p>
+  <div class="ctl" style="margin-bottom:12px">
+    <label class="lab" for="dataday">Dag</label>
+    <select class="pick" id="dataday"></select>
+  </div>
+  <div class="scroller"><table class="dt" id="pipetable"></table></div>
+  <p class="mnote">Elke subscore wordt afgeknipt op 0 en 100 vóór de weging. De gewichten per profiel staan in <code>WEIGHTS</code> en tellen op tot 1, dus de dagscore blijft op dezelfde schaal van 0–100.</p>
+
+  <h3 class="sub">Föhn: de ruwe druk</h3>
+  <p class="subnote">Uurlijkse luchtdruk herleid naar zeeniveau voor Innsbruck en Bolzano, per dag gemiddeld. Het verschil noord − zuid stuurt de naald in de föhnmeter.</p>
+  <div class="scroller"><table class="dt" id="foehntable"></table></div>
+
+  <h3 class="sub">Kanttekeningen bij de bewerking</h3>
+  <ul class="caveats" id="caveats"></ul>
+</section>
+
 <p class="status" id="status">Weerdata ophalen…</p>
 
 <noscript>
-  <p class="status err">Deze pagina haalt zijn weerdata live op met JavaScript. Zet JavaScript aan om de rangschikking te zien.</p>
+  <p class="status err">Deze pagina haalt zijn weerdata live op met JavaScript. Zet JavaScript aan om het dashboard te zien.</p>
 </noscript>
 
 <footer>
   Data: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), best-match model, geen API-sleutel nodig.
-  Score is een hulpmiddel, geen voorspelling — check bij twijfel de kaarten zelf.
+  Score is een hulpmiddel, geen voorspelling — check bij twijfel de kaarten zelf. Veel plezier, A&amp;B.
 </footer>
 </div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* ------------------------------------------------------------------
-   Bestemmingen. `drive` = rijtijd vanaf Mayrhofen in uren (schatting),
-   `side` is puur informatief: welke kant van de hoofdkam.
-------------------------------------------------------------------- */
-const PLACES = [
-  {n:"Mayrhofen",     r:"Zillertal, AT",     lat:47.162, lon:11.859, drive:0,   side:"noord"},
-  {n:"Brixen",        r:"Eisacktal, IT",     lat:46.715, lon:11.657, drive:1.5, side:"zuid"},
-  {n:"Sölden",        r:"Ötztal, AT",        lat:46.968, lon:11.008, drive:1.5, side:"noord"},
-  {n:"Lienz",         r:"Osttirol, AT",      lat:46.830, lon:12.769, drive:2.5, side:"zuid"},
-  {n:"Schlanders",    r:"Vinschgau, IT",     lat:46.628, lon:10.771, drive:2.5, side:"zuid"},
-  {n:"Scuol",         r:"Unterengadin, CH",  lat:46.797, lon:10.298, drive:3,   side:"inneralpine"},
-  {n:"Livigno",       r:"Alta Valtellina, IT", lat:46.538, lon:10.135, drive:3.5, side:"inneralpine"},
-  {n:"Bormio",        r:"Valtellina, IT",    lat:46.468, lon:10.372, drive:3.5, side:"zuid"},
-  {n:"Cortina",       r:"Dolomieten, IT",    lat:46.540, lon:12.136, drive:3.5, side:"zuid"},
-  {n:"Sils Maria",    r:"Oberengadin, CH",   lat:46.430, lon:9.760,  drive:4,   side:"inneralpine"},
-  {n:"Locarno",       r:"Ticino, CH",        lat:46.171, lon:8.799,  drive:4.5, side:"zuid"},
-  {n:"Kranjska Gora", r:"Julische Alpen, SI",lat:46.484, lon:13.786, drive:5,   side:"zuid"},
-  {n:"Aosta",         r:"Valle d'Aosta, IT", lat:45.735, lon:7.313,  drive:6,   side:"zuid"},
-  {n:"Briançon",      r:"Queyras, FR",       lat:44.899, lon:6.641,  drive:7.5, side:"zuid"}
+/* ==================================================================
+   1. Bestemmingen, weging, metrieken
+   `drive` = rijtijd vanaf Mayrhofen in uren (schatting),
+   `side`  = welke kant van de hoofdkam (informatief).
+================================================================== */
+const REGIONS = [
+  {n:"Zillertal",         r:"Tirol",            c:"AT", lat:47.20, lon:11.85, drive:0,   side:"noord",       base:true},
+  {n:"Tirol Unterland", s:"Unterland",   r:"Kaisergebirge",    c:"AT", lat:47.52, lon:12.20, drive:1,   side:"noord"},
+  {n:"Ötztal",            r:"Tirol",            c:"AT", lat:46.97, lon:11.00, drive:1.5, side:"noord"},
+  {n:"Hohe Tauern",       r:"Pinzgau",          c:"AT", lat:47.20, lon:12.70, drive:1.5, side:"noord"},
+  {n:"Eisacktal",         r:"Südtirol",         c:"IT", lat:46.68, lon:11.50, drive:1.5, side:"zuid"},
+  {n:"Arlberg–Lechtal", s:"Arlberg",   r:"Tirol",            c:"AT", lat:47.20, lon:10.25, drive:2,   side:"noord"},
+  {n:"Vinschgau",         r:"Südtirol",         c:"IT", lat:46.65, lon:10.72, drive:2.5, side:"zuid"},
+  {n:"Osttirol",          r:"Karnische Alpen",  c:"AT", lat:46.83, lon:12.72, drive:2.5, side:"zuid"},
+  {n:"Rätikon",           r:"Vorarlberg",       c:"AT", lat:47.10, lon:9.85,  drive:2.5, side:"noord"},
+  {n:"Salzkammergut", s:"Salzkammer.",     r:"Dachstein",        c:"AT", lat:47.55, lon:13.60, drive:2.5, side:"noord"},
+  {n:"Unterengadin",      r:"Graubünden",       c:"CH", lat:46.80, lon:10.28, drive:3,   side:"inneralpine"},
+  {n:"Dolomieten",        r:"Belluno",          c:"IT", lat:46.45, lon:12.05, drive:3.5, side:"zuid"},
+  {n:"Alta Valtellina", s:"Livigno",   r:"Livigno",          c:"IT", lat:46.50, lon:10.20, drive:3.5, side:"inneralpine"},
+  {n:"Niedere Tauern", s:"N. Tauern",    r:"Steiermark",       c:"AT", lat:47.30, lon:14.20, drive:3.5, side:"noord"},
+  {n:"Oberengadin",       r:"Graubünden",       c:"CH", lat:46.45, lon:9.80,  drive:4,   side:"inneralpine"},
+  {n:"Surselva",          r:"Graubünden",       c:"CH", lat:46.72, lon:9.10,  drive:4,   side:"inneralpine"},
+  {n:"Karawanken",        r:"Kärnten",          c:"AT", lat:46.60, lon:13.85, drive:4,   side:"zuid"},
+  {n:"Ticino",            r:"Tessin",           c:"CH", lat:46.30, lon:8.80,  drive:4.5, side:"zuid"},
+  {n:"Valtellina",        r:"Sondrio",          c:"IT", lat:46.15, lon:9.85,  drive:4.5, side:"zuid"},
+  {n:"Zentralschweiz", s:"Zentralschw.",    r:"Uri",              c:"CH", lat:46.80, lon:8.55,  drive:4.5, side:"noord"},
+  {n:"Julische Alpen", s:"Julische",    r:"Gorenjska",        c:"SI", lat:46.42, lon:13.75, drive:5,   side:"zuid"},
+  {n:"Semmering",         r:"Niederösterreich", c:"AT", lat:47.62, lon:15.45, drive:5,   side:"noord"},
+  {n:"Berner Oberland", s:"Berner Obl.",   r:"Bern",             c:"CH", lat:46.55, lon:7.90,  drive:5,   side:"noord"},
+  {n:"Wallis",            r:"Valais",           c:"CH", lat:46.20, lon:7.60,  drive:6,   side:"inneralpine"},
+  {n:"Valle d'Aosta", s:"Aosta",     r:"Aosta",            c:"IT", lat:45.75, lon:7.40,  drive:6,   side:"zuid"},
+  {n:"Chablais",          r:"Haute-Savoie",     c:"FR", lat:46.05, lon:6.45,  drive:6.5, side:"noord"},
+  {n:"Mont Blanc",        r:"Chamonix",         c:"FR", lat:45.90, lon:6.85,  drive:7,   side:"noord"},
+  {n:"Vanoise",           r:"Tarentaise",       c:"FR", lat:45.45, lon:6.75,  drive:7.5, side:"inneralpine"},
+  {n:"Écrins",            r:"Briançonnais",     c:"FR", lat:44.85, lon:6.45,  drive:8,   side:"zuid"},
+  {n:"Vercors",           r:"Isère",            c:"FR", lat:45.15, lon:5.75,  drive:8,   side:"noord"},
+  {n:"Cuneese",           r:"Piemonte",         c:"IT", lat:44.55, lon:7.25,  drive:8.5, side:"zuid"},
+  {n:"Mercantour",        r:"Alpes-Maritimes",  c:"FR", lat:44.15, lon:7.05,  drive:9.5, side:"zuid"}
 ];
+
+/* Grove omtrek van de Alpenboog (lon, lat), met de klok mee vanaf Nice.
+   Schematisch: goed genoeg om de rasterkaart op te knippen, geen grens. */
+const ARC = [
+  [7.30,43.72],[6.85,44.10],[6.10,44.55],[5.60,44.85],[5.45,45.25],[5.60,45.55],[5.85,45.90],[6.05,46.20],
+  [6.75,46.55],[7.35,46.75],[8.00,46.95],[8.60,47.05],[9.30,47.25],[9.75,47.50],[10.30,47.60],[11.10,47.65],
+  [11.60,47.70],[12.20,47.75],[12.90,47.80],[13.60,47.85],[14.40,47.85],[15.20,47.90],[15.90,47.85],
+  [16.10,47.55],[15.90,47.10],[15.30,46.75],[14.80,46.45],[14.30,46.15],[13.80,46.10],[13.30,46.15],
+  [12.60,46.10],[12.00,46.00],[11.40,45.85],[10.90,45.75],[10.55,45.75],[10.20,45.85],[9.70,45.85],
+  [9.30,45.85],[8.90,45.90],[8.55,45.85],[8.20,45.70],[7.95,45.55],[7.70,45.25],[7.40,44.95],[7.25,44.55],
+  [7.35,44.15]
+];
+const GEO = {lon0:5.30, lon1:16.30, lat0:43.60, lat1:48.00, latStep:0.07, k:Math.cos(45.8*Math.PI/180), px:100};
 
 const WEIGHTS = {
   bike:  {dry:.34, prob:.18, sun:.20, wind:.18, temp:.10, snow:.00},
@@ -267,40 +671,95 @@ const WEIGHTS = {
   chill: {dry:.26, prob:.16, sun:.28, wind:.08, temp:.22, snow:.00}
 };
 
-const PROFILES = ["bike","hike","chill"];
-const CACHE_KEY = "basiskamp:v1";
+const PROFILE_LABEL = {bike:"Racefiets", hike:"Hiken", chill:"Meer"};
+
+// volgorde en kleur van de opbouwbalk
+const PARTS = [
+  {k:"dry",  label:"droogte",     c:"#E0742F"},
+  {k:"prob", label:"neerslagkans",c:"#C9924F"},
+  {k:"sun",  label:"zon",         c:"#E8B33C"},
+  {k:"wind", label:"wind",        c:"#6E97A6"},
+  {k:"temp", label:"temperatuur", c:"#C4553A"},
+  {k:"snow", label:"vriespunt",   c:"#2E7EA0"}
+];
+
+const PROFILES = Object.keys(WEIGHTS);
+const TABS = ["map","rank","matrix","pack","data"];
+const CACHE_KEY = "basiskamp:v2";
+const PACK_KEY  = "basiskamp:pack:v1";
 const CACHE_TTL = 30 * 60 * 1000;   // Open-Meteo ververst ~elk uur
 
-let state = {profile:"bike", days:5, drive:9, data:null, fetchedAt:null, open:null};
+let state = {profile:"bike", days:5, drive:10, start:0, tab:"map", metric:"score",
+             data:null, raw:null, foehnRaw:null, fromCache:false, fetchedAt:null,
+             open:null, sel:null, view:null, dataPlace:null, dataDay:0};
+let packDone = new Set();
+let lastView = null;
 
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const fmt = n => n==null||Number.isNaN(n) ? "–" : Math.round(n);
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const DAYS = ["ma","di","wo","do","vr","za","zo"];
+const dow = date => (new Date(date+"T12:00").getDay()+6)%7;
+const dm  = date => date.slice(8,10) + "-" + date.slice(5,7);
+const COUNTRY = {AT:"Oostenrijk", IT:"Italië", CH:"Zwitserland", FR:"Frankrijk", SI:"Slovenië"};
+const driveTxt = p => p.drive===0 ? "basis" : p.drive+" u rijden";
 
-/* ---------- score ---------- */
-function dayScore(d, w){
-  const dry   = clamp(100 - d.rain*13, 0, 100);
-  const prob  = clamp(100 - (d.prob ?? 40), 0, 100);
-  const sun   = clamp((d.sun/Math.max(d.daylight,1))*115, 0, 100);
-  const wind  = clamp(100 - Math.max(0, d.wind-14)*3.2, 0, 100);
-  const temp  = clamp(100 - Math.abs(d.tmax-21)*6.5, 0, 100);
-  // vriespunt onder 2600 m = sneeuw op de hoge routes
-  const snow  = clamp((d.frz-1900)/9, 0, 100);
-  return dry*w.dry + prob*w.prob + sun*w.sun + wind*w.wind + temp*w.temp + snow*w.snow;
+/* ==================================================================
+   2. Score
+================================================================== */
+function dayParts(d){
+  return {
+    dry:  clamp(100 - d.rain*13, 0, 100),
+    prob: clamp(100 - (d.prob ?? 40), 0, 100),
+    sun:  clamp((d.sun/Math.max(d.daylight,1))*115, 0, 100),
+    wind: clamp(100 - Math.max(0, d.wind-14)*3.2, 0, 100),
+    temp: clamp(100 - Math.abs(d.tmax-21)*6.5, 0, 100),
+    // vriespunt onder 2600 m = sneeuw op de hoge routes
+    snow: clamp((d.frz-1900)/9, 0, 100)
+  };
 }
+const weigh = (parts, w) => PARTS.reduce((a,p)=>a + parts[p.k]*w[p.k], 0);
 
 const darkMode = () => window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 function scoreColor(s){
   // continue schaal nat → droog, zoals een kaartlegenda
   const t = clamp(s,0,100)/100;
-  const wet = darkMode() ? [44,104,130] : [46,126,160];
-  const dryc = [224,116,47];
+  const wet = darkMode() ? [48,104,124] : [62,143,168];
+  const dryc = darkMode() ? [232,154,74] : [224,138,51];
   const c = wet.map((v,i)=>Math.round(v+(dryc[i]-v)*t));
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 }
 
-/* ---------- data ---------- */
+// matrix-metrieken: `good` vertaalt de waarde naar 0-100 zodat de kleurschaal klopt
+const METRICS = {
+  score:{label:"score",     val:d=>d.s,        txt:v=>fmt(v),          good:v=>v},
+  rain: {label:"mm",        val:d=>d.rain,     txt:v=>v.toFixed(1),    good:v=>clamp(100-v*13,0,100)},
+  sun:  {label:"zonuren",   val:d=>d.sun/3600, txt:v=>v.toFixed(1),    good:v=>clamp(v*9,0,100)},
+  tmax: {label:"°C max",    val:d=>d.tmax,     txt:v=>fmt(v),          good:v=>clamp(100-Math.abs(v-21)*6.5,0,100)},
+  wind: {label:"km/u",      val:d=>d.wind,     txt:v=>fmt(v),          good:v=>clamp(100-Math.max(0,v-14)*3.2,0,100)},
+  frz:  {label:"0 °C in m", val:d=>d.frz,      txt:v=>fmt(v),          good:v=>clamp((v-1900)/9,0,100)}
+};
+
+/* ==================================================================
+   3. Data
+================================================================== */
+const LATS = REGIONS.map(p=>p.lat).join(",");
+const LONS = REGIONS.map(p=>p.lon).join(",");
+const URLS = {
+  data: "https://api.open-meteo.com/v1/forecast"
+    + `?latitude=${LATS}&longitude=${LONS}`
+    + "&daily=precipitation_sum,precipitation_probability_max,sunshine_duration,daylight_duration,"
+    + "temperature_2m_max,temperature_2m_min,wind_speed_10m_max,weather_code"
+    + "&hourly=freezing_level_height"
+    + "&timezone=Europe%2FBerlin&forecast_days=10",
+  // Innsbruck (574 m) en Bolzano (262 m)
+  foehn: "https://api.open-meteo.com/v1/forecast"
+    + "?latitude=47.267,46.498&longitude=11.393,11.354"
+    + "&hourly=pressure_msl&timezone=Europe%2FBerlin&forecast_days=10"
+};
+
 async function getJSON(url, tries = 3){
   for(let attempt = 1; ; attempt++){
     try{
@@ -315,21 +774,7 @@ async function getJSON(url, tries = 3){
 }
 
 async function load(){
-  const lats = PLACES.map(p=>p.lat).join(",");
-  const lons = PLACES.map(p=>p.lon).join(",");
-  const url = "https://api.open-meteo.com/v1/forecast"
-    + `?latitude=${lats}&longitude=${lons}`
-    + "&daily=precipitation_sum,precipitation_probability_max,sunshine_duration,daylight_duration,"
-    + "temperature_2m_max,wind_speed_10m_max,weather_code"
-    + "&hourly=freezing_level_height"
-    + "&timezone=Europe%2FBerlin&forecast_days=10";
-
-  // Innsbruck (574 m) en Bolzano (262 m)
-  const foehnUrl = "https://api.open-meteo.com/v1/forecast"
-    + "?latitude=47.267,46.498&longitude=11.393,11.354"
-    + "&hourly=pressure_msl&timezone=Europe%2FBerlin&forecast_days=10";
-
-  const [raw, foehnRaw] = await Promise.all([getJSON(url), getJSON(foehnUrl)]);
+  const [raw, foehnRaw] = await Promise.all([getJSON(URLS.data), getJSON(URLS.foehn)]);
   const arr  = Array.isArray(raw) ? raw : [raw];
   const fArr = Array.isArray(foehnRaw) ? foehnRaw : [foehnRaw];
 
@@ -350,10 +795,11 @@ async function load(){
       sun:  D.sunshine_duration[k] ?? 0,
       daylight: D.daylight_duration[k] ?? 45000,
       tmax: D.temperature_2m_max[k] ?? 15,
+      tmin: (D.temperature_2m_min || [])[k] ?? null,
       wind: D.wind_speed_10m_max[k] ?? 0,
       frz:  frzByDate[date] ?? 3500
     }));
-    return {...PLACES[i], days};
+    return {...REGIONS[i], days};
   });
 
   // föhn: dagelijks gemiddeld drukverschil noord − zuid
@@ -368,38 +814,519 @@ async function load(){
     .sort((a,b)=>a[0] < b[0] ? -1 : 1)
     .map(([date,v])=>({date, diff: v.reduce((x,y)=>x+y,0)/v.length}));
 
-  return {places, foehn};
+  return {places, foehn, raw: arr, foehnRaw: fArr};
 }
 
 function readCache(){
   try{
     const hit = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
     if(!hit || Date.now() - hit.t > CACHE_TTL) return null;
-    if(hit.places !== PLACES.length) return null;   // lijst gewijzigd → opnieuw ophalen
+    if(hit.places !== REGIONS.length) return null;   // lijst gewijzigd → opnieuw ophalen
     return hit;
   }catch{ return null; }
 }
 function writeCache(data){
-  try{ sessionStorage.setItem(CACHE_KEY, JSON.stringify({t:Date.now(), places:PLACES.length, data})); }catch{}
+  try{ sessionStorage.setItem(CACHE_KEY, JSON.stringify({t:Date.now(), places:REGIONS.length, data})); }catch{}
+}
+function loadPack(){
+  try{ packDone = new Set(JSON.parse(localStorage.getItem(PACK_KEY) || "[]")); }catch{ packDone = new Set(); }
+}
+function savePack(){
+  try{ localStorage.setItem(PACK_KEY, JSON.stringify([...packDone])); }catch{}
 }
 
-/* ---------- deelbare URL ---------- */
+/* ==================================================================
+   4. Deelbare URL
+================================================================== */
 function readUrlState(){
   const q = new URLSearchParams(location.hash.replace(/^#/, ""));
   if(PROFILES.includes(q.get("p"))) state.profile = q.get("p");
   const d = +q.get("d"); if(d >= 2 && d <= 10) state.days = Math.round(d);
-  const r = +q.get("r"); if(r >= 1 && r <= 9) state.drive = Math.round(r);
+  const r = +q.get("r"); if(r >= 1 && r <= 10) state.drive = Math.round(r);
+  const s = +q.get("s"); if(s >= 0 && s <= 8) state.start = Math.round(s);
+  if(TABS.includes(q.get("t"))) state.tab = q.get("t");
+  if(METRICS[q.get("m")]) state.metric = q.get("m");
+  if(q.get("g") && REGIONS.some(r=>r.n === q.get("g"))) state.sel = q.get("g");
 }
 function writeUrlState(){
-  const q = new URLSearchParams({p:state.profile, d:state.days, r:state.drive});
+  const q = new URLSearchParams({p:state.profile, d:state.days, r:state.drive, s:state.start,
+                                 m:state.metric, t:state.tab});
+  if(state.sel) q.set("g", state.sel);
   history.replaceState(null, "", "#" + q);
 }
 
-/* ---------- render ---------- */
-function renderFoehn(n){
-  const win = state.data.foehn.slice(0, n);
-  if(!win.length){ $("verdict").textContent = "Geen drukdata beschikbaar."; return; }
-  const avg = win.reduce((a,b)=>a+b.diff,0)/win.length;
+/* ==================================================================
+   5. Afleiden: scores, vensters, kpi's
+================================================================== */
+function bestWindow(per, k){
+  // beste aaneengesloten venster van k dagen
+  if(per.length < k) k = per.length;
+  let best = {i:0, avg:-1};
+  for(let i=0; i+k<=per.length; i++){
+    const avg = per.slice(i,i+k).reduce((a,b)=>a+b.s,0)/k;
+    if(avg > best.avg) best = {i, avg};
+  }
+  return {...best, k, from:per[best.i].date, to:per[best.i+k-1].date};
+}
+
+function derive(){
+  const {places, foehn} = state.data;
+  const w = WEIGHTS[state.profile];
+  const total = places[0].days.length;
+  const start = clamp(state.start, 0, Math.max(0, total-2));
+  const n = Math.min(state.days, total - start);
+  const win = Math.min(3, n);
+
+  const all = places
+    .map(p=>{
+      const per = p.days.slice(start, start+n).map(d=>{
+        const parts = dayParts(d);
+        return {...d, parts, s: weigh(parts, w)};
+      });
+      const avgParts = {};
+      PARTS.forEach(x => avgParts[x.k] = per.reduce((a,b)=>a+b.parts[x.k],0)/per.length);
+      return {
+        ...p, per, avgParts,
+        total: per.reduce((a,b)=>a+b.s,0)/per.length,
+        rainSum: per.reduce((a,b)=>a+b.rain,0),
+        dryDays: per.filter(d=>d.rain < 1).length,
+        sunAvg: per.reduce((a,b)=>a+b.sun,0)/per.length/3600,
+        minFrz: Math.min(...per.map(d=>d.frz)),
+        maxWind: Math.max(...per.map(d=>d.wind)),
+        maxTemp: Math.max(...per.map(d=>d.tmax)),
+        minTemp: Math.min(...per.map(d=>d.tmax)),
+        maxRain: Math.max(...per.map(d=>d.rain)),
+        window: bestWindow(per, win),
+        far: p.drive > state.drive
+      };
+    });
+
+  const scored = all.filter(p=>!p.far).sort((a,b)=>b.total-a.total);
+  scored.forEach((p,i)=>{ p.rank = i+1; });
+
+  const fwin = foehn.slice(start, start+n);
+  const foehnAvg = fwin.length ? fwin.reduce((a,b)=>a+b.diff,0)/fwin.length : null;
+
+  const dates = places[0].days.slice(start, start+n).map(d=>d.date);
+  return {all, scored, n, start, total, win, dates, foehn: fwin, foehnAvg};
+}
+
+/* de regio waar de paklijst en de kaartkaart op slaan */
+function focusOf(v){
+  if(!v.scored.length) return null;
+  return v.scored.find(p=>p.n === state.sel) || v.scored[0];
+}
+function selectedRegion(v){
+  return v.all.find(p=>p.n === state.sel) || v.scored[0] || null;
+}
+
+const foehnLabel = a =>
+  a == null ? "geen data" : a > 2.5 ? "zuidkant droog" : a < -2.5 ? "noordkant droog" : "geen sturing";
+
+/* ==================================================================
+   6. Render
+================================================================== */
+/* ------------------------------------------------------------------
+   Kaartgeometrie. De Alpenboog wordt als raster van vierkante cellen
+   opgedeeld; elke cel gaat naar de dichtstbijzijnde regio (Voronoi).
+   Eén keer berekend, daarna verandert alleen de kleur.
+------------------------------------------------------------------- */
+const prj = (lon,lat) => [ (lon-GEO.lon0)*GEO.k*GEO.px, (GEO.lat1-lat)*GEO.px ];
+
+function inArc(lon,lat){
+  let inside = false;
+  for(let i=0, j=ARC.length-1; i<ARC.length; j=i++){
+    const [xi,yi]=ARC[i], [xj,yj]=ARC[j];
+    if((yi>lat) !== (yj>lat) && lon < (xj-xi)*(lat-yi)/(yj-yi)+xi) inside = !inside;
+  }
+  return inside;
+}
+
+const MAP = (()=>{
+  const latStep = GEO.latStep, lonStep = latStep/GEO.k;
+  const cols = Math.ceil((GEO.lon1-GEO.lon0)/lonStep);
+  const rows = Math.ceil((GEO.lat1-GEO.lat0)/latStep);
+  const cw = lonStep*GEO.k*GEO.px, ch = latStep*GEO.px;      // even breed als hoog
+  const owner = new Int16Array(cols*rows).fill(-1);
+  const cen = REGIONS.map(r=>prj(r.lon,r.lat));
+  const f1 = v => +v.toFixed(1);
+
+  for(let ry=0; ry<rows; ry++){
+    const lat = GEO.lat1 - (ry+0.5)*latStep;
+    for(let cx=0; cx<cols; cx++){
+      const lon = GEO.lon0 + (cx+0.5)*lonStep;
+      if(!inArc(lon,lat)) continue;
+      const X=(lon-GEO.lon0)*GEO.k*GEO.px, Y=(GEO.lat1-lat)*GEO.px;
+      let best=-1, bd=Infinity;
+      for(let i=0;i<cen.length;i++){
+        const dx=cen[i][0]-X, dy=cen[i][1]-Y, d=dx*dx+dy*dy;
+        if(d<bd){ bd=d; best=i; }
+      }
+      owner[ry*cols+cx]=best;
+    }
+  }
+  const own = (c,r) => (c<0||r<0||c>=cols||r>=rows) ? -1 : owner[r*cols+c];
+
+  // horizontale runs: scheelt duizenden losse rects
+  const runs=[];
+  for(let ry=0; ry<rows; ry++){
+    let cx=0;
+    while(cx<cols){
+      const o=own(cx,ry);
+      if(o<0){ cx++; continue; }
+      let e=cx; while(own(e+1,ry)===o) e++;
+      runs.push({r:o, x:f1(cx*cw), y:f1(ry*ch), w:f1((e-cx+1)*cw+0.35), h:f1(ch+0.35)});
+      cx=e+1;
+    }
+  }
+
+  // omtrek van een cellenverzameling, samengevoegd tot lange lijnstukken
+  function edgePath(test){
+    const V=new Set(), H=new Set();
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      if(!test(c,r)) continue;
+      if(!test(c-1,r)) V.add(c+":"+r);
+      if(!test(c+1,r)) V.add((c+1)+":"+r);
+      if(!test(c,r-1)) H.add(c+":"+r);
+      if(!test(c,r+1)) H.add(c+":"+(r+1));
+    }
+    let d="";
+    for(const key of V){
+      const [c,r]=key.split(":").map(Number);
+      if(V.has(c+":"+(r-1))) continue;
+      let r2=r; while(V.has(c+":"+(r2+1))) r2++;
+      d += "M"+f1(c*cw)+" "+f1(r*ch)+"V"+f1((r2+1)*ch);
+    }
+    for(const key of H){
+      const [c,r]=key.split(":").map(Number);
+      if(H.has((c-1)+":"+r)) continue;
+      let c2=c; while(H.has((c2+1)+":"+r)) c2++;
+      d += "M"+f1(c*cw)+" "+f1(r*ch)+"H"+f1((c2+1)*cw);
+    }
+    return d;
+  }
+
+  const outlines = REGIONS.map((_,i)=>edgePath((c,r)=>own(c,r)===i));
+
+  // labelpositie = zwaartepunt van de cellen van die regio
+  const acc = REGIONS.map(()=>({n:0,x:0,y:0}));
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const o=own(c,r); if(o<0) continue;
+    const a=acc[o]; a.n++; a.x+=(c+0.5)*cw; a.y+=(r+0.5)*ch;
+  }
+  const labels = acc.map((a,i)=> a.n>=16 ? {i, x:f1(a.x/a.n), y:f1(a.y/a.n), cells:a.n} : null).filter(Boolean);
+
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  runs.forEach(r=>{ x0=Math.min(x0,r.x); y0=Math.min(y0,r.y); x1=Math.max(x1,r.x+r.w); y1=Math.max(y1,r.y+r.h); });
+  const pad = 5;
+
+  return {
+    W:f1(cols*cw), H:f1(rows*ch), runs, outlines, labels,
+    viewBox: [f1(x0-pad), f1(y0-pad), f1(x1-x0+2*pad), f1(y1-y0+2*pad)].join(" "),
+    borders: outlines.join(""),
+    base: prj(11.859, 47.162).map(f1),
+    cells: acc.map(a=>a.n)
+  };
+})();
+
+const METRIC_NOTE = {
+  score:"de gewogen dagscore voor het gekozen profiel",
+  rain:"de neerslagsom per dag in millimeter",
+  sun:"het aantal zonuren per dag",
+  tmax:"de dagmaximumtemperatuur",
+  wind:"de hoogste windsnelheid van de dag",
+  frz:"de hoogte van het vriespunt — laag betekent sneeuw op de hoge routes"
+};
+
+function renderMap(v){
+  const M = METRICS[state.metric];
+  const by = {}; v.all.forEach(p=>by[p.n]=p);
+  const mean = p => p.per.reduce((a,d)=>a+M.val(d),0)/p.per.length;
+  const sel = selectedRegion(v);
+
+  const vals = REGIONS.map(rg=>{ const p=by[rg.n]; return p ? mean(p) : null; });
+  const fills = vals.map(x => x==null ? "#8a9aa0" : scoreColor(M.good(x)));
+
+  const rects = MAP.runs.map(r=>{
+    const p = by[REGIONS[r.r].n];
+    return `<rect class="c${p&&p.far?" far":""}" data-r="${r.r}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fills[r.r]}"/>`;
+  }).join("");
+
+  // labels plaatsen van groot naar klein; wat botst laten we weg
+  const taken = [{x0:MAP.base[0]-30, y0:MAP.base[1]-14, x1:MAP.base[0]+30, y1:MAP.base[1]+2}];
+  const fits = b => !taken.some(t => b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0);
+  const labels = [...MAP.labels].sort((a,b)=>b.cells-a.cells).map(L=>{
+    const rg = REGIONS[L.i], p = by[rg.n];
+    const txt = (rg.s || rg.n).toUpperCase();
+    const big = L.cells >= 40 && vals[L.i] != null;
+    const w = txt.length * 5.2, hh = big ? 21 : 10;
+    const box = {x0:L.x-w/2-1, y0:L.y-9, x1:L.x+w/2+1, y1:L.y-9+hh};
+    if(!fits(box)) return "";
+    taken.push(box);
+    const far = p && p.far ? " far" : "";
+    return `<text class="lb${far}" x="${L.x}" y="${L.y}">${esc(txt)}`
+      + (big ? `<tspan x="${L.x}" dy="10.5" style="font-size:10px;font-weight:600">${M.txt(vals[L.i])}</tspan>` : "")
+      + `</text>`;
+  }).join("");
+
+  const si = sel ? REGIONS.findIndex(r=>r.n===sel.n) : -1;
+  const ring = si >= 0 ? `<path class="selring" d="${MAP.outlines[si]}"/>` : "";
+  const bx = MAP.base[0], byy = MAP.base[1];
+
+  $("mapsvg").innerHTML =
+    `<svg viewBox="${MAP.viewBox}" role="img" aria-label="Kaart van de Alpen, regio's gekleurd naar ${esc(M.label)}">
+      <g>${rects}</g>
+      <path class="borders" d="${MAP.borders}"/>
+      ${ring}
+      <g>${labels}</g>
+      <g class="base">
+        <circle cx="${bx}" cy="${byy}" r="3.2"/>
+        <text x="${bx}" y="${(byy + 11).toFixed(1)}">MAYRHOFEN</text>
+      </g>
+    </svg>`;
+
+  const a = v.dates[0], b = v.dates[v.n-1];
+  $("mapsub").textContent =
+    `${REGIONS.length} regio's in de Alpenboog, gekleurd naar ${state.metric === "score" ? "de score voor " + PROFILE_LABEL[state.profile].toLowerCase() : M.label}, `
+    + `gemiddeld over ${v.n} dagen — ${DAYS[dow(a)]} ${dm(a)} t/m ${DAYS[dow(b)]} ${dm(b)}. `
+    + `Klik een regio om hem vast te zetten; de paklijst rekent daarna met die regio.`;
+  $("mapnote").innerHTML = `Kleur = ${esc(METRIC_NOTE[state.metric])}. Weggezakte regio's vallen buiten je rijtijd. `
+    + `De vlakken zijn schematisch — elke cel hoort bij het dichtstbijzijnde regiomiddelpunt, het is geen grenskaart.`;
+}
+
+function renderSelCard(v){
+  const el = $("selcard");
+  const p = selectedRegion(v);
+  if(!p){ el.innerHTML = ""; return; }
+  const wd = p.window;
+  const facts = [
+    ["Neerslag", p.rainSum.toFixed(1) + " mm"],
+    ["Droge dagen", p.dryDays + " van " + p.per.length],
+    ["Zon", p.sunAvg.toFixed(1) + " u/dag"],
+    ["Warmst", fmt(p.maxTemp) + " °C"],
+    ["Wind max", fmt(p.maxWind) + " km/u"],
+    ["Vriespunt", fmt(p.minFrz) + " m"]
+  ];
+  el.innerHTML = `
+    <div class="selcard">
+      <div class="top">
+        <div>
+          <h3>${esc(p.n)}</h3>
+          <p class="meta">${esc(p.r)}, ${esc(COUNTRY[p.c]||p.c)} · ${driveTxt(p)} · ${esc(p.side)}
+            ${p.far ? "· <strong>buiten je rijtijdfilter</strong>" : (p.rank ? "· nummer " + p.rank + " van " + v.scored.length : "")}</p>
+        </div>
+        <div style="text-align:right">
+          <div class="sc">${fmt(p.total)}</div>
+          <div class="scorelabel">score</div>
+        </div>
+      </div>
+      <div class="strip">${p.per.map(d=>
+        `<div class="cell" style="background:${scoreColor(d.s)}" title="${d.date}: score ${fmt(d.s)}, ${d.rain.toFixed(1)} mm"><span>${d.rain >= 9.5 ? fmt(d.rain) : d.rain.toFixed(1)}</span></div>`).join("")}</div>
+      <div class="striplabels">${p.per.map(d=>`<div class="${dow(d.date)>=5?"we":""}">${DAYS[dow(d.date)]}</div>`).join("")}</div>
+      <div class="facts">${facts.map(x=>`<div><div class="k">${x[0]}</div><div class="v">${x[1]}</div></div>`).join("")}</div>
+      <p class="whynote" style="margin-top:14px">Beste aaneengesloten venster: <strong>${DAYS[dow(wd.from)]} ${dm(wd.from)} – ${DAYS[dow(wd.to)]} ${dm(wd.to)}</strong> (score ${fmt(wd.avg)}).</p>
+      <div class="acts">
+        <button type="button" data-go="rank">Opbouw van de score</button>
+        <button type="button" data-go="pack">Paklijst hiervoor</button>
+        ${p.far ? `<button type="button" data-drive="${Math.ceil(p.drive)}">Rijtijd naar ${Math.ceil(p.drive)} u</button>` : ""}
+        ${state.sel===p.n ? `<button type="button" data-go="clear">Selectie loslaten</button>` : ""}
+      </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------------
+   Ruwe data: laten zien wat er binnenkomt en wat ermee gebeurt
+------------------------------------------------------------------- */
+const WMO = {0:"onbewolkt",1:"overwegend helder",2:"half bewolkt",3:"bewolkt",45:"mist",48:"aanvriezende mist",
+  51:"lichte motregen",53:"motregen",55:"dichte motregen",61:"lichte regen",63:"regen",65:"zware regen",
+  71:"lichte sneeuw",73:"sneeuw",75:"zware sneeuw",77:"korrelsneeuw",80:"lichte buien",81:"buien",82:"zware buien",
+  85:"sneeuwbuien",86:"zware sneeuwbuien",95:"onweer",96:"onweer met hagel",99:"zwaar onweer met hagel"};
+
+const PIPE = [
+  {k:"dry",  veld:"precipitation_sum",             eenheid:"mm",  raw:d=>d.rain.toFixed(1),
+   formule:"100 − mm × 13",                    note:"0 mm = 100, vanaf ~7,7 mm = 0"},
+  {k:"prob", veld:"precipitation_probability_max", eenheid:"%",   raw:d=>fmt(d.prob),
+   formule:"100 − kans",                       note:"ontbreekt de kans, dan rekenen we met 40 %"},
+  {k:"sun",  veld:"sunshine_duration / daylight_duration", eenheid:"s", raw:d=>`${(d.sun/3600).toFixed(1)} van ${(d.daylight/3600).toFixed(1)} u`,
+   formule:"zonfractie × 115",                 note:"vanaf 87 % zon is het vol"},
+  {k:"wind", veld:"wind_speed_10m_max",            eenheid:"km/u",raw:d=>fmt(d.wind),
+   formule:"100 − (wind − 14) × 3,2",          note:"tot 14 km/u geen aftrek, vanaf ~45 km/u nul"},
+  {k:"temp", veld:"temperature_2m_max",            eenheid:"°C",  raw:d=>fmt(d.tmax),
+   formule:"100 − |T − 21| × 6,5",             note:"21 °C is het optimum, ±15 °C is nul"},
+  {k:"snow", veld:"freezing_level_height (min/dag)",eenheid:"m",  raw:d=>fmt(d.frz),
+   formule:"(hoogte − 1900) ÷ 9",              note:"1900 m = 0, vanaf 2800 m = 100"}
+];
+
+function dataPlace(v){
+  return v.all.find(p=>p.n === state.dataPlace)
+      || (state.sel && v.all.find(p=>p.n === state.sel))
+      || v.scored[0] || v.all[0];
+}
+
+function renderData(v){
+  if(!state.raw) return;
+  const p = dataPlace(v);
+  const idx = REGIONS.findIndex(r=>r.n === p.n);
+  const o = state.raw[idx] || {};
+  const fresh = Date.now() - state.fetchedAt;
+  const gen = (state.raw.reduce((a,x)=>a+(x.generationtime_ms||0),0)
+             + state.foehnRaw.reduce((a,x)=>a+(x.generationtime_ms||0),0));
+  const days = state.data.places[0].days.length;
+  const punten = REGIONS.length*days*8 + REGIONS.length*days*24 + 2*days*24;
+
+  $("datacards").innerHTML = [
+    {k:"Bron", v:"Open-Meteo /v1/forecast",
+     n:`best-match model · ${days} dagen · tijdzone ${esc(o.timezone_abbreviation||"CEST")} · geen sleutel`},
+    {k:"Opgehaald", v:new Date(state.fetchedAt).toLocaleString("nl-NL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}),
+     n:`${fresh < 60000 ? "zojuist" : Math.round(fresh/60000) + " min geleden"} · ${state.fromCache ? "uit de sessie-cache" : "vers opgehaald"} · cache vervalt na 30 min`},
+    {k:"Omvang", v:`${punten.toLocaleString("nl-NL")} waarden`,
+     n:`${REGIONS.length} regio's × ${days} dagen × 8 dagvelden, plus ${REGIONS.length*days*24} uurwaarden vriespunt en ${2*days*24} uurwaarden druk · rekentijd server ${gen.toFixed(1)} ms`}
+  ].map(t=>`<div class="card"><div class="k">${esc(t.k)}</div><div class="v">${esc(t.v)}</div><div class="n">${t.n}</div></div>`).join("");
+
+  const showUrl = (u) => esc(u).replace(/&amp;/g, "<i>&amp;</i>").replace(/(daily|hourly|latitude|longitude|timezone|forecast_days)=/g, "<b>$1</b>=");
+  $("reqs").innerHTML = [
+    ["Verzoek 1 — weer voor alle regio's", URLS.data, `${REGIONS.length} coördinatenparen in één request; het antwoord is een array met één object per regio, in dezelfde volgorde.`],
+    ["Verzoek 2 — luchtdruk voor de föhnmeter", URLS.foehn, "Twee stations: Innsbruck (574 m) en Bolzano (262 m), alleen uurlijkse druk op zeeniveau."]
+  ].map(([t,u,n])=>`
+    <div class="req">
+      <div class="t">${esc(t)}</div>
+      <code>${showUrl(u)}</code>
+      <p class="n" style="font-family:var(--body);font-size:12.5px;color:var(--ink3);margin:9px 0 0">${esc(n)}</p>
+      <div class="acts">
+        <a href="${esc(u)}" target="_blank" rel="noopener">Open de JSON</a>
+        <button type="button" data-copy="${esc(u)}">Kopieer URL</button>
+      </div>
+    </div>`).join("");
+
+  // ruwe dagwaarden
+  $("dataplace").innerHTML = v.all.map(x=>
+    `<option value="${esc(x.n)}"${x.n===p.n?" selected":""}>${esc(x.n)} — ${esc(x.r)}${x.far?" (buiten rijtijd)":""}</option>`).join("");
+  const D = o.daily || {};
+  $("rawtable").innerHTML = `
+    <thead><tr>
+      <th>time</th><th>precipitation<br>_sum</th><th>precipitation<br>_probability_max</th>
+      <th>sunshine<br>_duration</th><th>daylight<br>_duration</th><th>temperature<br>_2m_max</th>
+      <th>temperature<br>_2m_min</th><th>wind_speed<br>_10m_max</th><th>weather<br>_code</th><th>freezing_level<br>(min/dag)</th>
+    </tr></thead>
+    <tbody>${(D.time||[]).map((t,k)=>{
+      const day = state.data.places[idx].days[k];
+      const inWin = k >= v.start && k < v.start + v.n;
+      return `<tr style="${inWin?"":"opacity:.42"}">
+        <td>${t}</td>
+        <td>${(D.precipitation_sum||[])[k] ?? "–"}</td>
+        <td>${(D.precipitation_probability_max||[])[k] ?? "–"}</td>
+        <td>${(D.sunshine_duration||[])[k] ?? "–"}</td>
+        <td>${(D.daylight_duration||[])[k] ?? "–"}</td>
+        <td>${(D.temperature_2m_max||[])[k] ?? "–"}</td>
+        <td>${(D.temperature_2m_min||[])[k] ?? "–"}</td>
+        <td>${(D.wind_speed_10m_max||[])[k] ?? "–"}</td>
+        <td class="txt">${(D.weather_code||[])[k] ?? "–"} ${WMO[(D.weather_code||[])[k]] ? "· " + WMO[(D.weather_code||[])[k]] : ""}</td>
+        <td>${fmt(day.frz)}</td>
+      </tr>`;
+    }).join("")}</tbody>`;
+  $("rawmeta").innerHTML =
+    `Gevraagd om <strong>${p.lat.toFixed(3)} N, ${p.lon.toFixed(3)} O</strong>; het model antwoordt voor de rastercel op `
+    + `<strong>${(o.latitude ?? p.lat).toFixed(3)} N, ${(o.longitude ?? p.lon).toFixed(3)} O</strong> op `
+    + `<strong>${fmt(o.elevation)} m</strong> hoogte. Die celhoogte is een gemiddelde over enkele kilometers — in een diep dal `
+    + `ligt de echte bodem er honderden meters onder, en dat verklaart het grootste deel van het temperatuurverschil met de dalbodem. `
+    + `Grijze rijen vallen buiten je gekozen venster.`;
+
+  // rekensom voor één dag
+  const maxDay = state.data.places[idx].days.length - 1;
+  state.dataDay = clamp(state.dataDay, 0, maxDay);
+  $("dataday").innerHTML = state.data.places[idx].days.map((d,k)=>
+    `<option value="${k}"${k===state.dataDay?" selected":""}>${DAYS[dow(d.date)]} ${dm(d.date)}</option>`).join("");
+  const d0 = state.data.places[idx].days[state.dataDay];
+  const parts = dayParts(d0), w = WEIGHTS[state.profile];
+  const totaal = weigh(parts, w);
+  $("pipetable").innerHTML = `
+    <thead><tr>
+      <th>onderdeel</th><th>API-veld</th><th>ruwe waarde</th><th>normalisatie</th>
+      <th>subscore</th><th>weging ${esc(PROFILE_LABEL[state.profile].toLowerCase())}</th><th>bijdrage</th>
+    </tr></thead>
+    <tbody>${PIPE.map(row=>{
+      const P = PARTS.find(x=>x.k===row.k);
+      return `<tr>
+        <td><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:${P.c};margin-right:6px"></span>${P.label}</td>
+        <td class="txt">${esc(row.veld)}</td>
+        <td>${row.raw(d0)} ${esc(row.eenheid)}</td>
+        <td class="form">${esc(row.formule)}<br><span style="opacity:.6">${esc(row.note)}</span></td>
+        <td>${parts[row.k].toFixed(1)}</td>
+        <td>${w[row.k].toFixed(2)}</td>
+        <td>${(parts[row.k]*w[row.k]).toFixed(1)}</td>
+      </tr>`;
+    }).join("")}</tbody>
+    <tfoot><tr><td colspan="6">Dagscore voor ${esc(p.n)} op ${DAYS[dow(d0.date)]} ${dm(d0.date)}</td><td>${totaal.toFixed(1)}</td></tr></tfoot>`;
+
+  // föhn ruw
+  const N = state.foehnRaw[0].hourly, S = state.foehnRaw[1].hourly;
+  const agg = {};
+  N.time.forEach((t,i)=>{
+    const day = t.slice(0,10);
+    (agg[day] ||= {n:[], s:[]});
+    if(N.pressure_msl[i] != null) agg[day].n.push(N.pressure_msl[i]);
+    if(S.pressure_msl[i] != null) agg[day].s.push(S.pressure_msl[i]);
+  });
+  const avg = a => a.reduce((x,y)=>x+y,0)/a.length;
+  $("foehntable").innerHTML = `
+    <thead><tr><th>dag</th><th>uren</th><th>Innsbruck hPa</th><th>Bolzano hPa</th><th>verschil</th><th>duiding</th></tr></thead>
+    <tbody>${Object.entries(agg).map(([day,a])=>{
+      const diff = avg(a.n) - avg(a.s);
+      const inWin = v.dates.includes(day);
+      return `<tr style="${inWin?"":"opacity:.42"}">
+        <td>${DAYS[dow(day)]} ${dm(day)}</td><td>${a.n.length}</td>
+        <td>${avg(a.n).toFixed(1)}</td><td>${avg(a.s).toFixed(1)}</td>
+        <td style="color:${scoreColor(clamp(50+diff*5.5,0,100))};font-weight:600">${diff>=0?"+":""}${diff.toFixed(1)}</td>
+        <td class="txt">${diff > 2.5 ? "nordföhn — zuidkant in de luwte" : diff < -2.5 ? "südföhn — noordkant in de luwte" : "vlak drukveld"}</td>
+      </tr>`;
+    }).join("")}</tbody>`;
+
+  $("caveats").innerHTML = [
+    `<b>Het drukverschil heeft een vaste bias.</b> Innsbruck ligt op 574 m, Bolzano op 262 m, en beide waarden zijn herleid naar zeeniveau. De absolute uitslag klopt daardoor niet als natuurkunde; het teken en de verandering van dag tot dag zijn wél het signaal.`,
+    `<b>Best-match is niet één model.</b> Open-Meteo kiest per rastercel het best passende model (ICON-D2, ICON-EU, GFS …). Twee naburige regio's kunnen dus uit verschillende modellen komen, met een sprong op de grens.`,
+    `<b>De rastercel is grover dan een dal.</b> Enkele kilometers per cel, en de modelhoogte is een gemiddelde. In de Alpen betekent dat systematisch te koele dagmaxima op dalbodems en te milde nachten op de toppen.`,
+    `<b>Het vriespunt is de laagste uurwaarde van de dag.</b> Dat is bewust conservatief: het gaat om de vraag of er 's ochtends sneeuw op de hoge route ligt, niet om het daggemiddelde.`,
+    `<b>Zonneschijn is model, geen meting.</b> <code>sunshine_duration</code> is afgeleid uit de voorspelde straling en overschat in de bergen makkelijk door schaduwwerking van de kammen.`,
+    `<b>Neerslagkans is het dagmaximum</b>, niet het gemiddelde. Eén onweersuur kan de hele dag op 80 % zetten.`,
+    `<b>De curves knippen af.</b> Boven ~7,7 mm scoort elke dag even nat, boven 45 km/u even winderig. Wie het verschil tussen fors en extreem wil zien, moet naar de dagtabel kijken, niet naar de score.`,
+    `<b>Een gemiddelde verbergt een rotdag.</b> Vijf redelijke dagen en vijf natte geven dezelfde score als tien matige. Daarom staat de dag-voor-dag balk overal naast het cijfer.`,
+    `<b>Voorbij dag vijf wordt het gokken.</b> De API geeft tien dagen, maar de betrouwbaarheid zakt daarna snel. Gebruik de verre dagen om een richting te kiezen, niet om een besluit op te bouwen.`,
+    `<b>De regiokaart is schematisch.</b> Elk vlak is de verzameling rastercellen die het dichtst bij het middelpunt van die regio ligt — één meetpunt per regio, geen interpolatie en zeker geen grens.`
+  ].map(x=>`<li>${x}</li>`).join("");
+}
+
+function renderKpis(v){
+  const el = $("kpis");
+  if(!v.scored.length){ el.innerHTML = ""; return; }
+  const top = v.scored[0];
+  const runner = v.scored[1];
+  const driest = [...v.scored].sort((a,b)=>a.rainSum-b.rainSum)[0];
+  const bestWin = [...v.scored].sort((a,b)=>b.window.avg-a.window.avg)[0];
+  const wd = bestWin.window;
+  const gap = runner ? top.total - runner.total : null;
+
+  const tiles = [
+    {k:"Beste keuze", v:top.n,
+     n:`score ${fmt(top.total)} · ${driveTxt(top)}` + (gap!=null ? ` · ${gap>=1?"+"+fmt(gap):"nek aan nek"} t.o.v. ${runner.n}` : "")},
+    {k:`Beste ${wd.k} dagen`, v:bestWin.n,
+     n:`${DAYS[dow(wd.from)]} ${dm(wd.from)} – ${DAYS[dow(wd.to)]} ${dm(wd.to)} · score ${fmt(wd.avg)}`},
+    {k:"Droogst", v:driest.n,
+     n:`${driest.rainSum.toFixed(1)} mm over ${v.n} dagen · ${driest.dryDays} van ${v.n} dagen droog`},
+    {k:"Föhn", v:v.foehnAvg==null ? "—" : (v.foehnAvg>=0?"+":"") + v.foehnAvg.toFixed(1) + " hPa",
+     n:foehnLabel(v.foehnAvg) + (v.foehnAvg==null ? "" : ` · gemiddeld over ${v.n} dagen`)}
+  ];
+  el.innerHTML = tiles.map(t=>
+    `<div class="kpi"><div class="k">${esc(t.k)}</div><div class="v" title="${esc(t.v)}">${esc(t.v)}</div><div class="n">${esc(t.n)}</div></div>`
+  ).join("");
+}
+
+function renderFoehn(v){
+  if(v.foehnAvg == null){
+    $("verdict").textContent = "Geen drukdata beschikbaar.";
+    $("foehnstrip").innerHTML = "";
+    return;
+  }
+  const avg = v.foehnAvg;
   $("needle").style.left = clamp(50 + avg*5.5, 3, 97) + "%";   // ±9 hPa vult de schaal
 
   const signed = (avg >= 0 ? "+" : "") + avg.toFixed(1);
@@ -408,55 +1335,79 @@ function renderFoehn(n){
   else if(avg < -2.5) verdict = `<strong>Südföhn-signaal (${signed} hPa gemiddeld).</strong> Aanvoer vanuit het zuiden: stuwingsregen aan de zuidrand, terwijl Tirol juist droog en warm wordt. Blijf dan noordelijk.`;
   else                verdict = `<strong>Vlak drukveld (${signed} hPa).</strong> Geen duidelijke föhnsturing. Beide kanten hebben ongeveer gelijke kansen — de lokale scores hieronder wegen dan zwaarder dan de grote lijn.`;
   $("verdict").innerHTML = verdict;
+
+  // dag-voor-dag: waar zit het signaal, en draait het?
+  $("foehnstrip").innerHTML = v.foehn.map(f=>{
+    const t = clamp(50 + f.diff*5.5, 0, 100);
+    return `<div style="background:${scoreColor(t)}" title="${f.date}: ${f.diff>=0?"+":""}${f.diff.toFixed(1)} hPa">
+      ${DAYS[dow(f.date)]} ${f.diff>=0?"+":""}${f.diff.toFixed(1)}</div>`;
+  }).join("");
 }
 
-function render(){
-  const {places} = state.data;
+function whyBlock(p){
   const w = WEIGHTS[state.profile];
-  const n = Math.min(state.days, places[0].days.length);
+  const contrib = PARTS.map(x=>({...x, val: p.avgParts[x.k]*w[x.k]})).filter(x=>w[x.k] > 0);
+  const bars = contrib.map(x=>`<i style="width:${x.val}%;background:${x.c}" title="${x.label}: ${x.val.toFixed(1)} van ${fmt(p.total)}"></i>`).join("");
+  const leg = contrib.map(x=>`<span><b style="background:${x.c}"></b>${x.label} ${x.val.toFixed(1)}</span>`).join("");
+  const strong = [...contrib].sort((a,b)=>b.val-a.val)[0];
+  const weakest = [...contrib].sort((a,b)=>(a.val/Math.max(w[a.k],.001))-(b.val/Math.max(w[b.k],.001)))[0];
+  const wd = p.window;
+  return `
+    <div class="why">
+      <div class="whytitle">Opbouw van de score — ${fmt(p.total)} van 100</div>
+      <div class="whybar">${bars}</div>
+      <div class="whylegend">${leg}</div>
+      <p class="whynote">
+        Trekker is <strong>${strong.label}</strong>; zwakste schakel is <strong>${weakest.label}</strong>.
+        Beste aaneengesloten venster: <strong>${DAYS[dow(wd.from)]} ${dm(wd.from)} – ${DAYS[dow(wd.to)]} ${dm(wd.to)}</strong>
+        (score ${fmt(wd.avg)}). ${p.dryDays} van ${p.per.length} dagen onder 1 mm,
+        ${p.rainSum.toFixed(1)} mm totaal, gemiddeld ${p.sunAvg.toFixed(1)} zonuren,
+        vriespunt zakt tot ${fmt(p.minFrz)} m.
+      </p>
+    </div>`;
+}
 
-  renderFoehn(n);
-
-  const scored = places
-    .filter(p => p.drive <= state.drive)
-    .map(p=>{
-      const per = p.days.slice(0,n).map(d=>({...d, s:dayScore(d,w)}));
-      return {...p, per, total: per.reduce((a,b)=>a+b.s,0)/per.length};
-    })
-    .sort((a,b)=>b.total-a.total);
-
-  const labels = ["ma","di","wo","do","vr","za","zo"];
+function renderRank(v){
   const list = $("list");
   list.innerHTML = "";
 
-  if(!scored.length){
+  if(!v.scored.length){
     list.innerHTML = `<p class="empty">Geen bestemmingen binnen ${state.drive} u rijden. Schuif de rijtijd omhoog.</p>`;
   }
 
-  scored.forEach((p,i)=>{
+  const top = v.scored[0];
+  v.scored.forEach((p,i)=>{
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "row";
     btn.setAttribute("aria-expanded", state.open===p.n ? "true" : "false");
+
     const strip = p.per.map(d=>
-      `<div class="cell" style="background:${scoreColor(d.s)}" title="${d.date}: score ${fmt(d.s)}, ${d.rain.toFixed(1)} mm"><span>${fmt(d.rain)}</span></div>`
+      `<div class="cell" style="background:${scoreColor(d.s)}" title="${d.date}: score ${fmt(d.s)}, ${d.rain.toFixed(1)} mm, ${(d.sun/3600).toFixed(1)} zonuren"><span>${d.rain >= 9.5 ? fmt(d.rain) : d.rain.toFixed(1)}</span></div>`
     ).join("");
     const stripLabels = p.per.map(d=>{
-      const dt = new Date(d.date+"T12:00");
-      return `<div>${labels[(dt.getDay()+6)%7]}</div>`;
+      const i = dow(d.date);
+      return `<div class="${i>=5?"we":""}">${DAYS[i]}</div>`;
     }).join("");
+
+    const tags = [];
+    if(i === 0) tags.push('<span class="tag best">beste keuze</span>');
+    if(p.dryDays === p.per.length) tags.push('<span class="tag">alles droog</span>');
+    else if(p.dryDays >= p.per.length - 1) tags.push(`<span class="tag">${p.dryDays}/${p.per.length} droog</span>`);
+    if(p.minFrz < 2600) tags.push(`<span class="tag">sneeuw &lt; ${fmt(p.minFrz)} m</span>`);
 
     btn.innerHTML = `
       <div class="rank">${String(i+1).padStart(2,"0")}</div>
       <div>
-        <div class="name">${p.n}</div>
-        <div class="meta">${p.r} · ${p.drive===0?"basis":p.drive+" u rijden"} · ${p.side}</div>
+        <div class="name">${esc(p.n)}${tags.join("")}</div>
+        <div class="meta">${esc(p.r)}, ${esc(COUNTRY[p.c]||p.c)} · ${driveTxt(p)} · ${esc(p.side)} · ${p.rainSum.toFixed(1)} mm · ${p.sunAvg.toFixed(1)} u zon/dag</div>
         <div class="strip">${strip}</div>
         <div class="striplabels">${stripLabels}</div>
       </div>
       <div>
         <div class="score">${fmt(p.total)}</div>
         <div class="scorelabel">score</div>
+        <div class="delta">${i===0 ? "&nbsp;" : "−" + (top.total-p.total).toFixed(1)}</div>
       </div>`;
     btn.addEventListener("click", ()=>{
       state.open = state.open===p.n ? null : p.n;
@@ -467,15 +1418,15 @@ function render(){
     if(state.open===p.n){
       const det = document.createElement("div");
       det.className = "detail";
-      det.innerHTML = `
-        <table>
+      det.innerHTML = whyBlock(p) + `
+        <div class="scroller"><table>
           <thead><tr>
-            <th>dag</th><th>mm</th><th>kans</th><th>zon</th><th>max</th><th>wind</th><th>0°C</th><th>score</th>
+            <th>dag</th><th>mm</th><th>kans</th><th>zon</th><th>max</th><th>wind</th><th>0 °C</th><th>score</th>
           </tr></thead>
           <tbody>
           ${p.per.map(d=>`
             <tr>
-              <td>${d.date.slice(8,10)}-${d.date.slice(5,7)}</td>
+              <td>${DAYS[dow(d.date)]} ${dm(d.date)}</td>
               <td>${d.rain.toFixed(1)}</td>
               <td>${fmt(d.prob)}%</td>
               <td>${(d.sun/3600).toFixed(1)}u</td>
@@ -485,27 +1436,225 @@ function render(){
               <td>${fmt(d.s)}</td>
             </tr>`).join("")}
           </tbody>
-        </table>`;
+        </table></div>`;
       list.appendChild(det);
     }
   });
 
-  const dates = places[0].days;
-  const first = dates[0].date, last = dates[n-1].date;
-  const dm = s => s.slice(8,10) + "-" + s.slice(5,7);
+  const f = v.dates[0], l = v.dates[v.n-1];
   $("sectionsub").textContent =
-    `${scored.length} bestemmingen, gewogen over ${n} dagen (${dm(first)} t/m ${dm(last)}). Getal in de balk = mm neerslag.`;
+    `${v.scored.length} bestemmingen, gewogen voor ${PROFILE_LABEL[state.profile].toLowerCase()} over ${v.n} dagen `
+    + `(${dm(f)} t/m ${dm(l)}). De balk is de dag-voor-dag score, het getal erin is de neerslag in mm.`;
+}
+
+function renderMatrix(v){
+  const M = METRICS[state.metric];
+  const t = $("matrix");
+  if(!v.scored.length){ t.innerHTML = ""; $("mnote").textContent = ""; return; }
+
+  // sorteer op hoe goed de bestemming scoort op de getoonde metriek
+  const rows = [...v.scored].map(p=>{
+    const vals = p.per.map(d=>M.val(d));
+    return {p, vals, mean: vals.reduce((a,b)=>a+b,0)/vals.length,
+            goodMean: p.per.reduce((a,d)=>a+M.good(M.val(d)),0)/p.per.length};
+  }).sort((a,b)=>b.goodMean-a.goodMean);
+
+  const head = v.dates.map(d=>`<th class="${dow(d)>=5?"we":""}">${DAYS[dow(d)]}<br>${dm(d)}</th>`).join("");
+  const body = rows.map(({p,vals,mean})=>{
+    const tds = vals.map((val,k)=>{
+      const d = p.per[k];
+      return `<td class="m" style="background:${scoreColor(M.good(val))}"
+        title="${esc(p.n)} · ${d.date} — score ${fmt(d.s)}, ${d.rain.toFixed(1)} mm, ${(d.sun/3600).toFixed(1)} u zon, ${fmt(d.tmax)} °C, wind ${fmt(d.wind)} km/u, 0 °C op ${fmt(d.frz)} m"
+        >${M.txt(val)}</td>`;
+    }).join("");
+    return `<tr><th><b>${esc(p.n)}</b><em>${esc(COUNTRY[p.c]||p.c)} · ${driveTxt(p)}</em></th>${tds}<td class="avg">${M.txt(mean)}</td></tr>`;
+  }).join("");
+
+  t.innerHTML = `<thead><tr><th style="text-align:left">bestemming</th>${head}<th class="avgh">gem</th></tr></thead><tbody>${body}</tbody>`;
+
+  $("matrixsub").textContent =
+    `Alle ${v.scored.length} bestemmingen tegen alle ${v.n} dagen. Oranje is gunstig, blauw ongunstig — `
+    + `ook bij neerslag, wind en vriespunt, zodat de kleur altijd hetzelfde betekent.`;
+  $("mnote").innerHTML =
+    `Getoond: <strong>${M.label}</strong>. Rijen staan gesorteerd op hoe gunstig die waarde gemiddeld uitpakt, `
+    + `niet op de totaalscore. Hover of tik een cel voor alle waarden van die dag.`;
+}
+
+/* ---------- paklijst ---------- */
+const PACK = [
+  {g:"Papieren & auto", items:[
+    {t:"Paspoort of ID, rijbewijs, verzekeringspapieren"},
+    {t:"Vignet Oostenrijk", why:()=>"vertrek en transit door AT"},
+    {t:"Vignet Zwitserland (jaarvignet, 40 CHF)", when:c=>c.countries.has("CH"), why:c=>`${c.top.n} ligt in Zwitserland`},
+    {t:"Contant geld voor Italiaanse tol", when:c=>c.countries.has("IT"), why:c=>`${c.top.n} ligt in Italië`},
+    {t:"Vignet Slovenië", when:c=>c.countries.has("SI"), why:c=>`${c.top.n} ligt in Slovenië`},
+    {t:"Fietsdrager, sleutel en extra spanband", when:c=>c.profile==="bike"},
+    {t:"Reservelamp, gevarendriehoek, veiligheidshesjes (verplicht in IT/FR)"},
+    {t:"Check winterbanden of kettingen", when:c=>c.minFrz<2100, why:c=>`vriespunt zakt tot ${Math.round(c.minFrz)} m`}
+  ]},
+  {g:"Kamp & slapen", items:[
+    {t:"Tent, stokken, haringen, grondzeil"},
+    {t:"Slaapmat en slaapzak"},
+    {t:"Extra deken of liner", when:c=>c.minTemp<15, why:c=>`koudste dag komt niet boven ${Math.round(c.minTemp)} °C`},
+    {t:"Stormharingen en extra scheerlijnen", when:c=>c.maxWind>=30, why:c=>`wind tot ${Math.round(c.maxWind)} km/u`},
+    {t:"Luifel of tarp voor de natte uurtjes", when:c=>c.maxRain>=4, why:c=>`natste dag ${c.maxRain.toFixed(1)} mm`},
+    {t:"Hoofdlamp en reservebatterijen"},
+    {t:"Campingstoel, tafeltje, waslijn"}
+  ]},
+  {g:"Kleding", items:[
+    {t:"Regenjas"},
+    {t:"Regenbroek en waterdichte schoenhoezen", when:c=>c.maxRain>=4, why:c=>`${c.wetDays} van ${c.n} dagen boven 2 mm`},
+    {t:"Warme mid-layer of donsjas", when:c=>c.minTemp<17 || c.minFrz<2500, why:c=>`vriespunt tot ${Math.round(c.minFrz)} m`},
+    {t:"Muts en handschoenen", when:c=>c.minFrz<2400, why:c=>`sneeuwgrens rond ${Math.round(c.minFrz)} m`},
+    {t:"Zonnebril, pet, zonnebrand factor 50", when:c=>c.sunAvg>=6, why:c=>`gemiddeld ${c.sunAvg.toFixed(1)} zonuren per dag`},
+    {t:"Lichte shirts en korte broek", when:c=>c.maxTemp>=24, why:c=>`tot ${Math.round(c.maxTemp)} °C`},
+    {t:"Slippers en iets schoons voor 's avonds"}
+  ]},
+  {g:"Op de fiets", when:c=>c.profile==="bike", items:[
+    {t:"Helm, fietsschoenen, twee bidons"},
+    {t:"Reserveband, plakset, banden­lichters, mini-pomp"},
+    {t:"Kettingolie, multitool, extra derailleurhanger"},
+    {t:"Windjack en armstukken voor de afdalingen", why:c=>`boven 2000 m is het snel ${Math.round(c.minTemp-12)} °C`},
+    {t:"Beenstukken", when:c=>c.minFrz<2600, why:c=>`koude lucht tot ${Math.round(c.minFrz)} m`},
+    {t:"Fietscomputer, lader, routes offline gezet"},
+    {t:"Achterlicht — verplicht in tunnels en galerijen"}
+  ]},
+  {g:"Op pad", when:c=>c.profile==="hike", items:[
+    {t:"Wandelschoenen ingelopen, wandelstokken"},
+    {t:"Dagrugzak 25–30 l met regenhoes"},
+    {t:"Kaart en GPX offline, kompas"},
+    {t:"Microspikes of stijgijzers", when:c=>c.minFrz<2500, why:c=>`sneeuwresten boven ${Math.round(c.minFrz)} m`},
+    {t:"Thermoskan en lunchpakket"},
+    {t:"Alpenvereinlidmaatschap of hutreserveringen"}
+  ]},
+  {g:"Aan het water", when:c=>c.profile==="chill", items:[
+    {t:"Zwemkleding, snel drogende handdoek"},
+    {t:"Waterschoenen — bergmeren zitten vol keien"},
+    {t:"Koelbox of koeltas", when:c=>c.maxTemp>=24, why:c=>`tot ${Math.round(c.maxTemp)} °C`},
+    {t:"Boek, spel, hangmat"},
+    {t:"Muggenspul voor de avond bij het water"}
+  ]},
+  {g:"Eten & koken", items:[
+    {t:"Brander, gasfles, aansteker"},
+    {t:"Pannenset, bestek, snijplank, mes"},
+    {t:"Koffiezetter en voorraad koffie"},
+    {t:"Ontbijt voor de eerste ochtend, snacks voor onderweg"},
+    {t:"Waterzak of jerrycan, afwasspullen"}
+  ]},
+  {g:"Elektronica", items:[
+    {t:"Telefoon, lader, 12V-adapter"},
+    {t:"Powerbank"},
+    {t:"Adapter type J", when:c=>c.countries.has("CH"), why:()=>"Zwitserse stopcontacten nemen niet elke geaarde stekker"},
+    {t:"Offline kaarten en deze pagina gebookmarkt"}
+  ]},
+  {g:"EHBO & klein", items:[
+    {t:"EHBO-set, pleisters, tape, pijnstiller"},
+    {t:"Europese zorgpas (EHIC)"},
+    {t:"Reddingsdeken en fluitje"},
+    {t:"Muggenspray en aftersun"},
+    {t:"Vuilniszakken — alles gaat mee terug"}
+  ]}
+];
+
+function packContext(v){
+  const top = focusOf(v);
+  return {
+    profile: state.profile, n: v.n, top,
+    countries: new Set(["AT", top.c]),
+    minFrz: top.minFrz, maxWind: top.maxWind, maxRain: top.maxRain,
+    maxTemp: top.maxTemp, minTemp: top.minTemp, sunAvg: top.sunAvg,
+    wetDays: top.per.filter(d=>d.rain >= 2).length
+  };
+}
+
+function renderPack(v){
+  const grid = $("packgrid");
+  if(!v.scored.length){
+    grid.innerHTML = `<p class="empty">Geen bestemming geselecteerd — schuif de rijtijd omhoog.</p>`;
+    $("packsub").textContent = "—";
+    $("packcount").textContent = "";
+    return;
+  }
+  const c = packContext(v);
+  const groups = PACK.filter(g => !g.when || g.when(c)).map(g=>({
+    g: g.g,
+    items: g.items.filter(it => !it.when || it.when(c)).map(it=>({
+      t: it.t,
+      why: it.why ? (typeof it.why === "function" ? it.why(c) : it.why) : null,
+      cond: !!it.when
+    }))
+  }));
+
+  const all = groups.flatMap(g=>g.items.map(i=>i.t));
+  const done = all.filter(t=>packDone.has(t)).length;
+
+  grid.innerHTML = groups.map(g=>`
+    <section class="packgroup">
+      <h3>${esc(g.g)}</h3>
+      <ul>${g.items.map(it=>`
+        <li><label>
+          <input type="checkbox" data-t="${esc(it.t)}"${packDone.has(it.t)?" checked":""}>
+          <span class="it">${esc(it.t)}${it.cond?'<span class="cond">weer</span>':""}
+            ${it.why?`<span class="wy">${esc(it.why)}</span>`:""}</span>
+        </label></li>`).join("")}</ul>
+    </section>`).join("");
+
+  $("packsub").innerHTML =
+    `Afgestemd op <strong>${esc(PROFILE_LABEL[state.profile].toLowerCase())}</strong> en op de voorspelling voor `
+    + `<strong>${esc(c.top.n)}</strong> — de regio waar de kaart nu op staat. Regels met het label `
+    + `<em>weer</em> staan er alleen in omdat de verwachting erom vraagt; ze verdwijnen weer als het weer draait. `
+    + `Vinkjes blijven in deze browser bewaard.`;
+  $("packfill").style.width = (all.length ? done/all.length*100 : 0) + "%";
+  $("packtxt").textContent = `${done} van ${all.length} ingepakt`;
+  $("packcount").textContent = `${done}/${all.length}`;
+  state.view = {groups, all};
+}
+
+/* ---------- alles ---------- */
+function render(){
+  const v = lastView = derive();
+  renderKpis(v);
+  renderMap(v);
+  renderSelCard(v);
+  renderFoehn(v);
+  renderRank(v);
+  renderMatrix(v);
+  renderPack(v);
+  renderData(v);
   $("eyebrow").textContent =
     "Bijgewerkt " + new Date(state.fetchedAt).toLocaleString("nl-NL",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 }
 
-/* ---------- controls ---------- */
+/* ==================================================================
+   7. Interactie
+================================================================== */
+function showTab(t){
+  state.tab = t;
+  TABS.forEach(x=>{
+    const on = x === t;
+    const tab = $("tab-" + x);
+    tab.setAttribute("aria-selected", String(on));
+    tab.tabIndex = on ? 0 : -1;
+    $("panel-" + x).hidden = !on;
+  });
+  writeUrlState();
+}
+
 $("profile").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
   state.profile = b.dataset.p;
   [...e.currentTarget.children].forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
   writeUrlState();
   if(state.data) render();
+});
+["metric","mapmetric"].forEach(id=>{
+  $(id).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    state.metric = b.dataset.m;
+    syncMetric();
+    writeUrlState();
+    if(state.data) render();
+  });
 });
 $("days").addEventListener("input", e=>{
   state.days = +e.target.value;
@@ -515,41 +1664,191 @@ $("days").addEventListener("input", e=>{
 });
 $("drive").addEventListener("input", e=>{
   state.drive = +e.target.value;
-  $("driveval").textContent = state.drive>=9 ? "alles" : "max " + state.drive + " u";
+  $("driveval").textContent = state.drive>=10 ? "alles" : "max " + state.drive + " u";
   writeUrlState();
   if(state.data) render();
 });
+document.querySelector(".tabs").addEventListener("click", e=>{
+  const b = e.target.closest("button[role=tab]"); if(!b) return;
+  showTab(b.dataset.t);
+});
+document.querySelector(".tabs").addEventListener("keydown", e=>{
+  const i = TABS.indexOf(state.tab);
+  let j = null;
+  if(e.key === "ArrowRight") j = (i+1) % TABS.length;
+  if(e.key === "ArrowLeft")  j = (i-1+TABS.length) % TABS.length;
+  if(j == null) return;
+  e.preventDefault();
+  showTab(TABS[j]);
+  $("tab-" + TABS[j]).focus();
+});
+$("packgrid").addEventListener("change", e=>{
+  const cb = e.target.closest("input[type=checkbox]"); if(!cb) return;
+  const t = cb.dataset.t;
+  cb.checked ? packDone.add(t) : packDone.delete(t);
+  savePack();
+  const all = state.view ? state.view.all : [];
+  const done = all.filter(x=>packDone.has(x)).length;
+  $("packfill").style.width = (all.length ? done/all.length*100 : 0) + "%";
+  $("packtxt").textContent = `${done} van ${all.length} ingepakt`;
+  $("packcount").textContent = `${done}/${all.length}`;
+});
+
+let toastTimer;
+function toast(msg){
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("on"), 2200);
+}
+
+$("packreset").addEventListener("click", ()=>{
+  packDone.clear(); savePack();
+  if(state.data) render();
+  toast("Vinkjes gewist");
+});
+$("packprint").addEventListener("click", ()=>window.print());
+$("packcopy").addEventListener("click", async ()=>{
+  if(!state.view) return;
+  const txt = state.view.groups.map(g =>
+    g.g + "\n" + g.items.map(i => (packDone.has(i.t) ? "[x] " : "[ ] ") + i.t + (i.why ? "  (" + i.why + ")" : "")).join("\n")
+  ).join("\n\n");
+  try{
+    await navigator.clipboard.writeText(txt);
+    toast("Paklijst gekopieerd");
+  }catch{
+    toast("Kopiëren geblokkeerd door de browser");
+  }
+});
+/* vertrekdag */
+function fillStart(){
+  const days = state.data.places[0].days;
+  const max = Math.max(0, days.length - 2);
+  state.start = clamp(state.start, 0, max);
+  $("start").innerHTML = days.slice(0, max+1).map((d,i)=>{
+    const lab = i===0 ? "vandaag" : i===1 ? "morgen" : DAYS[dow(d.date)] + " " + dm(d.date);
+    return `<option value="${i}"${i===state.start?" selected":""}>${lab}</option>`;
+  }).join("");
+}
+$("start").addEventListener("change", e=>{
+  state.start = +e.target.value;
+  writeUrlState();
+  if(state.data) render();
+});
+
+/* kaart: hover, tik en selectie */
+const tip = $("maptip");
+const regionAt = e => { const t = e.target.closest("rect.c"); return t ? +t.dataset.r : -1; };
+
+$("mapwrap").addEventListener("pointermove", e=>{
+  const i = regionAt(e);
+  const p = i < 0 || !lastView ? null : lastView.all.find(x=>x.n === REGIONS[i].n);
+  if(!p){ tip.classList.remove("on"); return; }
+  const rg = REGIONS[i], M = METRICS[state.metric];
+  const mean = p.per.reduce((a,d)=>a+M.val(d),0)/p.per.length;
+  const box = $("mapwrap").getBoundingClientRect();
+  tip.style.left = (e.clientX - box.left) + "px";
+  tip.style.top  = (e.clientY - box.top) + "px";
+  const head = state.metric === "score"
+    ? `<i>score ${fmt(p.total)}</i>`
+    : `<i>${esc(M.label)} ${M.txt(mean)}</i> · score ${fmt(p.total)}`;
+  tip.innerHTML = `<b>${esc(rg.n)}</b>`
+    + `${esc(rg.r)}, ${esc(COUNTRY[rg.c]||rg.c)} · ${driveTxt(rg)}<br>`
+    + head
+    + (p.far ? " · buiten rijtijd" : (p.rank ? " · nr " + p.rank : "")) + `<br>`
+    + `${p.rainSum.toFixed(1)} mm · ${p.sunAvg.toFixed(1)} u zon/dag · ${p.dryDays}/${p.per.length} droog`;
+  tip.classList.add("on");
+});
+$("mapwrap").addEventListener("pointerleave", ()=>tip.classList.remove("on"));
+$("mapwrap").addEventListener("click", e=>{
+  const i = regionAt(e);
+  if(i < 0) return;
+  const n = REGIONS[i].n;
+  state.sel = state.sel === n ? null : n;
+  writeUrlState();
+  render();
+});
+
+$("selcard").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.drive){
+    state.drive = +b.dataset.drive;
+    $("drive").value = state.drive;
+    $("driveval").textContent = state.drive>=10 ? "alles" : "max " + state.drive + " u";
+    writeUrlState(); render(); return;
+  }
+  const go = b.dataset.go;
+  const p = lastView ? selectedRegion(lastView) : null;
+  if(go === "clear"){ state.sel = null; writeUrlState(); render(); return; }
+  if(go === "rank"){
+    if(p) state.open = p.n;
+    showTab("rank"); render();
+    $("panel-rank").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+  if(go === "pack"){
+    if(p && !p.far){ state.sel = p.n; writeUrlState(); }
+    showTab("pack"); render();
+    $("panel-pack").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+});
+
+function syncMetric(){
+  ["metric","mapmetric"].forEach(id =>
+    [...$(id).children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === state.metric))));
+}
+
+$("dataplace").addEventListener("change", e=>{ state.dataPlace = e.target.value; if(state.data) render(); });
+$("dataday").addEventListener("change", e=>{ state.dataDay = +e.target.value; if(state.data) render(); });
+$("reqs").addEventListener("click", async e=>{
+  const b = e.target.closest("button[data-copy]"); if(!b) return;
+  try{ await navigator.clipboard.writeText(b.dataset.copy); toast("Verzoek-URL gekopieerd"); }
+  catch{ toast("Kopiëren geblokkeerd door de browser"); }
+});
+
 $("refresh").addEventListener("click", ()=>boot({force:true}));
 
 function syncControls(){
   $("days").value = state.days;
   $("daysval").textContent = state.days + " dagen";
   $("drive").value = state.drive;
-  $("driveval").textContent = state.drive>=9 ? "alles" : "max " + state.drive + " u";
+  $("driveval").textContent = state.drive>=10 ? "alles" : "max " + state.drive + " u";
   [...$("profile").children].forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.p===state.profile)));
+  syncMetric();
+  showTab(state.tab);
 }
 
-/* ---------- boot ---------- */
+/* ==================================================================
+   8. Boot
+================================================================== */
 async function boot({force=false} = {}){
   const st = $("status"), rf = $("refresh");
   const cached = force ? null : readCache();
   if(cached){
     state.data = cached.data;
+    state.raw = state.data.raw;
+    state.foehnRaw = state.data.foehnRaw;
+    state.fromCache = true;
     state.fetchedAt = cached.t;
-    st.style.display = "none";
+    st.hidden = true;
+    fillStart();
     render();
     return;
   }
   rf.disabled = true;
   st.className = "status";
-  st.style.display = "";
+  st.hidden = false;
   st.textContent = "Weerdata ophalen…";
   $("eyebrow").textContent = "Laden…";
   try{
     state.data = await load();
+    state.raw = state.data.raw;
+    state.foehnRaw = state.data.foehnRaw;
+    state.fromCache = false;
     state.fetchedAt = Date.now();
     writeCache(state.data);
-    st.style.display = "none";
+    st.hidden = true;
+    fillStart();
     render();
   }catch(err){
     st.className = "status err";
@@ -565,6 +1864,13 @@ async function boot({force=false} = {}){
   }
 }
 
+window.addEventListener("hashchange", ()=>{
+  readUrlState();
+  syncControls();
+  if(state.data) render();
+});
+
+loadPack();
 readUrlState();
 syncControls();
 boot();
