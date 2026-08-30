@@ -128,6 +128,19 @@ input[type=range]{width:170px;accent-color:var(--slate)}
 .kpi .n{font-family:var(--mono);font-size:11px;color:var(--ink3);line-height:1.35}
 .kpi .bignum{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--dry)}
 
+/* ---------- toplevel (Waar naartoe / Paklijst) ---------- */
+.toplevel{display:inline-flex;gap:3px;padding:4px;background:var(--paper);border:1px solid var(--line);
+  border-radius:999px;box-shadow:var(--shadow);margin-bottom:22px}
+.toplevel button{
+  font-family:var(--disp);font-size:16px;font-weight:600;letter-spacing:-.005em;
+  background:none;border:0;border-radius:999px;color:var(--ink3);
+  padding:8px 20px;cursor:pointer;white-space:nowrap
+}
+.toplevel button[aria-selected="true"]{background:var(--rock);color:var(--mist)}
+.toplevel button:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
+.toplevel .count{font-family:var(--mono);font-size:10px;font-weight:400;opacity:.75;margin-left:7px}
+@media (max-width:560px){.toplevel{width:100%}.toplevel button{flex:1;padding:8px 10px;text-align:center}}
+
 /* ---------- tabs ---------- */
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}
 .tabs button{
@@ -427,7 +440,7 @@ footer a{color:var(--slate)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
-  .controls,.tabs,.kpis,.topline,.gauge,.packbtns,footer{display:none!important}
+  .controls,.tabs,.toplevel,.kpis,.topline,.gauge,.packbtns,footer{display:none!important}
   .packgrid{columns:2}
   body{background:#fff}
 }
@@ -509,13 +522,17 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
   </div>
 </div>
 
+<nav class="toplevel" role="tablist" aria-label="Onderdeel" id="toplevel">
+  <button type="button" role="tab" id="top-dash" aria-selected="true" data-top="dash">Waar naartoe</button>
+  <button type="button" role="tab" id="top-pack" aria-selected="false" data-top="pack" tabindex="-1">Paklijst<span class="count" id="packcount"></span></button>
+</nav>
+
 <div class="kpis" id="kpis" aria-live="polite"></div>
 
-<nav class="tabs" role="tablist" aria-label="Weergave">
+<nav class="tabs" role="tablist" aria-label="Weergave" id="subnav">
   <button type="button" role="tab" id="tab-map"    aria-controls="panel-map"    aria-selected="true"  data-t="map">Kaart</button>
   <button type="button" role="tab" id="tab-rank"   aria-controls="panel-rank"   aria-selected="false" data-t="rank" tabindex="-1">Lijstje</button>
   <button type="button" role="tab" id="tab-matrix" aria-controls="panel-matrix" aria-selected="false" data-t="matrix" tabindex="-1">Per dag</button>
-  <button type="button" role="tab" id="tab-pack"   aria-controls="panel-pack"   aria-selected="false" data-t="pack" tabindex="-1">Paklijst<span class="count" id="packcount"></span></button>
   <button type="button" role="tab" id="tab-data"   aria-controls="panel-data"   aria-selected="false" data-t="data" tabindex="-1">Onder de motorkap</button>
 </nav>
 
@@ -602,7 +619,7 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
   <div class="legend"><span>slecht</span><span class="bar"></span><span>goed</span></div>
 </section>
 
-<section id="panel-pack" role="tabpanel" aria-labelledby="tab-pack" tabindex="0" hidden>
+<section id="panel-pack" role="tabpanel" aria-labelledby="top-pack" tabindex="0" hidden>
   <h2 class="section">Paklijst</h2>
   <p class="sectionsub" id="packsub">—</p>
   <div class="ctl" id="mectl" hidden style="margin-bottom:16px">
@@ -749,13 +766,14 @@ const PARTS = [
 ];
 
 const PROFILES = Object.keys(WEIGHTS);
-const TABS = ["map","rank","matrix","pack","data"];
+const DASH_TABS = ["map","rank","matrix","data"];
+const TABS = [...DASH_TABS, "pack"];
 const CACHE_KEY = "basiskamp:v2";
 const PACK_KEY  = "basiskamp:pack:v2";
 const PACK_KEY_LEGACY = "basiskamp:pack:v1";
 const CACHE_TTL = 30 * 60 * 1000;   // Open-Meteo ververst ~elk uur
 
-let state = {profile:"bike", days:5, drive:10, start:0, tab:"map", metric:"score",
+let state = {profile:"bike", days:5, drive:10, start:0, tab:"map", dashTab:"map", metric:"score",
              data:null, raw:null, foehnRaw:null, fromCache:false, fetchedAt:null,
              open:null, sel:null, view:null, day:-1, dataPlace:null, dataDay:0};
 let packDone = new Set();
@@ -1913,15 +1931,27 @@ function render(){
 function showTab(t){
   if(t !== "map") stopPlay();
   state.tab = t;
+  if(t !== "pack") state.dashTab = t;
   if(t === "pack" && supaEnabled) loadPackState().then(()=>{ if(lastView) renderPack(lastView); });
-  TABS.forEach(x=>{
+  TABS.forEach(x=>{ $("panel-" + x).hidden = (x !== t); });
+  DASH_TABS.forEach(x=>{
     const on = x === t;
     const tab = $("tab-" + x);
     tab.setAttribute("aria-selected", String(on));
     tab.tabIndex = on ? 0 : -1;
-    $("panel-" + x).hidden = !on;
   });
+  syncTopNav();
   writeUrlState();
+}
+
+function syncTopNav(){
+  const onPack = state.tab === "pack";
+  $("top-dash").setAttribute("aria-selected", String(!onPack));
+  $("top-pack").setAttribute("aria-selected", String(onPack));
+  $("top-dash").tabIndex = onPack ? -1 : 0;
+  $("top-pack").tabIndex = onPack ? 0 : -1;
+  $("kpis").hidden = onPack;
+  $("subnav").hidden = onPack;
 }
 
 $("profile").addEventListener("click", e=>{
@@ -1953,19 +1983,30 @@ $("drive").addEventListener("input", e=>{
   writeUrlState();
   if(state.data) render();
 });
-document.querySelector(".tabs").addEventListener("click", e=>{
+$("subnav").addEventListener("click", e=>{
   const b = e.target.closest("button[role=tab]"); if(!b) return;
   showTab(b.dataset.t);
 });
-document.querySelector(".tabs").addEventListener("keydown", e=>{
-  const i = TABS.indexOf(state.tab);
+$("subnav").addEventListener("keydown", e=>{
+  const i = DASH_TABS.indexOf(state.tab);
   let j = null;
-  if(e.key === "ArrowRight") j = (i+1) % TABS.length;
-  if(e.key === "ArrowLeft")  j = (i-1+TABS.length) % TABS.length;
+  if(e.key === "ArrowRight") j = (i+1) % DASH_TABS.length;
+  if(e.key === "ArrowLeft")  j = (i-1+DASH_TABS.length) % DASH_TABS.length;
   if(j == null) return;
   e.preventDefault();
-  showTab(TABS[j]);
-  $("tab-" + TABS[j]).focus();
+  showTab(DASH_TABS[j]);
+  $("tab-" + DASH_TABS[j]).focus();
+});
+$("toplevel").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-top]"); if(!b) return;
+  showTab(b.dataset.top === "pack" ? "pack" : (state.dashTab || "map"));
+});
+$("toplevel").addEventListener("keydown", e=>{
+  if(e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  e.preventDefault();
+  const onPack = state.tab === "pack";
+  showTab(onPack ? (state.dashTab || "map") : "pack");
+  $(onPack ? "top-dash" : "top-pack").focus();
 });
 $("packgrid").addEventListener("change", e=>{
   const note = e.target.closest(".pi-note");
