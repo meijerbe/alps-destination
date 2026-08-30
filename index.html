@@ -267,10 +267,25 @@ table.matrix thead th.avgh{border-left:1px solid var(--line)}
 .packgroup ul{list-style:none;margin:0;padding:0}
 .packgroup li{border-bottom:1px solid var(--hair);padding:0}
 .packgroup li:last-child{border-bottom:0}
-.packgroup label{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer;font-size:13.5px;line-height:1.4}
-.packgroup input{margin:2px 0 0;accent-color:var(--dry);width:15px;height:15px;flex:none}
-.packgroup input:checked ~ .it{opacity:.42;text-decoration:line-through}
+.packgroup li.packrow{padding:8px 0}
+.pi-single{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13.5px;line-height:1.4}
+.pi-single input{margin:2px 0 0;accent-color:var(--dry);width:15px;height:15px;flex:none}
+.pi-single input:checked ~ .it{opacity:.42;text-decoration:line-through}
 .packgroup .it{min-width:0}
+.packgroup.personal h3::after{content:" · ieder apart";font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+  text-transform:none;opacity:.55;font-weight:400}
+.pi-top{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.4}
+.pi-chips{display:flex;gap:4px;flex:none;margin-top:1px}
+.chk{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:10px;font-weight:600;
+  padding:2px 7px 2px 5px;border:1px solid var(--line);border-radius:999px;cursor:pointer;white-space:nowrap;
+  color:var(--ink3);flex:none}
+.chk input{margin:0;width:12px;height:12px;accent-color:var(--dry)}
+.chk:has(input:checked){background:var(--rock);color:var(--mist);border-color:var(--rock)}
+.pi-top:not(:has(.pi-chips input:not(:checked))) .it{opacity:.42;text-decoration:line-through}
+.pi-note{display:block;width:100%;margin-top:5px;font-family:var(--body);font-size:12px;color:var(--ink2);
+  background:transparent;border:0;border-bottom:1px dashed var(--line);padding:3px 1px;outline:none}
+.pi-note:focus{border-bottom-color:var(--slate)}
+.pi-note::placeholder{color:var(--ink4);opacity:.7}
 .packgroup .wy{display:block;font-family:var(--mono);font-size:10px;color:var(--dry);opacity:.9;margin-top:2px;text-decoration:none}
 .packgroup .cond{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
   border:1px solid var(--dry);color:var(--dry);border-radius:8px;padding:0 4px;margin-left:6px;white-space:nowrap}
@@ -590,6 +605,13 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
 <section id="panel-pack" role="tabpanel" aria-labelledby="tab-pack" tabindex="0" hidden>
   <h2 class="section">Paklijst</h2>
   <p class="sectionsub" id="packsub">—</p>
+  <div class="ctl" id="mectl" hidden style="margin-bottom:16px">
+    <span class="lab" id="lab-me">Wie ben jij</span>
+    <div class="seg" id="me" role="group" aria-labelledby="lab-me">
+      <button type="button" data-me="A" aria-pressed="false">A</button>
+      <button type="button" data-me="B" aria-pressed="false">B</button>
+    </div>
+  </div>
   <div class="packhead">
     <div class="progress">
       <div class="track"><div class="fill" id="packfill" style="width:0%"></div></div>
@@ -653,6 +675,7 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 /* ==================================================================
    1. Bestemmingen, weging, metrieken
@@ -728,7 +751,8 @@ const PARTS = [
 const PROFILES = Object.keys(WEIGHTS);
 const TABS = ["map","rank","matrix","pack","data"];
 const CACHE_KEY = "basiskamp:v2";
-const PACK_KEY  = "basiskamp:pack:v1";
+const PACK_KEY  = "basiskamp:pack:v2";
+const PACK_KEY_LEGACY = "basiskamp:pack:v1";
 const CACHE_TTL = 30 * 60 * 1000;   // Open-Meteo ververst ~elk uur
 
 let state = {profile:"bike", days:5, drive:10, start:0, tab:"map", metric:"score",
@@ -872,6 +896,20 @@ function writeCache(data){
 }
 function loadPack(){
   try{ packDone = new Set(JSON.parse(localStorage.getItem(PACK_KEY) || "[]")); }catch{ packDone = new Set(); }
+  if(packDone.size) return;
+  // eenmalige migratie vanaf de vorige opslag (vóór de persoonlijke vinkjes)
+  try{
+    const legacy = JSON.parse(localStorage.getItem(PACK_KEY_LEGACY) || "[]");
+    if(!legacy.length) return;
+    const byText = {};
+    PACK.forEach(g=>g.items.forEach(it=>{ byText[it.t] = {key: slug(g.g)+"__"+slug(it.t), personal: !!g.personal}; }));
+    legacy.forEach(t=>{
+      const m = byText[t]; if(!m) return;
+      if(m.personal){ packDone.add(m.key+"|A"); packDone.add(m.key+"|B"); }
+      else packDone.add(m.key+"|gedeeld");
+    });
+    if(packDone.size) savePack();
+  }catch{}
 }
 function savePack(){
   try{ localStorage.setItem(PACK_KEY, JSON.stringify([...packDone])); }catch{}
@@ -1601,7 +1639,7 @@ const PACK = [
     {t:"Hoofdlamp en reservebatterijen"},
     {t:"Campingstoel, tafeltje, waslijn"}
   ]},
-  {g:"Kleding", items:[
+  {g:"Kleding", personal:true, items:[
     {t:"Regenjas"},
     {t:"Regenbroek en waterdichte schoenhoezen", when:c=>c.maxRain>=4, why:c=>`${c.wetDays} van ${c.n} dagen boven 2 mm`},
     {t:"Warme mid-layer of donsjas", when:c=>c.minTemp<17 || c.minFrz<2500, why:c=>`vriespunt tot ${Math.round(c.minFrz)} m`},
@@ -1610,7 +1648,7 @@ const PACK = [
     {t:"Lichte shirts en korte broek", when:c=>c.maxTemp>=24, why:c=>`tot ${Math.round(c.maxTemp)} °C`},
     {t:"Slippers en iets schoons voor 's avonds"}
   ]},
-  {g:"Op de fiets", when:c=>c.profile==="bike", items:[
+  {g:"Op de fiets", when:c=>c.profile==="bike", personal:true, items:[
     {t:"Helm, fietsschoenen, twee bidons"},
     {t:"Reserveband, plakset, banden­lichters, mini-pomp"},
     {t:"Kettingolie, multitool, extra derailleurhanger"},
@@ -1619,7 +1657,7 @@ const PACK = [
     {t:"Fietscomputer, lader, routes offline gezet"},
     {t:"Achterlicht — verplicht in tunnels en galerijen"}
   ]},
-  {g:"Op pad", when:c=>c.profile==="hike", items:[
+  {g:"Op pad", when:c=>c.profile==="hike", personal:true, items:[
     {t:"Wandelschoenen ingelopen, wandelstokken"},
     {t:"Dagrugzak 25–30 l met regenhoes"},
     {t:"Kaart en GPX offline, kompas"},
@@ -1627,7 +1665,7 @@ const PACK = [
     {t:"Thermoskan en lunchpakket"},
     {t:"Alpenvereinlidmaatschap of hutreserveringen"}
   ]},
-  {g:"Aan het water", when:c=>c.profile==="chill", items:[
+  {g:"Aan het water", when:c=>c.profile==="chill", personal:true, items:[
     {t:"Zwemkleding, snel drogende handdoek"},
     {t:"Waterschoenen — bergmeren zitten vol keien"},
     {t:"Koelbox of koeltas", when:c=>c.maxTemp>=24, why:c=>`tot ${Math.round(c.maxTemp)} °C`},
@@ -1656,6 +1694,126 @@ const PACK = [
   ]}
 ];
 
+/* ------------------------------------------------------------------
+   Gedeelde paklijst via Supabase — optioneel. Zonder configuratie
+   blijft alles precies zoals voorheen: vinkjes en notities per browser,
+   via localStorage. Vul SUPABASE_URL en SUPABASE_ANON_KEY hieronder in
+   (zie README, kopje "Gedeelde paklijst") om ze met elkaar te delen.
+   SUPABASE_ANON_KEY is de publieke sleutel uit Settings → API — de
+   klassieke "anon"-JWT of de nieuwere "publishable"-sleutel (sb_publishable_…)
+   werken hier allebei, nooit de service_role-sleutel.
+------------------------------------------------------------------- */
+const SUPABASE_URL = "https://civolabgzdvzfrsrzimq.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_zYrXuDJOFwprFKVD5Y3qbg_6X0uNn2R";
+const TRIP_ID = "ab-op-reis";
+const ME_KEY = "abopreis:me";
+const NOTES_KEY = "abopreis:notes:v1";
+
+const supaEnabled = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
+const sb = supaEnabled ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const cssEsc = window.CSS && CSS.escape ? (s=>CSS.escape(s)) : (s=>s.replace(/[^a-zA-Z0-9_-]/g,"\\$&"));
+
+let supaRows = new Map();      // "<item_key>|<scope>" → {checked, comment, updated_by, updated_at}
+let supaReady = false;
+let localNotes = {};           // fallback-notities, alleen gebruikt zonder Supabase
+let me = null;
+try{ me = localStorage.getItem(ME_KEY); }catch{}
+
+const rowKey = (item_key, scope) => item_key + "|" + scope;
+const getRow = (item_key, scope) => supaRows.get(rowKey(item_key, scope)) || {checked:false, comment:"", updated_by:null, updated_at:null};
+const isChecked = (key, scope) => supaEnabled ? !!getRow(key, scope).checked : packDone.has(key + "|" + scope);
+
+function slug(s){
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+
+function loadNotes(){
+  try{ localNotes = JSON.parse(localStorage.getItem(NOTES_KEY) || "{}"); }catch{ localNotes = {}; }
+}
+function saveNotes(){ try{ localStorage.setItem(NOTES_KEY, JSON.stringify(localNotes)); }catch{} }
+function getNote(key){ return supaEnabled ? (getRow(key,"gedeeld").comment || "") : (localNotes[key] || ""); }
+function setNote(key, val){
+  if(supaEnabled){ setPackState(key, "gedeeld", {comment: val || null}); return; }
+  if(val) localNotes[key] = val; else delete localNotes[key];
+  saveNotes();
+}
+
+function updatePackProgress(){
+  const boxes = [...document.querySelectorAll("#packgrid input[type=checkbox]")];
+  const done = boxes.filter(b=>b.checked).length, total = boxes.length;
+  $("packfill").style.width = (total ? done/total*100 : 0) + "%";
+  $("packtxt").textContent = `${done} van ${total} ingepakt`;
+  $("packcount").textContent = total ? `${done}/${total}` : "";
+}
+
+async function loadPackState(){
+  if(!supaEnabled) return;
+  try{
+    const {data, error} = await sb.from("packing_state").select("*").eq("trip", TRIP_ID);
+    if(error) throw error;
+    supaRows = new Map(data.map(r=>[rowKey(r.item_key, r.scope), r]));
+    supaReady = true;
+  }catch(err){
+    supaReady = false;
+    toast("Paklijst-sync niet bereikbaar — vinkjes blijven lokaal");
+  }
+}
+
+function applyRowToDom(item_key, scope, row){
+  const cb = document.querySelector(`#packgrid input[type=checkbox][data-key="${cssEsc(item_key)}"][data-scope="${cssEsc(scope)}"]`);
+  if(cb) cb.checked = !!row.checked;
+  if(scope === "gedeeld"){
+    const note = document.querySelector(`#packgrid .pi-note[data-key="${cssEsc(item_key)}"]`);
+    if(note && document.activeElement !== note) note.value = row.comment || "";
+  }
+  updatePackProgress();
+}
+
+async function setPackState(item_key, scope, patch){
+  const cur = getRow(item_key, scope);
+  const next = {...cur, ...patch, trip:TRIP_ID, item_key, scope, updated_by: me, updated_at: new Date().toISOString()};
+  supaRows.set(rowKey(item_key, scope), next);
+  applyRowToDom(item_key, scope, next);
+  try{
+    const {error} = await sb.from("packing_state").upsert(next, {onConflict:"trip,item_key,scope"});
+    if(error) throw error;
+  }catch(err){
+    toast("Opslaan mislukt — check je verbinding");
+  }
+}
+
+function subscribePackState(){
+  if(!supaEnabled) return;
+  sb.channel("packing_state_" + TRIP_ID)
+    .on("postgres_changes", {event:"*", schema:"public", table:"packing_state", filter:`trip=eq.${TRIP_ID}`}, payload=>{
+      const r = (payload.new && Object.keys(payload.new).length) ? payload.new : payload.old;
+      if(!r) return;
+      if(payload.eventType === "DELETE") supaRows.delete(rowKey(r.item_key, r.scope));
+      else supaRows.set(rowKey(r.item_key, r.scope), r);
+      if(state.tab === "pack") applyRowToDom(r.item_key, r.scope, r);
+    })
+    .subscribe();
+}
+
+function syncMe(){
+  [...$("me").children].forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.me === me)));
+}
+$("me").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  me = b.dataset.me;
+  try{ localStorage.setItem(ME_KEY, me); }catch{}
+  syncMe();
+});
+
+function initPackSync(){
+  if(!supaEnabled) return;
+  $("mectl").hidden = false;
+  syncMe();
+  loadPackState().then(()=>{ if(lastView) renderPack(lastView); });
+  subscribePackState();
+}
+
 function packContext(v){
   const top = focusOf(v);
   return {
@@ -1667,47 +1825,70 @@ function packContext(v){
   };
 }
 
+function packRow(it){
+  const badge = it.cond ? '<span class="cond">weer</span>' : "";
+  const why = it.why ? `<span class="wy">${esc(it.why)}</span>` : "";
+  const note = `<input class="pi-note" type="text" placeholder="notitie…" maxlength="200" value="${esc(getNote(it.key))}" data-key="${esc(it.key)}">`;
+  if(it.personal){
+    const a = isChecked(it.key,"A"), b = isChecked(it.key,"B");
+    return `<li class="packrow">
+      <div class="pi-top">
+        <div class="pi-chips">
+          <label class="chk"><input type="checkbox" data-key="${esc(it.key)}" data-scope="A"${a?" checked":""}>A</label>
+          <label class="chk"><input type="checkbox" data-key="${esc(it.key)}" data-scope="B"${b?" checked":""}>B</label>
+        </div>
+        <span class="it">${esc(it.t)} ${badge} ${why}</span>
+      </div>
+      ${note}
+    </li>`;
+  }
+  const chk = isChecked(it.key,"gedeeld");
+  return `<li class="packrow">
+    <label class="pi-single">
+      <input type="checkbox" data-key="${esc(it.key)}" data-scope="gedeeld"${chk?" checked":""}>
+      <span class="it">${esc(it.t)} ${badge} ${why}</span>
+    </label>
+    ${note}
+  </li>`;
+}
+
 function renderPack(v){
   const grid = $("packgrid");
   if(!v.scored.length){
     grid.innerHTML = `<p class="empty">Geen bestemming geselecteerd — schuif de rijtijd omhoog.</p>`;
     $("packsub").textContent = "—";
     $("packcount").textContent = "";
+    state.view = null;
     return;
   }
   const c = packContext(v);
   const groups = PACK.filter(g => !g.when || g.when(c)).map(g=>({
-    g: g.g,
+    g: g.g, personal: !!g.personal,
     items: g.items.filter(it => !it.when || it.when(c)).map(it=>({
       t: it.t,
+      key: slug(g.g) + "__" + slug(it.t),
       why: it.why ? (typeof it.why === "function" ? it.why(c) : it.why) : null,
-      cond: !!it.when
+      cond: !!it.when,
+      personal: !!g.personal
     }))
   }));
 
-  const all = groups.flatMap(g=>g.items.map(i=>i.t));
-  const done = all.filter(t=>packDone.has(t)).length;
-
   grid.innerHTML = groups.map(g=>`
-    <section class="packgroup">
+    <section class="packgroup${g.personal?" personal":""}">
       <h3>${esc(g.g)}</h3>
-      <ul>${g.items.map(it=>`
-        <li><label>
-          <input type="checkbox" data-t="${esc(it.t)}"${packDone.has(it.t)?" checked":""}>
-          <span class="it">${esc(it.t)}${it.cond?'<span class="cond">weer</span>':""}
-            ${it.why?`<span class="wy">${esc(it.why)}</span>`:""}</span>
-        </label></li>`).join("")}</ul>
+      <ul>${g.items.map(packRow).join("")}</ul>
     </section>`).join("");
 
   $("packsub").innerHTML =
     `Afgestemd op <strong>${esc(PROFILE_LABEL[state.profile].toLowerCase())}</strong> en op de voorspelling voor `
     + `<strong>${esc(c.top.n)}</strong> — de regio waar de kaart nu op staat. Regels met het label `
     + `<em>weer</em> staan er alleen in omdat de verwachting erom vraagt; ze verdwijnen weer als het weer draait. `
-    + `Vinkjes blijven in deze browser bewaard.`;
-  $("packfill").style.width = (all.length ? done/all.length*100 : 0) + "%";
-  $("packtxt").textContent = `${done} van ${all.length} ingepakt`;
-  $("packcount").textContent = `${done}/${all.length}`;
-  state.view = {groups, all};
+    + `Groepen met <em>ieder apart</em> hebben een vinkje per persoon. `
+    + (supaEnabled
+        ? `Vinkjes en notities staan gedeeld voor jullie allebei${supaReady?"":" — sync lukt nu niet, dit ververst zodra dat weer kan"}.`
+        : `Vinkjes en notities blijven in deze browser — koppel Supabase (zie README) om ze te delen.`);
+  state.view = {groups};
+  updatePackProgress();
 }
 
 /* ---------- alles ---------- */
@@ -1732,6 +1913,7 @@ function render(){
 function showTab(t){
   if(t !== "map") stopPlay();
   state.tab = t;
+  if(t === "pack" && supaEnabled) loadPackState().then(()=>{ if(lastView) renderPack(lastView); });
   TABS.forEach(x=>{
     const on = x === t;
     const tab = $("tab-" + x);
@@ -1786,15 +1968,14 @@ document.querySelector(".tabs").addEventListener("keydown", e=>{
   $("tab-" + TABS[j]).focus();
 });
 $("packgrid").addEventListener("change", e=>{
+  const note = e.target.closest(".pi-note");
+  if(note){ setNote(note.dataset.key, note.value.trim()); return; }
   const cb = e.target.closest("input[type=checkbox]"); if(!cb) return;
-  const t = cb.dataset.t;
-  cb.checked ? packDone.add(t) : packDone.delete(t);
+  const key = cb.dataset.key, scope = cb.dataset.scope;
+  if(supaEnabled){ setPackState(key, scope, {checked: cb.checked}); return; }
+  cb.checked ? packDone.add(key+"|"+scope) : packDone.delete(key+"|"+scope);
   savePack();
-  const all = state.view ? state.view.all : [];
-  const done = all.filter(x=>packDone.has(x)).length;
-  $("packfill").style.width = (all.length ? done/all.length*100 : 0) + "%";
-  $("packtxt").textContent = `${done} van ${all.length} ingepakt`;
-  $("packcount").textContent = `${done}/${all.length}`;
+  updatePackProgress();
 });
 
 let toastTimer;
@@ -1807,16 +1988,30 @@ function toast(msg){
 }
 
 $("packreset").addEventListener("click", ()=>{
-  packDone.clear(); savePack();
-  if(state.data) render();
+  if(supaEnabled && !confirm("Alle vinkjes voor jullie allebei wissen? Dit kan niet ongedaan gemaakt worden.")) return;
+  document.querySelectorAll("#packgrid input[type=checkbox]:checked").forEach(cb=>{
+    cb.checked = false;
+    cb.dispatchEvent(new Event("change", {bubbles:true}));
+  });
   toast("Vinkjes gewist");
 });
 $("packprint").addEventListener("click", ()=>window.print());
 $("packcopy").addEventListener("click", async ()=>{
-  if(!state.view) return;
-  const txt = state.view.groups.map(g =>
-    g.g + "\n" + g.items.map(i => (packDone.has(i.t) ? "[x] " : "[ ] ") + i.t + (i.why ? "  (" + i.why + ")" : "")).join("\n")
-  ).join("\n\n");
+  const groups = [...document.querySelectorAll("#packgrid .packgroup")];
+  if(!groups.length) return;
+  const txt = groups.map(sec=>{
+    const title = sec.querySelector("h3").textContent;
+    const lines = [...sec.querySelectorAll("li.packrow")].map(li=>{
+      const label = [...li.querySelector(".it").childNodes].map(n=>n.textContent).join(" ").replace(/\s+/g," ").trim();
+      const boxes = [...li.querySelectorAll("input[type=checkbox]")];
+      const mark = boxes.length > 1
+        ? boxes.map(b=>`${b.dataset.scope}:[${b.checked?"x":" "}]`).join(" ")
+        : `[${boxes[0].checked?"x":" "}]`;
+      const note = li.querySelector(".pi-note");
+      return mark + " " + label + (note && note.value ? `  · ${note.value}` : "");
+    });
+    return title + "\n" + lines.join("\n");
+  }).join("\n\n");
   try{
     await navigator.clipboard.writeText(txt);
     toast("Paklijst gekopieerd");
@@ -1935,6 +2130,7 @@ function syncControls(){
   $("driveval").textContent = state.drive>=10 ? "alles" : "max " + state.drive + " u";
   [...$("profile").children].forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.p===state.profile)));
   syncMetric();
+  syncMe();
   showTab(state.tab);
 }
 
@@ -1990,10 +2186,12 @@ window.addEventListener("hashchange", ()=>{
   if(state.data) render();
 });
 
+loadNotes();
 loadPack();
 readUrlState();
 syncControls();
 boot();
+initPackSync();
 </script>
 </body>
 </html>

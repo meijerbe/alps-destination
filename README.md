@@ -103,9 +103,52 @@ Alles zit bovenin het `<script>`-blok van `index.html`.
 - **Scorecurves** — de functie `dayParts`. Het tabblad *Onder de motorkap* laat elke curve met
   formule en al zien, dus daar zie je meteen wat een aanpassing doet.
 - **Paklijst** — de array `PACK`. Een regel met `when` verschijnt alleen als de verwachting eraan
-  voldoet, `why` legt in één zin uit waarom hij er staat.
+  voldoet, `why` legt in één zin uit waarom hij er staat. Een groep met `personal:true` (Kleding, Op
+  de fiets, Op pad, Aan het water) krijgt een vinkje per persoon in plaats van één gedeeld vinkje.
 - **Cache** — `CACHE_TTL` (30 min) bepaalt hoe lang een resultaat in `sessionStorage` blijft staan.
   De knop *Ververs* omzeilt de cache altijd.
+
+## Gedeelde paklijst (Supabase)
+
+Zonder verdere configuratie werkt de paklijst zoals eerst: vinkjes en notities blijven per browser
+bewaard (`localStorage`). Vul je een Supabase-project in, dan staan diezelfde vinkjes en notities
+gedeeld voor jullie allebei, en zie je elkaars wijzigingen vanzelf verschijnen zonder te hoeven
+verversen.
+
+**Zo zet je hem aan**
+
+1. Maak een gratis project op [supabase.com](https://supabase.com) (geen creditcard nodig voor de
+   hobby-laag).
+2. Open **SQL Editor → New query**, plak de inhoud van [`supabase/schema.sql`](supabase/schema.sql)
+   en klik **Run**. Dit zet één tabel neer (`packing_state`) met rijbeveiliging die de anon-sleutel
+   alleen toegang geeft tot rijen van deze ene reis.
+3. Ga naar **Settings → API** en kopieer de **Project URL** en de **anon public**-sleutel.
+4. Zet ze in `index.html`, bovenaan het paklijst-gedeelte van het script (zoek naar
+   `SUPABASE_URL`):
+   ```js
+   const SUPABASE_URL = "https://xxxxxxxx.supabase.co";
+   const SUPABASE_ANON_KEY = "eyJ…";
+   ```
+5. Commit en push (of `vercel --prod`). Klaar — het tabblad *Paklijst* laat nu een *Wie ben jij*-
+   knop zien (A of B), groepen met *ieder apart* krijgen twee vinkjes, en elk item krijgt een
+   notitieveld dat meteen wordt opgeslagen.
+
+**Hoe het werkt**
+
+Elk item krijgt een stabiele sleutel (groep + omschrijving, geslugd) en per persoon een eigen rij
+in `packing_state`: `gedeeld` voor de gewone spullen, `A`/`B` voor kleding, fiets-, wandel- en
+zwemspullen. De notitie hangt aan de `gedeeld`-rij, ook bij persoonlijke items — één notitieveld
+per item, niet per persoon. Wijzigingen gaan via Supabase Realtime meteen naar de ander door; komt
+de verbinding even niet tot stand, dan blijft alles gewoon werken en probeert de pagina het bij het
+volgende bezoek aan het tabblad opnieuw.
+
+**Kanttekening bij de beveiliging** — er zit geen login achter. De anon-sleutel staat zichtbaar in
+de broncode (dat is met Supabase de bedoeling; rijbeveiliging bepaalt wat hij mag) en is beperkt
+tot precies deze tabel en deze ene reis-id. Prima voor een privélink tussen jullie twee, niet
+geschikt voor iets gevoeligers.
+
+**Voor de volgende reis** — wis de tabel (`truncate packing_state;` in de SQL Editor) of pas de
+`TRIP_ID`-constante aan én de bijbehorende waarde in de drie policies in `schema.sql`.
 
 ## Databron
 
