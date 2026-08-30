@@ -417,7 +417,8 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sink);padding:1px 
 .empty{font-family:var(--mono);font-size:12px;padding:24px 0;opacity:.7}
 .toast{
   position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
-  background:var(--rock);color:var(--mist);font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  max-width:min(90vw,480px);text-align:center;white-space:pre-line;
+  background:var(--rock);color:var(--mist);font-family:var(--mono);font-size:11px;letter-spacing:.03em;line-height:1.5;
   padding:9px 16px;border-radius:12px;opacity:0;transition:opacity .25s ease;pointer-events:none;z-index:10
 }
 .toast.on{opacity:1}
@@ -1739,6 +1740,17 @@ try{ me = localStorage.getItem(ME_KEY); }catch{}
 
 const rowKey = (item_key, scope) => item_key + "|" + scope;
 const getRow = (item_key, scope) => supaRows.get(rowKey(item_key, scope)) || {checked:false, comment:"", updated_by:null, updated_at:null};
+
+// leesbare samenvatting van een Supabase/PostgREST-fout, voor in de toast —
+// zodat "kan geen verbinding maken" wordt wat het écht is: een RLS-afwijzing,
+// een verkeerde sleutel, een CORS-blokkade, …
+function supaErrText(err){
+  if(!err) return "onbekende fout";
+  const bits = [err.message || String(err)];
+  if(err.hint) bits.push("hint: " + err.hint);
+  if(err.code) bits.push("code " + err.code);
+  return bits.join(" · ");
+}
 const isChecked = (key, scope) => supaEnabled ? !!getRow(key, scope).checked : packDone.has(key + "|" + scope);
 
 function slug(s){
@@ -1774,7 +1786,8 @@ async function loadPackState(){
     supaReady = true;
   }catch(err){
     supaReady = false;
-    toast("Paklijst-sync niet bereikbaar — vinkjes blijven lokaal");
+    console.error("[paklijst] laden mislukt:", err);
+    toast("Paklijst-sync niet bereikbaar — vinkjes blijven lokaal\n" + supaErrText(err), 5000);
   }
 }
 
@@ -1797,7 +1810,8 @@ async function setPackState(item_key, scope, patch){
     const {error} = await sb.from("packing_state").upsert(next, {onConflict:"trip,item_key,scope"});
     if(error) throw error;
   }catch(err){
-    toast("Opslaan mislukt — check je verbinding");
+    console.error("[paklijst] opslaan mislukt:", err);
+    toast("Opslaan mislukt\n" + supaErrText(err), 5000);
   }
 }
 
@@ -2020,12 +2034,12 @@ $("packgrid").addEventListener("change", e=>{
 });
 
 let toastTimer;
-function toast(msg){
+function toast(msg, ms){
   const el = $("toast");
   el.textContent = msg;
   el.classList.add("on");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.classList.remove("on"), 2200);
+  toastTimer = setTimeout(()=>el.classList.remove("on"), ms || 2200);
 }
 
 $("packreset").addEventListener("click", ()=>{
