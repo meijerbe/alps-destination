@@ -1699,9 +1699,12 @@ const PACK = [
    blijft alles precies zoals voorheen: vinkjes en notities per browser,
    via localStorage. Vul SUPABASE_URL en SUPABASE_ANON_KEY hieronder in
    (zie README, kopje "Gedeelde paklijst") om ze met elkaar te delen.
+   SUPABASE_ANON_KEY is de publieke sleutel uit Settings → API — de
+   klassieke "anon"-JWT of de nieuwere "publishable"-sleutel (sb_publishable_…)
+   werken hier allebei, nooit de service_role-sleutel.
 ------------------------------------------------------------------- */
-const SUPABASE_URL = "";
-const SUPABASE_ANON_KEY = "";
+const SUPABASE_URL = "https://civolabgzdvzfrsrzimq.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_zYrXuDJOFwprFKVD5Y3qbg_6X0uNn2R";
 const TRIP_ID = "ab-op-reis";
 const ME_KEY = "abopreis:me";
 const NOTES_KEY = "abopreis:notes:v1";
