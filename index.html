@@ -281,10 +281,26 @@ table.matrix thead th.avgh{border-left:1px solid var(--line)}
 .packgroup li{border-bottom:1px solid var(--hair);padding:0}
 .packgroup li:last-child{border-bottom:0}
 .packgroup li.packrow{padding:8px 0}
-.pi-single{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13.5px;line-height:1.4}
+.pi-row{display:flex;align-items:flex-start;gap:6px}
+.pi-single{flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13.5px;line-height:1.4}
 .pi-single input{margin:2px 0 0;accent-color:var(--dry);width:15px;height:15px;flex:none}
 .pi-single input:checked ~ .it{opacity:.42;text-decoration:line-through}
 .packgroup .it{min-width:0}
+.itemdel{position:relative;margin-left:auto;flex:none;width:22px;height:22px;line-height:20px;text-align:center;
+  border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink3);
+  font-size:14px;cursor:pointer;padding:0}
+.itemdel:hover{border-color:var(--err);color:var(--err)}
+.itemdel:focus-visible{outline:2px solid var(--err);outline-offset:2px}
+/* zichtbaar blijft het knopje compact, maar het tikgebied is ruim 44px —
+   belangrijk op een telefoon, want dit verwijdert meteen en zonder undo */
+.itemdel::before{content:"";position:absolute;inset:-11px}
+.packadd{display:flex;gap:6px;margin:10px 0 4px;padding-top:9px;border-top:1px dashed var(--line)}
+.packadd input{flex:1;min-width:0;font-family:var(--body);font-size:13px;color:var(--rock);
+  background:var(--sink);border:1px solid var(--line);border-radius:8px;padding:6px 9px;outline:none}
+.packadd input:focus{border-color:var(--slate)}
+.packadd button{flex:none;width:30px;border:1px solid var(--line);border-radius:8px;background:transparent;
+  color:var(--slate);font-size:16px;cursor:pointer;line-height:1}
+.packadd button:hover{border-color:var(--slate)}
 .packgroup.personal h3::after{content:" · ieder apart";font-family:var(--mono);font-size:10px;letter-spacing:.06em;
   text-transform:none;opacity:.55;font-weight:400}
 .pi-top{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.4}
@@ -302,6 +318,24 @@ table.matrix thead th.avgh{border-left:1px solid var(--line)}
 .packgroup .wy{display:block;font-family:var(--mono);font-size:10px;color:var(--dry);opacity:.9;margin-top:2px;text-decoration:none}
 .packgroup .cond{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
   border:1px solid var(--dry);color:var(--dry);border-radius:8px;padding:0 4px;margin-left:6px;white-space:nowrap}
+
+/* ---------- boodschappen ---------- */
+.shopadd{display:flex;gap:8px;margin-bottom:18px}
+.shopadd input{flex:1;min-width:0;font-family:var(--body);font-size:14px;color:var(--rock);
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 13px;
+  outline:none;box-shadow:var(--shadow)}
+.shopadd input:focus{border-color:var(--slate)}
+.shopadd button{flex:none;width:44px;border:1px solid var(--line);border-radius:8px;background:var(--paper);
+  color:var(--slate);font-size:18px;cursor:pointer;box-shadow:var(--shadow)}
+.shopadd button:hover{border-color:var(--slate)}
+.shoplist{list-style:none;margin:0;padding:0;max-width:560px}
+.shoprow{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--hair)}
+.shoprow:last-child{border-bottom:0}
+.shoprow label{flex:1;min-width:0;display:flex;gap:10px;align-items:center;cursor:pointer;
+  font-size:14px;padding:6px 0}
+.shoprow input{accent-color:var(--dry);width:16px;height:16px;flex:none}
+.shoprow input:checked ~ .it{opacity:.42;text-decoration:line-through}
+.empty.shopempty{padding:20px 0}
 
 /* ---------- kaart ---------- */
 .mapwrap{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:var(--shadow)}
@@ -526,6 +560,7 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
 <nav class="toplevel" role="tablist" aria-label="Onderdeel" id="toplevel">
   <button type="button" role="tab" id="top-dash" aria-selected="true" data-top="dash">Waar naartoe</button>
   <button type="button" role="tab" id="top-pack" aria-selected="false" data-top="pack" tabindex="-1">Paklijst<span class="count" id="packcount"></span></button>
+  <button type="button" role="tab" id="top-shop" aria-selected="false" data-top="shop" tabindex="-1">Boodschappen<span class="count" id="shopcount"></span></button>
 </nav>
 
 <div class="kpis" id="kpis" aria-live="polite"></div>
@@ -642,6 +677,26 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
     </div>
   </div>
   <div class="packgrid" id="packgrid"></div>
+</section>
+
+<section id="panel-shop" role="tabpanel" aria-labelledby="top-shop" tabindex="0" hidden>
+  <h2 class="section">Boodschappen</h2>
+  <p class="sectionsub" id="shopsub">—</p>
+  <div class="packhead">
+    <div class="progress">
+      <div class="track"><div class="fill" id="shopfill" style="width:0%"></div></div>
+      <div class="txt" id="shoptxt">0 van 0 in huis</div>
+    </div>
+    <div class="packbtns">
+      <button type="button" id="shopcopy">Kopieer</button>
+      <button type="button" id="shopclear">Wis afgevinkte</button>
+    </div>
+  </div>
+  <form class="shopadd" id="shopform">
+    <input type="text" id="shopinput" placeholder="+ product toevoegen…" maxlength="80" aria-label="Nieuw product">
+    <button type="submit" aria-label="Toevoegen">+</button>
+  </form>
+  <ul class="shoplist" id="shoplist"></ul>
 </section>
 
 <section id="panel-data" role="tabpanel" aria-labelledby="tab-data" tabindex="0" hidden>
@@ -768,7 +823,9 @@ const PARTS = [
 
 const PROFILES = Object.keys(WEIGHTS);
 const DASH_TABS = ["map","rank","matrix","data"];
-const TABS = [...DASH_TABS, "pack"];
+const TOP_TABS = ["dash","pack","shop"];
+const TABS = [...DASH_TABS, "pack", "shop"];
+const topOf = t => DASH_TABS.includes(t) ? "dash" : t;
 const CACHE_KEY = "basiskamp:v2";
 const PACK_KEY  = "basiskamp:pack:v2";
 const PACK_KEY_LEGACY = "basiskamp:pack:v1";
@@ -1651,18 +1708,27 @@ const PACK = [
   ]},
   {g:"Kamp & slapen", items:[
     {t:"Tent, stokken, haringen, grondzeil"},
+    {t:"Hamer en een paar reserveharingen"},
+    {t:"Reparatieset voor tent en slaapmat (tape, plakkers)"},
     {t:"Slaapmat en slaapzak"},
+    {t:"Kussen of opblaaskussen"},
     {t:"Extra deken of liner", when:c=>c.minTemp<15, why:c=>`koudste dag komt niet boven ${Math.round(c.minTemp)} °C`},
     {t:"Stormharingen en extra scheerlijnen", when:c=>c.maxWind>=30, why:c=>`wind tot ${Math.round(c.maxWind)} km/u`},
     {t:"Luifel of tarp voor de natte uurtjes", when:c=>c.maxRain>=4, why:c=>`natste dag ${c.maxRain.toFixed(1)} mm`},
     {t:"Hoofdlamp en reservebatterijen"},
-    {t:"Campingstoel, tafeltje, waslijn"}
+    {t:"Campingstoel, tafeltje, waslijn"},
+    {t:"Touw of paracord, wasknijpers"},
+    {t:"Oordopjes"}
   ]},
   {g:"Kleding", personal:true, items:[
+    {t:"Ondergoed en sokken voor de hele reis"},
+    {t:"Nachtkleding"},
+    {t:"Dagelijkse schoenen, naast de technische schoenen"},
+    {t:"Lange broek en een warme trui voor 's avonds"},
     {t:"Regenjas"},
     {t:"Regenbroek en waterdichte schoenhoezen", when:c=>c.maxRain>=4, why:c=>`${c.wetDays} van ${c.n} dagen boven 2 mm`},
     {t:"Warme mid-layer of donsjas", when:c=>c.minTemp<17 || c.minFrz<2500, why:c=>`vriespunt tot ${Math.round(c.minFrz)} m`},
-    {t:"Muts en handschoenen", when:c=>c.minFrz<2400, why:c=>`sneeuwgrens rond ${Math.round(c.minFrz)} m`},
+    {t:"Muts, buff en handschoenen", when:c=>c.minFrz<2400, why:c=>`sneeuwgrens rond ${Math.round(c.minFrz)} m`},
     {t:"Zonnebril, pet, zonnebrand factor 50", when:c=>c.sunAvg>=6, why:c=>`gemiddeld ${c.sunAvg.toFixed(1)} zonuren per dag`},
     {t:"Lichte shirts en korte broek", when:c=>c.maxTemp>=24, why:c=>`tot ${Math.round(c.maxTemp)} °C`},
     {t:"Slippers en iets schoons voor 's avonds"}
@@ -1683,6 +1749,16 @@ const PACK = [
     {t:"Microspikes of stijgijzers", when:c=>c.minFrz<2500, why:c=>`sneeuwresten boven ${Math.round(c.minFrz)} m`},
     {t:"Thermoskan en lunchpakket"},
     {t:"Alpenvereinlidmaatschap of hutreserveringen"}
+  ]},
+  {g:"Trailrunnen", when:c=>c.profile==="hike", personal:true, items:[
+    {t:"Trailrunschoenen, ingelopen"},
+    {t:"Hardloopvest met drinkblazen of flesjes"},
+    {t:"Hardloopkleding die vocht afvoert, geen katoen"},
+    {t:"Antichafing balsem of vaseline"},
+    {t:"GPS-horloge, opgeladen"},
+    {t:"Energiegels, zout of elektrolyten voor de lange afstand"},
+    {t:"Vouwbekertje voor de bevoorradingsposten"},
+    {t:"Windjack in het vest, ook bij zon", why:c=>`boven 2000 m is het snel ${Math.round(c.minTemp-12)} °C`}
   ]},
   {g:"Aan het water", when:c=>c.profile==="chill", personal:true, items:[
     {t:"Zwemkleding, snel drogende handdoek"},
@@ -1727,6 +1803,8 @@ const SUPABASE_ANON_KEY = "sb_publishable_zYrXuDJOFwprFKVD5Y3qbg_6X0uNn2R";
 const TRIP_ID = "ab-op-reis";
 const ME_KEY = "abopreis:me";
 const NOTES_KEY = "abopreis:notes:v1";
+const CUSTOM_KEY = "abopreis:customitems:v1";
+const SHOP_KEY = "abopreis:shopping:v1";
 
 const supaEnabled = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
 const sb = supaEnabled ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -1735,8 +1813,12 @@ const cssEsc = window.CSS && CSS.escape ? (s=>CSS.escape(s)) : (s=>s.replace(/[^
 let supaRows = new Map();      // "<item_key>|<scope>" → {checked, comment, updated_by, updated_at}
 let supaReady = false;
 let localNotes = {};           // fallback-notities, alleen gebruikt zonder Supabase
+let customItems = [];          // [{id, group_name, label, personal, created_by}] — zelf toegevoegde paklijst-regels
+let shopRows = new Map();      // "<id>" → {id, label, checked, created_by, updated_by, created_at}
 let me = null;
 try{ me = localStorage.getItem(ME_KEY); }catch{}
+
+const localId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "id" + Date.now() + Math.random().toString(36).slice(2);
 
 const rowKey = (item_key, scope) => item_key + "|" + scope;
 const getRow = (item_key, scope) => supaRows.get(rowKey(item_key, scope)) || {checked:false, comment:"", updated_by:null, updated_at:null};
@@ -1825,15 +1907,172 @@ async function setPackState(item_key, scope, patch){
   }
 }
 
-function subscribePackState(){
+// ---- zelf toegevoegde paklijst-regels ----------------------------------
+function loadCustomLocal(){
+  try{ customItems = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "[]"); }catch{ customItems = []; }
+}
+function saveCustomLocal(){ try{ localStorage.setItem(CUSTOM_KEY, JSON.stringify(customItems)); }catch{} }
+
+async function loadCustomItems(){
+  if(!supaEnabled){ loadCustomLocal(); return; }
+  try{
+    const {data, error} = await sb.from("packing_custom_items").select("*").eq("trip", TRIP_ID);
+    if(error) throw error;
+    customItems = data;
+  }catch(err){
+    console.error("[paklijst] eigen items laden mislukt:", err);
+    toast("Eigen items laden mislukt\n" + supaErrText(err), 5000);
+  }
+}
+
+// voorkomt een tweede regel die op hetzelfde vinkje/notitie zou uitkomen
+// als een bestaande (ingebouwde of eerder toegevoegde) regel in die groep
+function itemKeyTaken(groupName, label, excludeId){
+  const wantKey = slug(groupName) + "__" + slug(label);
+  const g = PACK.find(x => x.g === groupName);
+  if(g && g.items.some(it => slug(groupName) + "__" + slug(it.t) === wantKey)) return true;
+  return customItems.some(ci => ci.id !== excludeId && ci.group_name === groupName
+    && slug(groupName) + "__" + slug(ci.label) === wantKey);
+}
+
+async function addCustomItem(groupName, label){
+  label = label.trim();
+  if(!label) return;
+  if(itemKeyTaken(groupName, label)){ toast("Staat er al bij"); return; }
+  const g = PACK.find(x => x.g === groupName);
+  const personal = !!(g && g.personal);
+  if(!supaEnabled){
+    customItems.push({id: localId(), group_name: groupName, label, personal, created_by: me});
+    saveCustomLocal();
+    if(lastView) renderPack(lastView);
+    return;
+  }
+  try{
+    const {data, error} = await sb.from("packing_custom_items")
+      .insert({trip: TRIP_ID, group_name: groupName, label, personal, created_by: me})
+      .select().single();
+    if(error) throw error;
+    // de realtime-echo van deze eigen insert kan sneller aankomen dan deze
+    // await hier verdergaat en al hebben gepusht — niet nog eens toevoegen
+    if(!customItems.some(ci => ci.id === data.id)) customItems.push(data);
+    if(lastView) renderPack(lastView);
+  }catch(err){
+    console.error("[paklijst] item toevoegen mislukt:", err);
+    toast("Toevoegen mislukt\n" + supaErrText(err), 5000);
+  }
+}
+
+async function deleteCustomItem(id){
+  const item = customItems.find(ci => String(ci.id) === String(id));
+  customItems = customItems.filter(ci => String(ci.id) !== String(id));
+  if(lastView) renderPack(lastView);
+  toast(item ? `${item.label} verwijderd` : "Item verwijderd");
+  if(!supaEnabled){ saveCustomLocal(); return; }
+  try{
+    const {error} = await sb.from("packing_custom_items").delete().eq("id", id);
+    if(error) throw error;
+  }catch(err){
+    console.error("[paklijst] item verwijderen mislukt:", err);
+    toast("Verwijderen mislukt\n" + supaErrText(err), 5000);
+  }
+}
+
+// ---- boodschappenlijst --------------------------------------------------
+function loadShopLocal(){
+  try{
+    const arr = JSON.parse(localStorage.getItem(SHOP_KEY) || "[]");
+    shopRows = new Map(arr.map(r => [String(r.id), r]));
+  }catch{ shopRows = new Map(); }
+}
+function saveShopLocal(){ try{ localStorage.setItem(SHOP_KEY, JSON.stringify([...shopRows.values()])); }catch{} }
+
+async function loadShoppingState(){
+  if(!supaEnabled){ loadShopLocal(); return; }
+  try{
+    const {data, error} = await sb.from("shopping_items").select("*").eq("trip", TRIP_ID).order("created_at");
+    if(error) throw error;
+    shopRows = new Map(data.map(r => [String(r.id), r]));
+  }catch(err){
+    console.error("[boodschappen] laden mislukt:", err);
+    toast("Boodschappenlijst laden mislukt\n" + supaErrText(err), 5000);
+  }
+}
+
+async function addShoppingItem(label){
+  label = label.trim();
+  if(!label) return;
+  if(!supaEnabled){
+    const id = localId();
+    shopRows.set(id, {id, label, checked:false, created_by: me, created_at: new Date().toISOString()});
+    saveShopLocal();
+    renderShopping();
+    return;
+  }
+  try{
+    const {data, error} = await sb.from("shopping_items")
+      .insert({trip: TRIP_ID, label, created_by: me}).select().single();
+    if(error) throw error;
+    shopRows.set(String(data.id), data);
+    renderShopping();
+  }catch(err){
+    console.error("[boodschappen] toevoegen mislukt:", err);
+    toast("Toevoegen mislukt\n" + supaErrText(err), 5000);
+  }
+}
+
+async function toggleShoppingItem(id, checked){
+  const cur = shopRows.get(String(id));
+  if(!cur) return;
+  const stamp = new Date().toISOString();
+  shopRows.set(String(id), {...cur, checked, updated_by: me, updated_at: stamp});
+  if(!supaEnabled){ saveShopLocal(); return; }
+  try{
+    const {error} = await sb.from("shopping_items").update({checked, updated_by: me, updated_at: stamp}).eq("id", id);
+    if(error) throw error;
+  }catch(err){
+    console.error("[boodschappen] bijwerken mislukt:", err);
+    toast("Bijwerken mislukt\n" + supaErrText(err), 5000);
+  }
+}
+
+async function deleteShoppingItem(id, opts={}){
+  const item = shopRows.get(String(id));
+  shopRows.delete(String(id));
+  renderShopping();
+  if(!opts.silent) toast(item ? `${item.label} verwijderd` : "Product verwijderd");
+  if(!supaEnabled){ saveShopLocal(); return; }
+  try{
+    const {error} = await sb.from("shopping_items").delete().eq("id", id);
+    if(error) throw error;
+  }catch(err){
+    console.error("[boodschappen] verwijderen mislukt:", err);
+    toast("Verwijderen mislukt\n" + supaErrText(err), 5000);
+  }
+}
+
+function subscribeShared(){
   if(!supaEnabled) return;
-  sb.channel("packing_state_" + TRIP_ID)
+  sb.channel("shared_" + TRIP_ID)
     .on("postgres_changes", {event:"*", schema:"public", table:"packing_state", filter:`trip=eq.${TRIP_ID}`}, payload=>{
       const r = (payload.new && Object.keys(payload.new).length) ? payload.new : payload.old;
       if(!r) return;
       if(payload.eventType === "DELETE") supaRows.delete(rowKey(r.item_key, r.scope));
       else supaRows.set(rowKey(r.item_key, r.scope), r);
       if(state.tab === "pack") applyRowToDom(r.item_key, r.scope, r);
+    })
+    .on("postgres_changes", {event:"*", schema:"public", table:"packing_custom_items", filter:`trip=eq.${TRIP_ID}`}, payload=>{
+      if(payload.eventType === "DELETE"){
+        customItems = customItems.filter(ci => ci.id !== payload.old.id);
+      }else{
+        const r = payload.new;
+        if(!customItems.some(ci => ci.id === r.id)) customItems.push(r);
+      }
+      if(state.tab === "pack" && lastView) renderPack(lastView);
+    })
+    .on("postgres_changes", {event:"*", schema:"public", table:"shopping_items", filter:`trip=eq.${TRIP_ID}`}, payload=>{
+      if(payload.eventType === "DELETE") shopRows.delete(String(payload.old.id));
+      else shopRows.set(String(payload.new.id), payload.new);
+      if(state.tab === "shop") renderShopping();
     })
     .subscribe();
 }
@@ -1849,11 +2088,14 @@ $("me").addEventListener("click", e=>{
 });
 
 function initPackSync(){
-  if(!supaEnabled) return;
-  $("mectl").hidden = false;
-  syncMe();
-  loadPackState().then(()=>{ if(lastView) renderPack(lastView); });
-  subscribePackState();
+  if(supaEnabled){
+    $("mectl").hidden = false;
+    syncMe();
+    subscribeShared();
+  }
+  Promise.all([loadPackState(), loadCustomItems(), loadShoppingState()]).then(()=>{
+    if(lastView){ renderPack(lastView); renderShopping(); }
+  });
 }
 
 function packContext(v){
@@ -1870,6 +2112,7 @@ function packContext(v){
 function packRow(it){
   const badge = it.cond ? '<span class="cond">weer</span>' : "";
   const why = it.why ? `<span class="wy">${esc(it.why)}</span>` : "";
+  const del = it.custom ? `<button type="button" class="itemdel" data-id="${esc(String(it.id))}" aria-label="${esc(it.t)} verwijderen">×</button>` : "";
   const note = `<input class="pi-note" type="text" placeholder="notitie…" maxlength="200" value="${esc(getNote(it.key))}" data-key="${esc(it.key)}">`;
   if(it.personal){
     const a = isChecked(it.key,"A"), b = isChecked(it.key,"B");
@@ -1880,16 +2123,20 @@ function packRow(it){
           <label class="chk"><input type="checkbox" data-key="${esc(it.key)}" data-scope="B"${b?" checked":""}>B</label>
         </div>
         <span class="it">${esc(it.t)} ${badge} ${why}</span>
+        ${del}
       </div>
       ${note}
     </li>`;
   }
   const chk = isChecked(it.key,"gedeeld");
   return `<li class="packrow">
-    <label class="pi-single">
-      <input type="checkbox" data-key="${esc(it.key)}" data-scope="gedeeld"${chk?" checked":""}>
-      <span class="it">${esc(it.t)} ${badge} ${why}</span>
-    </label>
+    <div class="pi-row">
+      <label class="pi-single">
+        <input type="checkbox" data-key="${esc(it.key)}" data-scope="gedeeld"${chk?" checked":""}>
+        <span class="it">${esc(it.t)} ${badge} ${why}</span>
+      </label>
+      ${del}
+    </div>
     ${note}
   </li>`;
 }
@@ -1903,21 +2150,32 @@ function renderPack(v){
     return;
   }
   const c = packContext(v);
-  const groups = PACK.filter(g => !g.when || g.when(c)).map(g=>({
-    g: g.g, personal: !!g.personal,
-    items: g.items.filter(it => !it.when || it.when(c)).map(it=>({
+  const groups = PACK.filter(g => !g.when || g.when(c)).map(g=>{
+    const builtin = g.items.filter(it => !it.when || it.when(c)).map(it=>({
       t: it.t,
       key: slug(g.g) + "__" + slug(it.t),
       why: it.why ? (typeof it.why === "function" ? it.why(c) : it.why) : null,
       cond: !!it.when,
       personal: !!g.personal
-    }))
-  }));
+    }));
+    const custom = customItems.filter(ci => ci.group_name === g.g).map(ci=>({
+      t: ci.label,
+      key: slug(g.g) + "__" + slug(ci.label),
+      why: null, cond: false,
+      personal: !!ci.personal,
+      custom: true, id: ci.id
+    }));
+    return {g: g.g, personal: !!g.personal, items: [...builtin, ...custom]};
+  });
 
   grid.innerHTML = groups.map(g=>`
     <section class="packgroup${g.personal?" personal":""}">
       <h3>${esc(g.g)}</h3>
       <ul>${g.items.map(packRow).join("")}</ul>
+      <form class="packadd" data-group="${esc(g.g)}">
+        <input type="text" class="packaddinput" placeholder="+ item toevoegen…" maxlength="80" aria-label="Nieuw item voor ${esc(g.g)}">
+        <button type="submit" aria-label="Toevoegen">+</button>
+      </form>
     </section>`).join("");
 
   $("packsub").innerHTML =
@@ -1931,6 +2189,28 @@ function renderPack(v){
   updatePackProgress();
 }
 
+function renderShopping(){
+  const rows = [...shopRows.values()].sort((a,b)=>{
+    if(a.checked !== b.checked) return a.checked ? 1 : -1;
+    return String(a.created_at||"").localeCompare(String(b.created_at||""));
+  });
+  $("shoplist").innerHTML = rows.length ? rows.map(r=>`
+    <li class="shoprow">
+      <label>
+        <input type="checkbox" data-id="${esc(String(r.id))}"${r.checked?" checked":""}>
+        <span class="it">${esc(r.label)}</span>
+      </label>
+      <button type="button" class="itemdel" data-shopid="${esc(String(r.id))}" aria-label="${esc(r.label)} verwijderen">×</button>
+    </li>`).join("") : `<p class="empty shopempty">Nog niets op de lijst — typ hierboven een product.</p>`;
+  const done = rows.filter(r=>r.checked).length;
+  $("shopfill").style.width = (rows.length ? done/rows.length*100 : 0) + "%";
+  $("shoptxt").textContent = `${done} van ${rows.length} in huis`;
+  $("shopcount").textContent = rows.length ? `${done}/${rows.length}` : "";
+  $("shopsub").textContent = supaEnabled
+    ? "Gedeeld voor jullie allebei — typ een product en druk op Enter."
+    : "Blijft in deze browser — koppel Supabase (zie README) om 'm te delen. Typ een product en druk op Enter.";
+}
+
 /* ---------- alles ---------- */
 function render(){
   const v = lastView = derive();
@@ -1942,6 +2222,7 @@ function render(){
   renderRank(v);
   renderMatrix(v);
   renderPack(v);
+  renderShopping();
   renderData(v);
   $("eyebrow").textContent =
     "Bijgewerkt " + new Date(state.fetchedAt).toLocaleString("nl-NL",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
@@ -1953,8 +2234,9 @@ function render(){
 function showTab(t){
   if(t !== "map") stopPlay();
   state.tab = t;
-  if(t !== "pack") state.dashTab = t;
+  if(DASH_TABS.includes(t)) state.dashTab = t;
   if(t === "pack" && supaEnabled && lastView) loadPackState().then(()=>renderPack(lastView));
+  if(t === "shop" && supaEnabled) loadShoppingState().then(renderShopping);
   TABS.forEach(x=>{ $("panel-" + x).hidden = (x !== t); });
   DASH_TABS.forEach(x=>{
     const on = x === t;
@@ -1967,13 +2249,15 @@ function showTab(t){
 }
 
 function syncTopNav(){
-  const onPack = state.tab === "pack";
-  $("top-dash").setAttribute("aria-selected", String(!onPack));
-  $("top-pack").setAttribute("aria-selected", String(onPack));
-  $("top-dash").tabIndex = onPack ? -1 : 0;
-  $("top-pack").tabIndex = onPack ? 0 : -1;
-  $("kpis").hidden = onPack;
-  $("subnav").hidden = onPack;
+  const top = topOf(state.tab);
+  TOP_TABS.forEach(x=>{
+    const on = x === top;
+    const b = $("top-" + x);
+    b.setAttribute("aria-selected", String(on));
+    b.tabIndex = on ? 0 : -1;
+  });
+  $("kpis").hidden = top !== "dash";
+  $("subnav").hidden = top !== "dash";
 }
 
 $("profile").addEventListener("click", e=>{
@@ -2021,14 +2305,17 @@ $("subnav").addEventListener("keydown", e=>{
 });
 $("toplevel").addEventListener("click", e=>{
   const b = e.target.closest("button[data-top]"); if(!b) return;
-  showTab(b.dataset.top === "pack" ? "pack" : (state.dashTab || "map"));
+  const t = b.dataset.top;
+  showTab(t === "dash" ? (state.dashTab || "map") : t);
 });
 $("toplevel").addEventListener("keydown", e=>{
   if(e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
   e.preventDefault();
-  const onPack = state.tab === "pack";
-  showTab(onPack ? (state.dashTab || "map") : "pack");
-  $(onPack ? "top-dash" : "top-pack").focus();
+  const i = TOP_TABS.indexOf(topOf(state.tab));
+  const j = e.key === "ArrowRight" ? (i+1) % TOP_TABS.length : (i-1+TOP_TABS.length) % TOP_TABS.length;
+  const t = TOP_TABS[j];
+  showTab(t === "dash" ? (state.dashTab || "map") : t);
+  $("top-" + t).focus();
 });
 // Notities slaan tijdens het typen op (afgeremd), niet pas bij het verlaten
 // van het veld — anders raak je een net getikte notitie kwijt als je de tab
@@ -2119,6 +2406,57 @@ $("packcopy").addEventListener("click", async ()=>{
     toast("Kopiëren geblokkeerd door de browser");
   }
 });
+
+$("packgrid").addEventListener("submit", e=>{
+  const form = e.target.closest(".packadd"); if(!form) return;
+  e.preventDefault();
+  const input = form.querySelector(".packaddinput");
+  addCustomItem(form.dataset.group, input.value);
+  input.value = "";
+  input.focus();
+});
+$("packgrid").addEventListener("click", e=>{
+  const b = e.target.closest(".itemdel"); if(!b) return;
+  deleteCustomItem(b.dataset.id);
+});
+
+/* ---------- boodschappenlijst ---------- */
+$("shopform").addEventListener("submit", e=>{
+  e.preventDefault();
+  const input = $("shopinput");
+  addShoppingItem(input.value);
+  input.value = "";
+  input.focus();
+});
+$("shoplist").addEventListener("change", e=>{
+  const cb = e.target.closest("input[type=checkbox]"); if(!cb) return;
+  toggleShoppingItem(cb.dataset.id, cb.checked);
+});
+$("shoplist").addEventListener("click", e=>{
+  const b = e.target.closest(".itemdel"); if(!b) return;
+  deleteShoppingItem(b.dataset.shopid);
+});
+$("shopclear").addEventListener("click", ()=>{
+  const done = [...shopRows.values()].filter(r=>r.checked);
+  if(!done.length){ toast("Er staat niets afgevinkt"); return; }
+  done.forEach(r=>deleteShoppingItem(r.id, {silent:true}));
+  toast(`${done.length} product${done.length===1?"":"en"} gewist`);
+});
+$("shopcopy").addEventListener("click", async ()=>{
+  const rows = [...document.querySelectorAll("#shoplist .shoprow")];
+  if(!rows.length) return;
+  const txt = rows.map(li=>{
+    const cb = li.querySelector("input[type=checkbox]");
+    return `[${cb.checked?"x":" "}] ` + li.querySelector(".it").textContent.trim();
+  }).join("\n");
+  try{
+    await navigator.clipboard.writeText(txt);
+    toast("Boodschappenlijst gekopieerd");
+  }catch{
+    toast("Kopiëren geblokkeerd door de browser");
+  }
+});
+
 /* vertrekdag */
 function fillStart(){
   const days = state.data.places[0].days;

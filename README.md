@@ -26,14 +26,27 @@ opbouw van de score: welk onderdeel de score trekt en welk onderdeel hem tegenho
 **Per dag** — alle regio's tegen alle dagen in één matrix, voor als je zoekt naar een gat in de
 buien in plaats van naar een goede week.
 
-**Paklijst** — beweegt mee met het profiel én met de verwachting voor de gekozen regio. Zakt het
-vriespunt, dan verschijnen muts en handschoenen; gaat het waaien, dan de stormharingen. Regels met
-het label *weer* staan er alleen in omdat de voorspelling erom vraagt. Vinkjes blijven in je eigen
-browser bewaard.
+*Kaart*, *Lijstje*, *Per dag* en *Onder de motorkap* zitten samen onder de bovenste schakelaar
+**Waar naartoe** — dat gaat over het kiezen van een bestemming. **Paklijst** en **Boodschappen**
+zijn eigen tabbladen ernaast: dat gaat over wat je meeneemt, niet over waar je heen gaat.
 
 **Onder de motorkap** — de twee API-verzoeken die de pagina doet, de onbewerkte dagwaarden zoals
 Open-Meteo ze teruggeeft, en de hele rekensom van ruwe waarde via normalisatie en weging naar de
 dagscore. Plus de kanttekeningen bij die bewerking.
+
+**Paklijst** — beweegt mee met het profiel én met de verwachting voor de gekozen regio. Zakt het
+vriespunt, dan verschijnen muts en handschoenen; gaat het waaien, dan de stormharingen. Regels met
+het label *weer* staan er alleen in omdat de voorspelling erom vraagt. Onderaan elke groep staat een
+regel om er zelf iets aan toe te voegen — die telt gewoon mee als vinkje en krijgt een ×'je om hem
+weer weg te halen. Groepen met *ieder apart* (Kleding, Op de fiets, Op pad, Aan het water) geven elk
+zelf toegevoegd item ook een vinkje per persoon. Elk item heeft een notitieveld.
+
+**Boodschappen** — een losse lijst, geen relatie met de paklijst en geen weerlogica: typen, Enter,
+klaar. Afgevinkte producten zakken naar onderen; *Wis afgevinkte* ruimt ze in één keer op.
+
+Zonder Supabase (zie hieronder) blijven vinkjes, notities, eigen paklijst-items en de boodschappen-
+lijst per browser bewaard. Mét Supabase staat alles gedeeld en zie je elkaars wijzigingen vanzelf
+verschijnen, zonder te hoeven verversen.
 
 ## Instellingen zitten in de URL
 
@@ -47,7 +60,7 @@ regio staan allemaal in de hash. Een specifieke weergave is dus te bookmarken of
 `p` = `bike` | `hike` | `chill`, `d` = 2–10 dagen, `r` = 1–10 uur rijden (10 = alles),
 `s` = vertrekdag als index in de voorspelling, `m` = `score` | `rain` | `sun` | `tmax` | `wind` | `frz`,
 `g` = regionaam, `k` = dag binnen de periode (weglaten voor het gemiddelde),
-`t` = `map` | `rank` | `matrix` | `pack` | `data`.
+`t` = `map` | `rank` | `matrix` | `pack` | `shop` | `data`.
 
 ## Deployen op Vercel
 
@@ -102,27 +115,32 @@ Alles zit bovenin het `<script>`-blok van `index.html`.
   en vriespuntniveau. Sommeert per profiel naar 1.
 - **Scorecurves** — de functie `dayParts`. Het tabblad *Onder de motorkap* laat elke curve met
   formule en al zien, dus daar zie je meteen wat een aanpassing doet.
-- **Paklijst** — de array `PACK`. Een regel met `when` verschijnt alleen als de verwachting eraan
-  voldoet, `why` legt in één zin uit waarom hij er staat. Een groep met `personal:true` (Kleding, Op
-  de fiets, Op pad, Aan het water) krijgt een vinkje per persoon in plaats van één gedeeld vinkje.
+- **Paklijst** — de array `PACK` bevat de ingebouwde groepen en regels. Een regel met `when`
+  verschijnt alleen als de verwachting eraan voldoet, `why` legt in één zin uit waarom hij er staat.
+  Een groep met `personal:true` (Kleding, Op de fiets, Op pad, Aan het water) krijgt een vinkje per
+  persoon in plaats van één gedeeld vinkje. Zelf toegevoegde regels (via het `+`-veld onderaan een
+  groep) staan niet in deze array — die leven in `packing_custom_items` (of lokaal, zonder
+  Supabase) en volgen automatisch de `personal`-instelling van hun groep.
 - **Cache** — `CACHE_TTL` (30 min) bepaalt hoe lang een resultaat in `sessionStorage` blijft staan.
   De knop *Ververs* omzeilt de cache altijd.
 
 ## Gedeelde paklijst (Supabase)
 
-Zonder verdere configuratie werkt de paklijst zoals eerst: vinkjes en notities blijven per browser
-bewaard (`localStorage`). Vul je een Supabase-project in, dan staan diezelfde vinkjes en notities
-gedeeld voor jullie allebei, en zie je elkaars wijzigingen vanzelf verschijnen zonder te hoeven
-verversen.
+Zonder verdere configuratie werkt alles zoals eerst: per browser bewaard (`localStorage`). Vul je
+een Supabase-project in, dan staat het gedeeld voor jullie allebei.
 
 **Zo zet je hem aan**
 
 1. Maak een gratis project op [supabase.com](https://supabase.com) (geen creditcard nodig voor de
    hobby-laag).
 2. Open **SQL Editor → New query**, plak de inhoud van [`supabase/schema.sql`](supabase/schema.sql)
-   en klik **Run**. Dit zet één tabel neer (`packing_state`) met rijbeveiliging die de anon-sleutel
-   alleen toegang geeft tot rijen van deze ene reis.
-3. Ga naar **Settings → API** en kopieer de **Project URL** en de **anon public**-sleutel.
+   en klik **Run**. Dit zet drie tabellen neer — `packing_state` (vinkjes/notities),
+   `packing_custom_items` (zelf toegevoegde paklijst-regels) en `shopping_items`
+   (boodschappenlijst) — elk met rijbeveiliging die de sleutel beperkt tot rijen van deze ene reis.
+   Zat er al een oudere versie van dit schema (alleen `packing_state`)? Gewoon opnieuw plakken en
+   draaien; het script is veilig om te herhalen en zet de twee nieuwe tabellen erbij.
+3. Ga naar **Settings → API** en kopieer de **Project URL** en de publieke sleutel (de klassieke
+   **anon**-sleutel of de nieuwere **publishable**-sleutel, `sb_publishable_…` — beide werken).
 4. Zet ze in `index.html`, bovenaan het paklijst-gedeelte van het script (zoek naar
    `SUPABASE_URL`):
    ```js
@@ -130,25 +148,28 @@ verversen.
    const SUPABASE_ANON_KEY = "eyJ…";
    ```
 5. Commit en push (of `vercel --prod`). Klaar — het tabblad *Paklijst* laat nu een *Wie ben jij*-
-   knop zien (A of B), groepen met *ieder apart* krijgen twee vinkjes, en elk item krijgt een
-   notitieveld dat meteen wordt opgeslagen.
+   knop zien (A of B), groepen met *ieder apart* krijgen twee vinkjes, elk item krijgt een
+   notitieveld, en de nieuwe paklijst-regels en boodschappen staan gedeeld.
 
 **Hoe het werkt**
 
-Elk item krijgt een stabiele sleutel (groep + omschrijving, geslugd) en per persoon een eigen rij
-in `packing_state`: `gedeeld` voor de gewone spullen, `A`/`B` voor kleding, fiets-, wandel- en
-zwemspullen. De notitie hangt aan de `gedeeld`-rij, ook bij persoonlijke items — één notitieveld
-per item, niet per persoon. Wijzigingen gaan via Supabase Realtime meteen naar de ander door; komt
-de verbinding even niet tot stand, dan blijft alles gewoon werken en probeert de pagina het bij het
-volgende bezoek aan het tabblad opnieuw.
+Elk ingebouwd item krijgt een stabiele sleutel (groep + omschrijving, geslugd) en per persoon een
+eigen rij in `packing_state`: `gedeeld` voor de gewone spullen, `A`/`B` voor kleding, fiets-, wandel-
+en zwemspullen. Zelf toegevoegde items krijgen dezelfde sleutel, dus hun vinkje/notitie werkt
+identiek — alleen hun *bestaan* (label, groep) staat apart in `packing_custom_items`, zodat je ze
+ook weer kunt verwijderen zonder een ingebouwd item aan te raken. Wijzigingen gaan via Supabase
+Realtime meteen naar de ander door; komt de verbinding even niet tot stand, dan blijft alles gewoon
+werken en probeert de pagina het bij het volgende bezoek aan het tabblad opnieuw.
 
-**Kanttekening bij de beveiliging** — er zit geen login achter. De anon-sleutel staat zichtbaar in
-de broncode (dat is met Supabase de bedoeling; rijbeveiliging bepaalt wat hij mag) en is beperkt
-tot precies deze tabel en deze ene reis-id. Prima voor een privélink tussen jullie twee, niet
-geschikt voor iets gevoeligers.
+**Kanttekening bij de beveiliging** — er zit geen login achter. De sleutel staat zichtbaar in de
+broncode (dat is met Supabase de bedoeling; rijbeveiliging bepaalt wat hij mag) en is beperkt tot
+deze drie tabellen en deze ene reis-id. Prima voor een privélink tussen jullie twee, niet geschikt
+voor iets gevoeligers. Verwijderen kan zonder bevestiging — het ×'je is met opzet ruimer dan het
+lijkt om te tikken (zie `.itemdel` in de CSS), en je krijgt een toast met wát er weg is.
 
-**Voor de volgende reis** — wis de tabel (`truncate packing_state;` in de SQL Editor) of pas de
-`TRIP_ID`-constante aan én de bijbehorende waarde in de drie policies in `schema.sql`.
+**Voor de volgende reis** — wis de tabellen (`truncate packing_state, packing_custom_items,
+shopping_items;` in de SQL Editor) of pas de `TRIP_ID`-constante aan én de bijbehorende waarde in
+alle policies in `schema.sql`.
 
 ## Databron
 
