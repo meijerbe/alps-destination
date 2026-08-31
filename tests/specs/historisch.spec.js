@@ -8,23 +8,81 @@ test.beforeEach(async ({ page }) => {
   await withoutSupabase(page);
 });
 
-test("Historisch droog kleurt de kaart zodra het 15-jaars-gemiddelde binnen is", async ({ page }) => {
+test("de bron-toggle kleurt de kaart zodra het 15-jaars-gemiddelde binnen is", async ({ page }) => {
   await mockHistorical(page);
   await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
   await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
   const voor = await page.locator("#mapsvg").innerHTML();
 
-  await page.locator('#mapmetric button[data-m="histRain"]').click();
-  await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveText("Historisch");
+  await page.locator('#mapsource button[data-h="1"]').click();
+  await expect(page.locator("#mapsource button[aria-pressed=true]")).toHaveText("Historisch");
+  // schakelt zelf naar Neerslag — Score bestaat niet historisch
+  await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveText("Neerslag");
 
-  // wacht tot de vlakken echt herkleurd zijn (de melding "wordt opgehaald" is weg)
   await expect(page.locator("#mapnote")).not.toContainText("wordt opgehaald");
   expect(await page.locator("#mapsvg").innerHTML()).not.toBe(voor);
 
-  // geen enkele cel blijft in de "onbekend"-grijstint hangen
   const grijs = await page.evaluate(() =>
     [...document.querySelectorAll(".mapwrap svg rect.c")].filter(r => r.getAttribute("fill") === "#8a9aa0").length);
   expect(grijs).toBe(0);
+});
+
+test("in historische weergave blijven Neerslag, Zon, Temp en Wind kiesbaar", async ({ page }) => {
+  await mockHistorical(page);
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&h=1&t=map");
+  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+  await expect(page.locator("#mapnote")).not.toContainText("wordt opgehaald");
+
+  for (const m of ["sun", "tmax", "wind", "rain"]) {
+    const voor = await page.locator("#mapsvg").innerHTML();
+    await page.locator(`#mapmetric button[data-m="${m}"]`).click();
+    await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveAttribute("data-m", m);
+    expect(await page.locator("#mapsvg").innerHTML()).not.toBe(voor);
+  }
+});
+
+test("Score en Vriespunt zijn uitgeschakeld zolang de bron op Historisch staat", async ({ page }) => {
+  await mockHistorical(page);
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
+  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+
+  await page.locator('#mapsource button[data-h="1"]').click();
+  await expect(page.locator('#mapmetric button[data-m="score"]')).toBeDisabled();
+  await expect(page.locator('#mapmetric button[data-m="frz"]')).toBeDisabled();
+
+  await page.locator('#mapsource button[data-h="0"]').click();
+  await expect(page.locator('#mapmetric button[data-m="score"]')).toBeEnabled();
+  await expect(page.locator('#mapmetric button[data-m="frz"]')).toBeEnabled();
+});
+
+test("de matrix volgt dezelfde bron-toggle als de kaart", async ({ page }) => {
+  await mockHistorical(page);
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
+  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+
+  await page.locator('#mapsource button[data-h="1"]').click();
+  await page.locator("#tab-matrix").click();
+  await expect(page.locator("#source button[aria-pressed=true]")).toHaveText("Historisch");
+  await expect(page.locator("#metric button[aria-pressed=true]")).toHaveText("Neerslag");
+  await expect(page.locator('#metric button[data-m="score"]')).toBeDisabled();
+  await expect(page.locator("#mnote")).toContainText("historisch");
+});
+
+test("een gedeelde link met h=1 herstelt de historische weergave", async ({ page }) => {
+  await mockHistorical(page);
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&m=sun&h=1&t=map");
+  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+  await expect(page.locator("#mapsource button[aria-pressed=true]")).toHaveText("Historisch");
+  await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveText("Zon");
+});
+
+test("een gedeelde link met h=1&m=score valt terug op neerslag", async ({ page }) => {
+  await mockHistorical(page);
+  // score bestaat niet historisch — een handmatig samengestelde (of oude) link
+  // met die combinatie mag niet op een kapotte weergave uitkomen
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&m=score&h=1&t=map");
+  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+  await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveText("Neerslag");
 });
 
 test("laat tussentijds zien dat de historische data nog wordt opgehaald", async ({ page }) => {
@@ -41,25 +99,24 @@ test("laat tussentijds zien dat de historische data nog wordt opgehaald", async 
       const d = new Date(start); d.setUTCDate(d.getUTCDate() + k);
       return d.toISOString().slice(0, 10);
     });
-    const one = i => ({ daily: { time, precipitation_sum: time.map(() => 2.5) } });
+    const one = () => ({ daily: {
+      time,
+      precipitation_sum: time.map(() => 2.5),
+      sunshine_duration: time.map(() => 18000),
+      temperature_2m_max: time.map(() => 20),
+      wind_speed_10m_max: time.map(() => 15)
+    } });
     route.fulfill({
       status: 200, contentType: "application/json",
-      body: JSON.stringify(nLoc > 1 ? [...Array(nLoc)].map((_, i) => one(i)) : one(0))
+      body: JSON.stringify(nLoc > 1 ? [...Array(nLoc)].map(one) : one())
     });
   });
 
-  await page.goto("/index.html#p=bike&d=5&r=10&s=0&m=histRain&t=map");
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&h=1&t=map");
   await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
 
   await expect(page.locator("#mapnote")).toContainText("wordt opgehaald");
   await expect(page.locator("#mapnote")).not.toContainText("wordt opgehaald", { timeout: 5000 });
-});
-
-test("een gedeelde link met m=histRain herstelt de keuze", async ({ page }) => {
-  await mockHistorical(page);
-  await page.goto("/index.html#p=bike&d=5&r=10&s=0&m=histRain&t=map");
-  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
-  await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveText("Historisch");
 });
 
 test("mislukt ophalen geeft een duidelijke melding, geen crash", async ({ page }) => {
@@ -67,7 +124,7 @@ test("mislukt ophalen geeft een duidelijke melding, geen crash", async ({ page }
   page.on("pageerror", e => fouten.push(e.message));
 
   await withoutHistorical(page);
-  await page.goto("/index.html#p=bike&d=5&r=10&s=0&m=histRain&t=map");
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&h=1&t=map");
   await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
 
   await expect(page.locator("#mapnote")).toContainText("niet gelukt", { timeout: 10000 });

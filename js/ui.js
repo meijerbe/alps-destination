@@ -83,12 +83,26 @@ function syncMetric(){
     [...$(id).children].forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === state.metric))));
 }
 
+// Score en vriespunt bestaan niet historisch (zie historical.js) — die
+// knoppen gaan uit in plaats van naar een lege/kapotte weergave te leiden.
+function syncSource(){
+  ["mapsource","source"].forEach(id =>
+    [...$(id).children].forEach(b => b.setAttribute("aria-pressed", String((b.dataset.h === "1") === state.histMode))));
+  ["mapmetric","metric"].forEach(id =>
+    [...$(id).children].forEach(b => {
+      const beschikbaar = !state.histMode || !!METRICS[b.dataset.m].histVal;
+      b.disabled = !beschikbaar;
+      b.title = beschikbaar ? "" : "Niet beschikbaar in historische weergave";
+    }));
+}
+
 export function syncControls(){
   $("days").value = state.days;
   $("daysval").textContent = state.days + " dagen";
   $("drive").value = state.drive;
   $("driveval").textContent = state.drive>=10 ? "alles" : "max " + state.drive + " u";
   [...$("profile").children].forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.p===state.profile)));
+  syncSource();
   syncMetric();
   syncMe();
   showTab(state.tab);
@@ -124,6 +138,17 @@ $("profile").addEventListener("click", e=>{
   $(id).addEventListener("click", e=>{
     const b = e.target.closest("button"); if(!b) return;
     state.metric = b.dataset.m;
+    syncMetric();
+    writeUrlState();
+    if(state.data) render();
+  });
+});
+["mapsource","source"].forEach(id=>{
+  $(id).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    state.histMode = b.dataset.h === "1";
+    if(state.histMode && !METRICS[state.metric].histVal) state.metric = "rain";
+    syncSource();
     syncMetric();
     writeUrlState();
     if(state.data) render();

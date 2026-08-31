@@ -32,7 +32,7 @@ serveert ze gewoon, er is niets dat kan breken bij een deploy. Al het testgereed
 | `specs/paklijst.spec.js`  | vinkjes lokaal en gedeeld, notities, reset, foutafhandeling |
 | `specs/eigen-items.spec.js` | zelf toegevoegde paklijst-regels |
 | `specs/boodschappen.spec.js` | de boodschappenlijst |
-| `specs/historisch.spec.js` | de kaartmetric *Historisch* — laden, tussentijdse melding, mislukt ophalen |
+| `specs/historisch.spec.js` | de bron-toggle Prognose/Historisch — laden, metriekkeuze, Score/Vriespunt uitschakelen, matrix-sync, tussentijdse melding, mislukt ophalen |
 
 Een paar tests staan er om een fout die we eerder echt hadden vast te pinnen —
 die zijn als zodanig gemarkeerd in een comment. Haal ze niet weg omdat ze
