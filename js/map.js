@@ -47,7 +47,19 @@ export function initMap(onSelect){
         + '(<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC-BY-SA</a>)'
     }).addTo(leafletMap);
 
-    leafletMap.fitBounds(L.latLngBounds(REGIONS.map(rg=>[rg.lat, rg.lon])), { padding: [24, 24] });
+    const fitToRegions = () => {
+      leafletMap.invalidateSize();
+      leafletMap.fitBounds(L.latLngBounds(REGIONS.map(rg=>[rg.lat, rg.lon])), { padding: [24, 24] });
+    };
+    // initMap() draait synchroon, vaak vóór de browser ook maar één layout-
+    // pas heeft gedaan (zeker op mobiel, met eigen lettertypes die nog
+    // laden). Meet Leaflet de container dán, dan krijgt fitBounds soms een
+    // te kleine/nul-grootte te zien en zoomt véél te ver uit. invalidateSize()
+    // + een frame wachten dwingt een verse meting af; het window-'load'-
+    // moment (na lettertype-reflow e.d.) doet dat nog een keer, voor de zekerheid.
+    fitToRegions();
+    requestAnimationFrame(fitToRegions);
+    window.addEventListener("load", fitToRegions, { once: true });
 
     // Voronoi-diagram op de 32 regio-middelpunten: elke cel is precies het
     // gebied dat dichter bij die regio ligt dan bij enige andere — dus
@@ -72,7 +84,7 @@ export function initMap(onSelect){
         ? cell.map(([x,y])=>[y, x / K])
         : [[rg.lat-.05,rg.lon-.05],[rg.lat-.05,rg.lon+.05],[rg.lat+.05,rg.lon+.05],[rg.lat+.05,rg.lon-.05]];
       const poly = L.polygon(latlngs, {
-        weight: 1.5, color: "#fff", fillOpacity: .6, fillColor: "#8a9aa0"
+        weight: 2, color: "#fff", fillOpacity: .82, fillColor: "#8a9aa0"
       }).addTo(leafletMap);
       poly.bindTooltip("", { sticky: true, direction: "top", className: "maptip" });
       poly.on("click", () => onSelect(rg.n));
@@ -147,9 +159,11 @@ export function renderMap(v){
     const isSel = !!(sel && sel.n === rg.n);
     cell.setStyle({
       fillColor: val==null ? "#8a9aa0" : scoreColor(M.good(val)),
-      fillOpacity: p && p.far ? .15 : .6,
+      // Hoog genoeg om de score in één oogopslag te vergelijken — het punt
+      // van kleur-coderen — het reliëf schemert er nog net doorheen.
+      fillOpacity: isSel ? .92 : (p && p.far ? .2 : .82),
       color: isSel ? "#2B2318" : "#fff",
-      weight: isSel ? 3 : 1.5
+      weight: isSel ? 3 : 2
     });
     if(isSel) cell.bringToFront();
     cell.setTooltipContent(tooltipHtml(rg, p, M));
