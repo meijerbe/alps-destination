@@ -1828,6 +1828,11 @@ const getRow = (item_key, scope) => supaRows.get(rowKey(item_key, scope)) || {ch
 // een verkeerde sleutel, een CORS-blokkade, …
 function supaErrText(err){
   if(!err) return "onbekende fout";
+  // de paar fouten die je in de praktijk tegenkomt, met wat je eraan doet —
+  // de ruwe Postgres-tekst zegt een mens weinig
+  if(err.code === "42501") return "de database laat dit nog niet toe — draai supabase/schema.sql opnieuw in de SQL Editor";
+  if(err.code === "42P01" || err.code === "PGRST205") return "die tabel bestaat nog niet — draai supabase/schema.sql in de SQL Editor";
+  if(err.code === "23505") return "dat staat er al op";
   const bits = [err.message || String(err)];
   if(err.hint) bits.push("hint: " + err.hint);
   if(err.code) bits.push("code " + err.code);

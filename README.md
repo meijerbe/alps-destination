@@ -92,13 +92,52 @@ externe hosts toestaat: Google Fonts (css), `fonts.gstatic.com` (de fontbestande
 > `/_vercel/insights/…`. Voeg in dat geval `'self'` toe aan `script-src` en `connect-src` in
 > `vercel.json`, anders blokkeert de CSP het.
 
-## Lokaal testen
+## Lokaal bekijken
 
 ```bash
 python3 -m http.server 8000
 ```
 
 en open <http://localhost:8000>.
+
+## Tests
+
+```bash
+cd tests
+npm ci
+npx playwright install chromium   # eenmalig
+npm test
+```
+
+52 browsertests over kaart, tabbladen, paklijst en boodschappen, op desktop en
+mobiel, in ongeveer twintig seconden. Open-Meteo en Supabase worden afgevangen, dus
+er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
+Ze draaien ook automatisch op elke pull request (zie `.github/workflows/tests.yml`).
+Meer erover in [`tests/README.md`](tests/README.md).
+
+## Waarom deze techniek
+
+Kort: **één statisch HTML-bestand, geen build-stap, Supabase voor wat gedeeld moet
+zijn.** Dat is een bewuste keuze, geen toeval, en het staat hier zodat we het over
+een jaar niet opnieuw hoeven uit te zoeken.
+
+- **Geen build-stap, geen framework.** De app wordt een paar keer per jaar aangeraakt.
+  Een Next.js- of Vite-opzet zou hier *fragieler* zijn, niet robuuster: dan is er een
+  `node_modules` die veroudert, een build die kan breken, en een framework dat om de
+  zoveel tijd een migratie wil. Nu is er één bestand dat het over vijf jaar nog doet.
+  De prijs is dat `index.html` groot is (~2500 regels); dat is het punt waarop dit
+  ooit gaat wringen. Zie hieronder.
+- **Supabase** voor de gedeelde lijstjes: Postgres met een REST-laag en live updates,
+  gratis voor dit volume, en geen server die wij moeten onderhouden. Het alternatief
+  (zelf een API'tje, of Firebase) is hier niet beter.
+- **Vercel** serveert een statisch bestand. Er is met opzet géén `package.json` in de
+  root, zodat er ook niets te bouwen valt; het testgereedschap staat in `tests/`.
+- **Open-Meteo** heeft geen sleutel nodig en is gratis voor dit gebruik.
+
+**Wanneer je dit wél moet omgooien:** als `index.html` te groot wordt om in te werken.
+De volgende stap is dan niet een framework, maar het opknippen in ES-modules
+(`<script type="module">`) — dat kan nog steeds zonder build-stap. Doe dat pas als
+het echt schuurt, en in een eigen wijziging met de tests als vangnet.
 
 ## Aanpassen
 
@@ -133,12 +172,34 @@ een Supabase-project in, dan staat het gedeeld voor jullie allebei.
 
 1. Maak een gratis project op [supabase.com](https://supabase.com) (geen creditcard nodig voor de
    hobby-laag).
-2. Open **SQL Editor → New query**, plak de inhoud van [`supabase/schema.sql`](supabase/schema.sql)
-   en klik **Run**. Dit zet drie tabellen neer — `packing_state` (vinkjes/notities),
+2. Pas het schema toe — kies één van de twee:
+
+   **Automatisch, eenmalig instellen** (aanbevolen — daarna hoeft dit nooit meer met de hand)
+
+   - Ga naar **Project Settings → Database → Connection string**, kies **Session pooler**, en vul
+     je databasewachtwoord in de URI in (dat wachtwoord staat op diezelfde pagina, of reset het
+     daar als je het kwijt bent).
+   - Zet die URI als GitHub-secret: repo → **Settings → Secrets and variables → Actions →
+     New repository secret**, naam `SUPABASE_DB_URL`, waarde de URI van hierboven.
+   - Klaar. De workflow [`apply-schema.yml`](.github/workflows/apply-schema.yml) past
+     `supabase/schema.sql` vanaf nu automatisch toe, elke keer dat dat bestand verandert en naar
+     `main` gaat. Staat het secret er al vóórdat deze PR merget, dan gebeurt het vanzelf bij de
+     merge. Zet je het pas daarna, ga dan naar **Actions → Supabase-schema toepassen → Run
+     workflow** om hem alsnog te laten draaien.
+
+   **Handmatig** (als je liever niets in GitHub-secrets zet)
+
+   - Open **SQL Editor → New query** in Supabase, plak de inhoud van
+     [`supabase/schema.sql`](supabase/schema.sql) en klik **Run**.
+
+   Beide manieren zetten dezelfde drie tabellen neer — `packing_state` (vinkjes/notities),
    `packing_custom_items` (zelf toegevoegde paklijst-regels) en `shopping_items`
    (boodschappenlijst) — elk met rijbeveiliging die de sleutel beperkt tot rijen van deze ene reis.
-   Zat er al een oudere versie van dit schema (alleen `packing_state`)? Gewoon opnieuw plakken en
-   draaien; het script is veilig om te herhalen en zet de twee nieuwe tabellen erbij.
+   Het script is veilig om zo vaak te draaien als je wilt, en controleert zichzelf: staat er iets
+   niet goed, dan krijg je een foutmelding in plaats van stil half werk. Bij de handmatige route
+   hoort onderaan een tabel met **twaalf rijen** te verschijnen, vier policies per tabel; bij de
+   automatische route is een groene run in de Actions-tab het teken. Zie je in de app *"de
+   database laat dit nog niet toe"*, dan is dit de stap die je opnieuw moet doen.
 3. Ga naar **Settings → API** en kopieer de **Project URL** en de publieke sleutel (de klassieke
    **anon**-sleutel of de nieuwere **publishable**-sleutel, `sb_publishable_…` — beide werken).
 4. Zet ze in `index.html`, bovenaan het paklijst-gedeelte van het script (zoek naar
@@ -150,6 +211,11 @@ een Supabase-project in, dan staat het gedeeld voor jullie allebei.
 5. Commit en push (of `vercel --prod`). Klaar — het tabblad *Paklijst* laat nu een *Wie ben jij*-
    knop zien (A of B), groepen met *ieder apart* krijgen twee vinkjes, elk item krijgt een
    notitieveld, en de nieuwe paklijst-regels en boodschappen staan gedeeld.
+
+**Waarom de sessiepooler en niet de directe verbinding** — die werkt over gewoon IPv4, wat
+GitHub Actions-runners nodig hebben; de directe verbinding van Supabase is IPv6-only tenzij je een
+addon koopt. Voor een script als dit (op zichzelf staande statements, geen langlopende sessie)
+maakt het verder niets uit.
 
 **Hoe het werkt**
 
