@@ -4,7 +4,9 @@ Ons weerdashboard voor de Alpen. Eén statisch bestand dat 32 Alpenregio's op ee
 kleurt naar het weer voor een actieve vakantie — fietsen, hiken of aan het water hangen —
 zodat we kunnen bepalen waar we heen gaan als het Mayrhofen-weekend erop zit.
 
-Geen build-stap, geen dependencies, geen API-sleutel. `index.html` is de hele app.
+Geen build-stap, geen dependencies, geen API-sleutel. `index.html` bevat de opmaak, `styles.css`
+de stijl en `js/` de logica als losse ES-modules (`<script type="module">`) — rechtstreeks door de
+browser geladen, niets te bouwen.
 
 ## Wat er in zit
 
@@ -83,14 +85,18 @@ vercel --prod   # productie
 
 ### vercel.json
 
-`cleanUrls` en `trailingSlash` houden de URL's schoon, `index.html` krijgt `must-revalidate` zodat
-een nieuwe deploy meteen zichtbaar is, en er staat een Content-Security-Policy die precies drie
-externe hosts toestaat: Google Fonts (css), `fonts.gstatic.com` (de fontbestanden) en
-`api.open-meteo.com` (de data).
+`cleanUrls` en `trailingSlash` houden de URL's schoon; `index.html`, `styles.css` en `js/*.js`
+krijgen `must-revalidate` zodat een nieuwe deploy overal meteen zichtbaar is — zonder dat zou een
+gecachete oude `js/main.js` naast een verse `index.html` kunnen komen te staan. Verder staat er een
+Content-Security-Policy die `default-src
+'none'` als basis neemt en per soort bestand precies openzet wat nodig is: `'self'` voor de eigen
+`styles.css` en `js/*.js`, `cdn.jsdelivr.net` voor de Supabase-client, Google Fonts (css) en
+`fonts.gstatic.com` (de fontbestanden) voor de typografie, en `api.open-meteo.com` plus
+`*.supabase.co` (ook `wss://`, voor Realtime) voor data.
 
 > Zet je Vercel Web Analytics of Speed Insights aan, dan injecteert Vercel een script vanaf
-> `/_vercel/insights/…`. Voeg in dat geval `'self'` toe aan `script-src` en `connect-src` in
-> `vercel.json`, anders blokkeert de CSP het.
+> `/_vercel/insights/…`. `script-src` staat al open voor `'self'`; voeg dan ook `'self'` toe aan
+> `connect-src` in `vercel.json`, anders blokkeert de CSP de meetbeacon.
 
 ## Lokaal bekijken
 
@@ -112,56 +118,77 @@ npm test
 52 browsertests over kaart, tabbladen, paklijst en boodschappen, op desktop en
 mobiel, in ongeveer twintig seconden. Open-Meteo en Supabase worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
-Ze draaien ook automatisch op elke pull request (zie `.github/workflows/tests.yml`).
+Daarnaast een ESLint-check (`npm run lint`) die alleen op `no-undef` en dode code let —
+geen stijlregels, wel de klasse fout (een vergeten import) die anders pas in de browser
+opvalt. Beide draaien automatisch op elke pull request (zie `.github/workflows/tests.yml`).
 Meer erover in [`tests/README.md`](tests/README.md).
 
 ## Waarom deze techniek
 
-Kort: **één statisch HTML-bestand, geen build-stap, Supabase voor wat gedeeld moet
-zijn.** Dat is een bewuste keuze, geen toeval, en het staat hier zodat we het over
-een jaar niet opnieuw hoeven uit te zoeken.
+Kort: **statische bestanden, geen build-stap, Supabase voor wat gedeeld moet zijn.**
+Dat is een bewuste keuze, geen toeval, en het staat hier zodat we het over een jaar
+niet opnieuw hoeven uit te zoeken.
 
 - **Geen build-stap, geen framework.** De app wordt een paar keer per jaar aangeraakt.
   Een Next.js- of Vite-opzet zou hier *fragieler* zijn, niet robuuster: dan is er een
   `node_modules` die veroudert, een build die kan breken, en een framework dat om de
-  zoveel tijd een migratie wil. Nu is er één bestand dat het over vijf jaar nog doet.
-  De prijs is dat `index.html` groot is (~2500 regels); dat is het punt waarop dit
-  ooit gaat wringen. Zie hieronder.
+  zoveel tijd een migratie wil. Nu zijn het bestanden die de browser rechtstreeks laadt
+  en die het over vijf jaar nog gewoon doen.
+- **ES-modules in plaats van één script.** De logica staat als `<script type="module">`
+  opgeknipt in `js/*.js` — elk bestand één onderwerp (kaart, paklijst, boodschappen,
+  Supabase-sync, …), met gewone `import`/`export` ertussen. Dat kan zonder build-stap:
+  browsers laden modules al jaren native. `index.html` zelf is nu alleen nog opmaak.
 - **Supabase** voor de gedeelde lijstjes: Postgres met een REST-laag en live updates,
   gratis voor dit volume, en geen server die wij moeten onderhouden. Het alternatief
   (zelf een API'tje, of Firebase) is hier niet beter.
-- **Vercel** serveert een statisch bestand. Er is met opzet géén `package.json` in de
+- **Vercel** serveert statische bestanden. Er is met opzet géén `package.json` in de
   root, zodat er ook niets te bouwen valt; het testgereedschap staat in `tests/`.
 - **Open-Meteo** heeft geen sleutel nodig en is gratis voor dit gebruik.
 
-**Wanneer je dit wél moet omgooien:** als `index.html` te groot wordt om in te werken.
-De volgende stap is dan niet een framework, maar het opknippen in ES-modules
-(`<script type="module">`) — dat kan nog steeds zonder build-stap. Doe dat pas als
-het echt schuurt, en in een eigen wijziging met de tests als vangnet.
+**Wanneer je dit wél moet omgooien:** als een los `js/*.js`-bestand zelf weer te groot
+wordt om in te werken, of als de app een reden krijgt om ergens *state* buiten de
+browser te delen die Supabase niet dekt. Tot die tijd is een framework hier een
+oplossing voor een probleem dat deze app niet heeft.
 
 ## Aanpassen
 
-Alles zit bovenin het `<script>`-blok van `index.html`.
+De logica staat in `js/`, één onderwerp per bestand:
 
-- **Regio's** — de array `REGIONS`. `lat`/`lon` is het punt waarvoor het weer wordt opgehaald én
-  het middelpunt waar de kaart de cellen omheen legt; `drive` is de rijtijd vanaf Mayrhofen in uren
-  (met de hand geschat, dus corrigeer gerust); `s` is een kortere naam voor op de kaart; `side` is
-  puur informatief. Een regio toevoegen of verplaatsen hertekent de kaart vanzelf.
-- **Omtrek van de Alpen** — `ARC`, een grove polygoon in lon/lat. Alleen bedoeld om het raster af
-  te knippen, het is geen grens.
-- **Rastergrofte** — `GEO.latStep`. Kleiner = fijnere kaart en meer SVG.
-- **Weging** — `WEIGHTS`, per profiel de weging van droogte, neerslagkans, zon, wind, temperatuur
-  en vriespuntniveau. Sommeert per profiel naar 1.
-- **Scorecurves** — de functie `dayParts`. Het tabblad *Onder de motorkap* laat elke curve met
-  formule en al zien, dus daar zie je meteen wat een aanpassing doet.
-- **Paklijst** — de array `PACK` bevat de ingebouwde groepen en regels. Een regel met `when`
-  verschijnt alleen als de verwachting eraan voldoet, `why` legt in één zin uit waarom hij er staat.
-  Een groep met `personal:true` (Kleding, Op de fiets, Op pad, Aan het water) krijgt een vinkje per
-  persoon in plaats van één gedeeld vinkje. Zelf toegevoegde regels (via het `+`-veld onderaan een
-  groep) staan niet in deze array — die leven in `packing_custom_items` (of lokaal, zonder
-  Supabase) en volgen automatisch de `personal`-instelling van hun groep.
-- **Cache** — `CACHE_TTL` (30 min) bepaalt hoe lang een resultaat in `sessionStorage` blijft staan.
-  De knop *Ververs* omzeilt de cache altijd.
+| bestand | wat erin zit |
+| --- | --- |
+| `dom.js` | generieke hulpfuncties: `$`, `esc`, `clamp`, `fmt`, `slug`, datumnotatie |
+| `regions.js` | `REGIONS`, `ARC`, `GEO`, `WEIGHTS`, `PARTS` — de bestemmingen en de weging |
+| `metrics.js` | `METRICS` — wat er te kleuren valt (score, mm, zon, …) |
+| `state.js` | de gedeelde `state`, cache, paklijst-vinkjes, de URL-hash |
+| `weather.js` | scoreberekening, Open-Meteo ophalen, `derive()` |
+| `map-geometry.js` / `map.js` | de rasterkaart en de kaart-render |
+| `dashboard.js` / `data-tab.js` | kerncijfers, föhnmeter, ranglijst, matrix, *onder de motorkap* |
+| `packing-data.js` / `packing.js` | de paklijst-inhoud en -logica |
+| `shopping.js` | de boodschappenlijst |
+| `supabase-client.js` / `realtime.js` | de Supabase-verbinding en live sync |
+| `render.js` / `ui.js` / `main.js` | de render-regisseur, alle DOM-events, en het opstarten |
+
+Meestal is maar één bestand relevant:
+
+- **Regio's** — `REGIONS` in `regions.js`. `lat`/`lon` is het punt waarvoor het weer wordt
+  opgehaald én het middelpunt waar de kaart de cellen omheen legt; `drive` is de rijtijd vanaf
+  Mayrhofen in uren (met de hand geschat, dus corrigeer gerust); `s` is een kortere naam voor op
+  de kaart; `side` is puur informatief. Een regio toevoegen of verplaatsen hertekent de kaart vanzelf.
+- **Omtrek van de Alpen** — `ARC` in `regions.js`, een grove polygoon in lon/lat. Alleen bedoeld
+  om het raster af te knippen, het is geen grens.
+- **Rastergrofte** — `GEO.latStep` in `regions.js`. Kleiner = fijnere kaart en meer SVG.
+- **Weging** — `WEIGHTS` in `regions.js`, per profiel de weging van droogte, neerslagkans, zon,
+  wind, temperatuur en vriespuntniveau. Sommeert per profiel naar 1.
+- **Scorecurves** — de functie `dayParts` in `weather.js`. Het tabblad *Onder de motorkap* laat
+  elke curve met formule en al zien, dus daar zie je meteen wat een aanpassing doet.
+- **Paklijst** — de array `PACK` in `packing-data.js` bevat de ingebouwde groepen en regels. Een
+  regel met `when` verschijnt alleen als de verwachting eraan voldoet, `why` legt in één zin uit
+  waarom hij er staat. Een groep met `personal:true` (Kleding, Op de fiets, Op pad, Aan het water)
+  krijgt een vinkje per persoon in plaats van één gedeeld vinkje. Zelf toegevoegde regels (via het
+  `+`-veld onderaan een groep) staan niet in deze array — die leven in `packing_custom_items` (of
+  lokaal, zonder Supabase) en volgen automatisch de `personal`-instelling van hun groep.
+- **Cache** — `CACHE_TTL` (30 min) in `state.js` bepaalt hoe lang een resultaat in
+  `sessionStorage` blijft staan. De knop *Ververs* omzeilt de cache altijd.
 
 ## Gedeelde paklijst (Supabase)
 
@@ -202,11 +229,10 @@ een Supabase-project in, dan staat het gedeeld voor jullie allebei.
    database laat dit nog niet toe"*, dan is dit de stap die je opnieuw moet doen.
 3. Ga naar **Settings → API** en kopieer de **Project URL** en de publieke sleutel (de klassieke
    **anon**-sleutel of de nieuwere **publishable**-sleutel, `sb_publishable_…` — beide werken).
-4. Zet ze in `index.html`, bovenaan het paklijst-gedeelte van het script (zoek naar
-   `SUPABASE_URL`):
+4. Zet ze bovenin `js/supabase-client.js`:
    ```js
-   const SUPABASE_URL = "https://xxxxxxxx.supabase.co";
-   const SUPABASE_ANON_KEY = "eyJ…";
+   export const SUPABASE_URL = "https://xxxxxxxx.supabase.co";
+   export const SUPABASE_ANON_KEY = "eyJ…";
    ```
 5. Commit en push (of `vercel --prod`). Klaar — het tabblad *Paklijst* laat nu een *Wie ben jij*-
    knop zien (A of B), groepen met *ieder apart* krijgen twee vinkjes, elk item krijgt een
