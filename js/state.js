@@ -18,6 +18,7 @@ export const PACK_KEY_LEGACY = "basiskamp:pack:v1";
 export const CACHE_TTL = 30 * 60 * 1000;   // Open-Meteo ververst ~elk uur
 
 export let state = {profile:"bike", days:5, drive:10, start:0, tab:"map", dashTab:"map", metric:"score",
+             histMode:false,
              data:null, raw:null, foehnRaw:null, fromCache:false, fetchedAt:null,
              open:null, sel:null, view:null, day:-1, dataPlace:null, dataDay:0};
 
@@ -68,11 +69,16 @@ export function readUrlState(){
   if(METRICS[q.get("m")]) state.metric = q.get("m");
   if(q.get("g") && REGIONS.some(r=>r.n === q.get("g"))) state.sel = q.get("g");
   const k = +q.get("k"); if(q.get("k") !== null && k >= 0 && k <= 9) state.day = Math.round(k);
+  state.histMode = q.get("h") === "1";
+  // score en vriespunt bestaan niet historisch — val terug op neerslag
+  // in plaats van een lege/kapotte weergave
+  if(state.histMode && !METRICS[state.metric].histVal) state.metric = "rain";
 }
 export function writeUrlState(){
   const q = new URLSearchParams({p:state.profile, d:state.days, r:state.drive, s:state.start,
                                  m:state.metric, t:state.tab});
   if(state.sel) q.set("g", state.sel);
   if(state.day >= 0) q.set("k", state.day);
+  if(state.histMode) q.set("h", "1");
   history.replaceState(null, "", "#" + q);
 }

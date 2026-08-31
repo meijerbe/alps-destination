@@ -14,7 +14,7 @@ export function render(){
   const v = setLastView(derive());
   // klimatologisch gemiddelde alleen ophalen als de gebruiker 'm ook echt
   // wil zien — kost 15 verzoeken, niet iets om altijd standaard te doen
-  if(state.metric === "histRain") ensureHistorical(v.dates, render);
+  if(state.histMode) ensureHistorical(v.dates, render);
   syncDay(v);
   renderKpis(v);
   renderMap(v);

@@ -5,7 +5,8 @@ import { $, esc, fmt, clamp, DAYS, dow, dm } from "./dom.js";
 import { PARTS, WEIGHTS, PROFILE_LABEL, COUNTRY, driveTxt } from "./regions.js";
 import { METRICS } from "./metrics.js";
 import { state } from "./state.js";
-import { scoreColor, foehnLabel } from "./weather.js";
+import { scoreColor, foehnLabel, metricGetter } from "./weather.js";
+import { histStatusNote } from "./historical.js";
 
 export function renderKpis(v){
   const el = $("kpis");
@@ -158,16 +159,18 @@ export function renderRank(v){
 
 export function renderMatrix(v){
   const M = METRICS[state.metric];
+  const get = metricGetter(M);
   const t = $("matrix");
   if(!v.scored.length){ t.innerHTML = ""; $("mnote").textContent = ""; return; }
 
   // sorteer op hoe goed de bestemming scoort op de getoonde metriek — bij
-  // histRain kan een dag nog "onbekend" (null) zijn; die telt dan niet mee
+  // historische data kan een dag nog "onbekend" (null) zijn; die telt dan
+  // niet mee in het gemiddelde van de laatste kolom
   const rows = [...v.scored].map(p=>{
-    const vals = p.per.map(d=>M.val(d));
+    const vals = p.per.map(get);
     const known = vals.filter(x => x != null);
     return {p, vals, mean: known.length ? known.reduce((a,b)=>a+b,0)/known.length : null,
-            goodMean: p.per.reduce((a,d)=>a+M.good(M.val(d)),0)/p.per.length};
+            goodMean: p.per.reduce((a,d)=>a+M.good(get(d)),0)/p.per.length};
   }).sort((a,b)=>b.goodMean-a.goodMean);
 
   const head = v.dates.map(d=>`<th class="${dow(d)>=5?"we":""}">${DAYS[dow(d)]}<br>${dm(d)}</th>`).join("");
@@ -183,10 +186,12 @@ export function renderMatrix(v){
 
   t.innerHTML = `<thead><tr><th style="text-align:left">bestemming</th>${head}<th class="avgh">gem</th></tr></thead><tbody>${body}</tbody>`;
 
-  $("matrixsub").textContent =
-    `Alle ${v.scored.length} bestemmingen tegen alle ${v.n} dagen. Oranje is gunstig, blauw ongunstig — `
+  $("matrixsub").textContent = state.histMode
+    ? `Alle ${v.scored.length} bestemmingen tegen alle ${v.n} dagen, als 15-jaars klimatologisch gemiddelde — geen voorspelling.`
+    : `Alle ${v.scored.length} bestemmingen tegen alle ${v.n} dagen. Oranje is gunstig, blauw ongunstig — `
     + `ook bij neerslag, wind en vriespunt, zodat de kleur altijd hetzelfde betekent.`;
   $("mnote").innerHTML =
-    `Getoond: <strong>${M.label}</strong>. Rijen staan gesorteerd op hoe gunstig die waarde gemiddeld uitpakt, `
-    + `niet op de totaalscore. Hover of tik een cel voor alle waarden van die dag.`;
+    `Getoond: <strong>${M.label}</strong>${state.histMode ? " (historisch)" : ""}. Rijen staan gesorteerd op hoe `
+    + `gunstig die waarde gemiddeld uitpakt, niet op de totaalscore. Hover of tik een cel voor alle waarden van die dag.`
+    + (state.histMode ? histStatusNote(v.dates) : "");
 }

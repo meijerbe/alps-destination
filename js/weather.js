@@ -122,7 +122,13 @@ export function derive(){
       const histRow = hist ? hist[p.n] : null;
       const per = p.days.slice(start, start+n).map((d,k)=>{
         const parts = dayParts(d);
-        return {...d, parts, s: weigh(parts, w), histRain: histRow ? histRow[k] ?? null : null};
+        return {
+          ...d, parts, s: weigh(parts, w),
+          histRain: histRow ? histRow.rain[k] ?? null : null,
+          histSun:  histRow ? histRow.sun[k]  ?? null : null,
+          histTmax: histRow ? histRow.tmax[k] ?? null : null,
+          histWind: histRow ? histRow.wind[k] ?? null : null
+        };
       });
       const avgParts = {};
       PARTS.forEach(x => avgParts[x.k] = per.reduce((a,b)=>a+b.parts[x.k],0)/per.length);
@@ -163,12 +169,20 @@ export function selectedRegion(v){
 export const foehnLabel = a =>
   a == null ? "geen data" : a > 2.5 ? "zuidkant droog" : a < -2.5 ? "noordkant droog" : "geen sturing";
 
+/* Welke kant van een metriek (val of histVal) op dit moment geldt — bepaalt
+   zowel de kaart als de matrix, dus hier op één plek in plaats van dubbel. */
+export function metricGetter(M){
+  return (state.histMode && M.histVal) ? M.histVal : M.val;
+}
+
 /* welke waarde kleurt de kaart: één dag, of het gemiddelde over de periode.
-   Null-veilig: bij histRain kan een dag nog "onbekend" zijn (nog niet
-   opgehaald) — die telt dan niet mee in het gemiddelde, in plaats van als 0. */
+   Null-veilig: bij historische data kan een dag nog "onbekend" zijn (nog
+   niet opgehaald) — die telt dan niet mee in het gemiddelde, in plaats van
+   als 0. */
 export function metricValue(p, M){
+  const get = metricGetter(M);
   const d = state.day >= 0 ? p.per[state.day] : null;
-  if(d) return M.val(d);
-  const vals = p.per.map(M.val).filter(v => v != null);
+  if(d) return get(d);
+  const vals = p.per.map(get).filter(v => v != null);
   return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
 }

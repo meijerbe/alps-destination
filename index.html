@@ -116,6 +116,13 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
   <p class="sectionsub" id="mapsub">—</p>
   <div class="pick2">
     <div class="ctl">
+      <span class="lab" id="lab-mapsource">Bron</span>
+      <div class="seg" id="mapsource" role="group" aria-labelledby="lab-mapsource">
+        <button type="button" data-h="0" aria-pressed="true">Prognose</button>
+        <button type="button" data-h="1" aria-pressed="false">Historisch</button>
+      </div>
+    </div>
+    <div class="ctl">
       <span class="lab" id="lab-mapmetric">Kleur op</span>
       <div class="seg" id="mapmetric" role="group" aria-labelledby="lab-mapmetric">
         <button type="button" data-m="score" aria-pressed="true">Score</button>
@@ -124,7 +131,6 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
         <button type="button" data-m="tmax" aria-pressed="false">Temp</button>
         <button type="button" data-m="wind" aria-pressed="false">Wind</button>
         <button type="button" data-m="frz" aria-pressed="false">Vriespunt</button>
-        <button type="button" data-m="histRain" aria-pressed="false">Historisch</button>
       </div>
     </div>
   </div>
@@ -179,6 +185,13 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
 <section id="panel-matrix" role="tabpanel" aria-labelledby="tab-matrix" tabindex="0" hidden>
   <h2 class="section">Dagmatrix</h2>
   <p class="sectionsub" id="matrixsub">—</p>
+  <div class="ctl" style="margin-bottom:16px">
+    <span class="lab" id="lab-source">Bron</span>
+    <div class="seg" id="source" role="group" aria-labelledby="lab-source">
+      <button type="button" data-h="0" aria-pressed="true">Prognose</button>
+      <button type="button" data-h="1" aria-pressed="false">Historisch</button>
+    </div>
+  </div>
   <div class="ctl" style="margin-bottom:16px">
     <span class="lab" id="lab-metric">Toon</span>
     <div class="seg" id="metric" role="group" aria-labelledby="lab-metric">

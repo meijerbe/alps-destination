@@ -1,27 +1,34 @@
 /* ------------------------------------------------------------------
-   Historisch droog: hoeveel neerslag viel er in de gekozen kalenderweek,
-   gemiddeld over de laatste HIST_YEARS jaar? Los van de 10-daagse
+   Historische weergave: hoe zag het weer er in de gekozen kalenderweek
+   gemiddeld uit over de laatste HIST_YEARS jaar? Los van de 10-daagse
    voorspelling — dit is een klimatologisch gemiddelde, geen voorspelling,
    en dient om regio's te vinden die in deze periode van het jaar
-   doorgaans droog zijn, ook als de actuele voorspelling nog onzeker is.
+   doorgaans gunstig zijn, ook als de actuele voorspelling nog onzeker is.
 
    Bron: Open-Meteo Historical Weather API (ERA5-reanalyse, terug tot
    1940, gratis, geen sleutel) — dezelfde vorm als de forecast-call:
-   alle regio's in één request per jaar.
+   alle regio's in één request per jaar. Geen "score" en geen "vriespunt"
+   historisch: score leunt op neerslagkans (bestaat niet met terugwerkende
+   kracht) en vriespunt zou uurdata over 15 jaar × 32 regio's vergen —
+   dat staat niet in verhouding tot wat het toevoegt.
 ------------------------------------------------------------------- */
 import { REGIONS } from "./regions.js";
 import { getJSON } from "./net.js";
 
 export const HIST_YEARS = 15;
-const HIST_CACHE_KEY = "abopreis:hist:v1";
+const HIST_CACHE_KEY = "abopreis:hist:v2";
 const READY_TTL  = 30 * 24 * 60 * 60 * 1000;   // 30 dagen — klimaat verandert niet per dag
 const FAILED_TTL = 10 * 60 * 1000;             // 10 min — daarna mag een nieuwe poging
+
+// metric-sleutel (zoals METRICS in metrics.js) → Open-Meteo daily-veldnaam
+const FIELDS = { rain: "precipitation_sum", sun: "sunshine_duration", tmax: "temperature_2m_max", wind: "wind_speed_10m_max" };
+const FIELD_KEYS = Object.keys(FIELDS);
 
 const LATS = REGIONS.map(p=>p.lat).join(",");
 const LONS = REGIONS.map(p=>p.lon).join(",");
 
 // in-memory spiegel van localStorage:
-// { [windowKey]: {status:"ready", byRegion:{naam:[mm,...]}, fetchedAt}
+// { [windowKey]: {status:"ready", byRegion:{naam:{rain:[...],sun:[...],tmax:[...],wind:[...]}}, fetchedAt}
 //               | {status:"failed", fetchedAt} }
 let cache = null;
 const pending = new Map();   // windowKey -> Promise, voorkomt dubbele fetch-rondes
@@ -50,7 +57,9 @@ function freshEntry(dates){
 
 /** Geeft de klaarstaande gegevens voor dit venster, of null als ze er nog niet
  *  (goed) zijn — nooit opgehaald, aan het laden, verlopen, of mislukt. Puur
- *  lezen, veilig om vanuit derive() bij elke render te doen. */
+ *  lezen, veilig om vanuit derive() bij elke render te doen. Per regio een
+ *  object {rain, sun, tmax, wind}, elk een array met één gemiddelde per dag
+ *  in het venster. */
 export function getHistoricalSnapshot(dates){
   const entry = freshEntry(dates);
   return entry && entry.status === "ready" ? entry.byRegion : null;
@@ -64,6 +73,15 @@ export function getHistoricalStatus(dates){
   return entry ? entry.status : "empty";
 }
 
+/** Kant-en-klare melding voor onder de kaart/matrix — leeg als de data er al
+ *  is (of de bron niet op historisch staat), anders een korte uitleg. */
+export function histStatusNote(dates){
+  const status = getHistoricalStatus(dates);
+  if(status === "ready") return "";
+  if(status === "failed") return " <strong>Historische data ophalen is niet gelukt — probeer het over een paar minuten opnieuw.</strong>";
+  return ` <strong>Historische data (${HIST_YEARS} jaar) wordt opgehaald — dit verschijnt vanzelf zodra dat klaar is.</strong>`;
+}
+
 function yearWindow(dates, year){
   const first = dates[0].slice(5), last = dates[dates.length-1].slice(5);
   const wraps = last < first;   // venster loopt over de jaarwisseling heen
@@ -74,18 +92,23 @@ async function fetchYear(dates, year){
   const {start, end} = yearWindow(dates, year);
   const url = "https://archive-api.open-meteo.com/v1/archive"
     + `?latitude=${LATS}&longitude=${LONS}&start_date=${start}&end_date=${end}`
-    + "&daily=precipitation_sum&timezone=Europe%2FBerlin";
+    + `&daily=${FIELD_KEYS.map(k=>FIELDS[k]).join(",")}&timezone=Europe%2FBerlin`;
   const raw = await getJSON(url);
   const arr = Array.isArray(raw) ? raw : [raw];
-  // per regio de reeks mm's voor dit ene jaar, in dezelfde volgorde als REGIONS
-  return arr.map(o => (o.daily && o.daily.precipitation_sum) || []);
+  // per regio, per veld de reeks voor dit ene jaar, in dezelfde volgorde als REGIONS
+  return arr.map(o => {
+    const row = {};
+    FIELD_KEYS.forEach(k => { row[k] = (o.daily && o.daily[FIELDS[k]]) || []; });
+    return row;
+  });
 }
 
 /** Zorgt dat er data is voor dit venster: leest de cache, en start zo nodig
  *  op de achtergrond HIST_YEARS ophaalverzoeken (parallel, één per jaar, elk
- *  meteen alle regio's). Roept `onReady` altijd aan zodra dit venster klaar
- *  is — gelukt of niet — zodat de aanroeper opnieuw kan renderen en de
- *  melding kan bijwerken. Nooit dubbel bezig voor hetzelfde venster. */
+ *  meteen alle regio's en alle velden tegelijk). Roept `onReady` altijd aan
+ *  zodra dit venster klaar is — gelukt of niet — zodat de aanroeper opnieuw
+ *  kan renderen en de melding kan bijwerken. Nooit dubbel bezig voor
+ *  hetzelfde venster. */
 export async function ensureHistorical(dates, onReady){
   const key = windowKey(dates);
   if(freshEntry(dates)) return;                      // al vers genoeg (goed of recent mislukt)
@@ -105,11 +128,14 @@ export async function ensureHistorical(dates, onReady){
     }else{
       const byRegion = {};
       REGIONS.forEach((rg, i) => {
-        const perDay = dates.map((_, k) => {
-          const vals = ok.map(yearRows => yearRows[i]?.[k]).filter(v => v != null);
-          return vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : null;
+        const perField = {};
+        FIELD_KEYS.forEach(field => {
+          perField[field] = dates.map((_, k) => {
+            const vals = ok.map(yearRows => yearRows[i]?.[field]?.[k]).filter(v => v != null);
+            return vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : null;
+          });
         });
-        byRegion[rg.n] = perDay;
+        byRegion[rg.n] = perField;
       });
       store[key] = {status: "ready", byRegion, fetchedAt: Date.now()};
     }
