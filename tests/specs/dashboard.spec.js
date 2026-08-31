@@ -1,16 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { mockWeather } from "../helpers/openmeteo.mjs";
 import { withoutSupabase } from "../helpers/supabase.mjs";
-import { mockLeaflet, mockTiles } from "../helpers/leaflet.mjs";
+import { mockMapLibs } from "../helpers/maplibs.mjs";
 
 test.beforeEach(async ({ page }) => {
   await mockWeather(page);
   await withoutSupabase(page);
-  // Moet ná withoutSupabase (die alle cdn.jsdelivr.net-verzoeken afbreekt):
-  // Playwright matcht routes in omgekeerde registratievolgorde, dus deze
-  // specifiekere leaflet-route (later geregistreerd) wint van die brede abort.
-  await mockLeaflet(page);
-  await mockTiles(page);
+  await mockMapLibs(page);   // ná withoutSupabase, zie helpers/maplibs.mjs
 });
 
 async function wachtOpKaartdata(page) {
@@ -62,11 +58,11 @@ test("een gedeelde link herstelt de hele weergave", async ({ page }) => {
   await expect(page.locator("#profile button[aria-pressed=true]")).toHaveText("Hiken");
   await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveText("Zon");
   await expect(page.locator("#daysval")).toHaveText("7 dagen");
-  // geen aparte selectiering meer — de geselecteerde stip zelf krijgt een
-  // dikkere rand (stroke-width 4 i.p.v. 2), precies één van de 32
+  // geen aparte selectiering meer — het geselecteerde vlak zelf krijgt een
+  // dikkere rand (stroke-width 3 i.p.v. 1.5), precies één van de 32
   const dik = await page.evaluate(() =>
     [...document.querySelectorAll("#mapview path.leaflet-interactive")]
-      .filter(p => p.getAttribute("stroke-width") === "4").length);
+      .filter(p => p.getAttribute("stroke-width") === "3").length);
   expect(dik).toBe(1);
 });
 
@@ -84,7 +80,7 @@ test("de drie hoofdonderdelen wisselen en onthouden waar je was", async ({ page 
   await expect(page.locator("#panel-matrix")).toBeVisible();  // onthouden
 });
 
-test("klikken op een kaartstip zet de selectie en tonen van de tooltip werkt", async ({ page }) => {
+test("klikken op een kaartvlak zet de selectie en tonen van de tooltip werkt", async ({ page }) => {
   await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
   await wachtOpKaartdata(page);
 
@@ -113,6 +109,14 @@ test("als Leaflet niet laadt, blijft de rest van de pagina gewoon werken", async
   await expect(page.locator("#panel-pack")).toBeVisible();
   await page.locator("#top-shop").click();
   await expect(page.locator("#panel-shop")).toBeVisible();
+});
+
+test("als d3-delaunay niet laadt (Voronoi-berekening), dezelfde nette terugval", async ({ page }) => {
+  await page.route("https://cdn.jsdelivr.net/npm/d3-delaunay@6.0.4/dist/d3-delaunay.min.js", r => r.abort());
+
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
+  await expect(page.locator("#mapview .status.err")).toContainText("Kaart kon niet laden");
+  await expect(page.locator(".kpi")).toHaveCount(4);
 });
 
 test("geen console-fouten bij een normale sessie", async ({ page }) => {

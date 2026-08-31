@@ -1,9 +1,11 @@
 /* ------------------------------------------------------------------
    De kaart zelf: een Leaflet-kaart met OpenTopoMap als ondergrond, de
-   32 regio's als gekleurde stippen erop, en de dagschuif-synchronisatie.
+   32 regio's als gekleurde Voronoi-vlakken erop, en de
+   dagschuif-synchronisatie.
 
-   `L` komt van de Leaflet-CDN-<script> in index.html (net als
-   `window.supabase`) — een globale, geen import.
+   `L` (Leaflet) en `d3` (d3-delaunay, voor de Voronoi-cellen) komen van
+   CDN-<script>'s in index.html (net als `window.supabase`) — globalen,
+   geen imports.
 ------------------------------------------------------------------- */
 import { $, esc, fmt, DAYS, dow, dm } from "./dom.js";
 import { METRICS, METRIC_NOTE } from "./metrics.js";
@@ -14,18 +16,26 @@ import { histStatusNote } from "./historical.js";
 
 const BASE = { lat: 47.162, lon: 11.859, label: "MAYRHOFEN" };   // vertrekpunt, geen regio
 
-let leafletMap = null;
-const markers = new Map();   // regionnaam → L.CircleMarker
+// Op deze breedtegraad is een lengtegraad merkbaar korter dan een breedtegraad
+// (~1° lon ≈ cos(46.5°) × 1° lat). Zonder correctie komt de Voronoi-berekening
+// (die gewoon Euclidisch rekent) uit op oost-west uitgerekte cellen. K
+// herschaalt de lengtegraad vóór het rekenen; bij het intekenen delen we 'm
+// er weer uit.
+const K = Math.cos(46.5 * Math.PI / 180);
 
-/** Bouwt de kaart en de 32 stippen één keer op, vóór de eerste render().
- *  `onSelect(naam)` wordt aangeroepen bij een klik op een regio-stip.
+let leafletMap = null;
+const cells = new Map();   // regionnaam → L.Polygon (de Voronoi-cel van die regio)
+
+/** Bouwt de kaart en de 32 Voronoi-vlakken één keer op, vóór de eerste
+ *  render(). `onSelect(naam)` wordt aangeroepen bij een klik op een vlak.
  *
- *  In een try/catch: Leaflet en de tegels komen van buiten (jsdelivr,
- *  tile.opentopomap.org) en kunnen om redenen buiten onze macht (ad-blocker,
- *  netwerkbeleid, CDN-storing) niet laden. Zonder deze vangrail stopt
- *  main.js' init-volgorde daar hard — dan werken de paklijst en de
- *  boodschappenlijst ook niet meer, terwijl die niets met de kaart te maken
- *  hebben. renderMap() controleert `leafletMap` en doet daarna netjes niets. */
+ *  In een try/catch: Leaflet, d3-delaunay en de tegels komen van buiten
+ *  (jsdelivr, tile.opentopomap.org) en kunnen om redenen buiten onze macht
+ *  (ad-blocker, netwerkbeleid, CDN-storing) niet laden. Zonder deze
+ *  vangrail stopt main.js' init-volgorde daar hard — dan werken de
+ *  paklijst en de boodschappenlijst ook niet meer, terwijl die niets met
+ *  de kaart te maken hebben. renderMap() controleert `leafletMap` en doet
+ *  daarna netjes niets. */
 export function initMap(onSelect){
   try{
     leafletMap = L.map("mapview", { minZoom: 5, maxZoom: 17, scrollWheelZoom: false });
@@ -39,13 +49,34 @@ export function initMap(onSelect){
 
     leafletMap.fitBounds(L.latLngBounds(REGIONS.map(rg=>[rg.lat, rg.lon])), { padding: [24, 24] });
 
-    REGIONS.forEach(rg=>{
-      const marker = L.circleMarker([rg.lat, rg.lon], {
-        radius: 11, weight: 2, color: "#fff", fillOpacity: .92, fillColor: "#8a9aa0"
+    // Voronoi-diagram op de 32 regio-middelpunten: elke cel is precies het
+    // gebied dat dichter bij die regio ligt dan bij enige andere — dus
+    // altijd inclusief het eigen middelpunt. Geclipt op een ruime
+    // bounding box rond de regio's (geen exacte Alpen-omtrek: dat vraagt
+    // vlak-in-vlak-clipping tegen een niet-convexe vorm, en de echte kaart
+    // eronder geeft nu toch al context aan de randcellen).
+    const lons = REGIONS.map(rg=>rg.lon), lats = REGIONS.map(rg=>rg.lat);
+    const pad = 0.6;
+    const bounds = [
+      (Math.min(...lons) - pad) * K, Math.min(...lats) - pad,
+      (Math.max(...lons) + pad) * K, Math.max(...lats) + pad
+    ];
+    const delaunay = d3.Delaunay.from(REGIONS.map(rg=>[rg.lon * K, rg.lat]));
+    const voronoi = delaunay.voronoi(bounds);
+
+    REGIONS.forEach((rg,i)=>{
+      const cell = voronoi.cellPolygon(i);
+      // cell is normaal altijd gevuld (elk punt is uniek) — de fallback is
+      // alleen een vangnet tegen toevallig samenvallende coördinaten.
+      const latlngs = cell
+        ? cell.map(([x,y])=>[y, x / K])
+        : [[rg.lat-.05,rg.lon-.05],[rg.lat-.05,rg.lon+.05],[rg.lat+.05,rg.lon+.05],[rg.lat+.05,rg.lon-.05]];
+      const poly = L.polygon(latlngs, {
+        weight: 1.5, color: "#fff", fillOpacity: .6, fillColor: "#8a9aa0"
       }).addTo(leafletMap);
-      marker.bindTooltip("", { sticky: true, direction: "top", className: "maptip" });
-      marker.on("click", () => onSelect(rg.n));
-      markers.set(rg.n, marker);
+      poly.bindTooltip("", { sticky: true, direction: "top", className: "maptip" });
+      poly.on("click", () => onSelect(rg.n));
+      cells.set(rg.n, poly);
     });
 
     L.circleMarker([BASE.lat, BASE.lon], {
@@ -110,19 +141,18 @@ export function renderMap(v){
   const sel = selectedRegion(v);
 
   REGIONS.forEach(rg=>{
-    const marker = markers.get(rg.n);
+    const cell = cells.get(rg.n);
     const p = by[rg.n];
     const val = p ? metricValue(p, M) : null;
     const isSel = !!(sel && sel.n === rg.n);
-    marker.setStyle({
+    cell.setStyle({
       fillColor: val==null ? "#8a9aa0" : scoreColor(M.good(val)),
-      fillOpacity: p && p.far ? .25 : .92,
+      fillOpacity: p && p.far ? .15 : .6,
       color: isSel ? "#2B2318" : "#fff",
-      weight: isSel ? 4 : 2,
-      radius: isSel ? 13 : 11
+      weight: isSel ? 3 : 1.5
     });
-    if(isSel) marker.bringToFront();
-    marker.setTooltipContent(tooltipHtml(rg, p, M));
+    if(isSel) cell.bringToFront();
+    cell.setTooltipContent(tooltipHtml(rg, p, M));
   });
 
   const a = v.dates[0], b = v.dates[v.n-1];
@@ -136,7 +166,7 @@ export function renderMap(v){
   $("mapnote").innerHTML = `Kleur = ${esc(METRIC_NOTE[state.metric])}${state.histMode ? " (historisch gemiddelde, geen voorspelling)" : ""}`
     + (state.day >= 0 ? ` op die ene dag — de ranglijst en de kerncijfers blijven over de hele periode rekenen` : "")
     + `. Weggevallen regio's vallen buiten je rijtijd. `
-    + `Elke stip is één meetpunt voor die regio, geen dekkingskaart — het weer in de rest van de regio kan afwijken.`
+    + `Vlakken zijn de Voronoi-cel rond het meetpunt van die regio, geen exacte grens — vlak bij een celrand kan het weer net zo goed op de andere regio lijken.`
     + (state.histMode ? histStatusNote(v.dates) : "");
 }
 

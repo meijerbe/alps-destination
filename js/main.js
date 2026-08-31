@@ -74,6 +74,6 @@ loadNotes();
 loadPack();
 readUrlState();
 syncControls();
-initMap(selectRegion);   // vóór boot(): render() verwacht dat de stippen al bestaan
+initMap(selectRegion);   // vóór boot(): render() verwacht dat de vlakken al bestaan
 boot();
 initPackSync();

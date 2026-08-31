@@ -2,16 +2,12 @@ import { test, expect } from "@playwright/test";
 import { mockWeather } from "../helpers/openmeteo.mjs";
 import { withoutSupabase } from "../helpers/supabase.mjs";
 import { mockHistorical, withoutHistorical } from "../helpers/historical.mjs";
-import { mockLeaflet, mockTiles } from "../helpers/leaflet.mjs";
+import { mockMapLibs } from "../helpers/maplibs.mjs";
 
 test.beforeEach(async ({ page }) => {
   await mockWeather(page);
   await withoutSupabase(page);
-  // Moet ná withoutSupabase (die alle cdn.jsdelivr.net-verzoeken afbreekt):
-  // Playwright matcht routes in omgekeerde registratievolgorde, dus deze
-  // specifiekere leaflet-route (later geregistreerd) wint van die brede abort.
-  await mockLeaflet(page);
-  await mockTiles(page);
+  await mockMapLibs(page);   // ná withoutSupabase, zie helpers/maplibs.mjs
 });
 
 async function wachtOpKaartdata(page) {

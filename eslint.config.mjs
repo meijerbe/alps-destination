@@ -18,7 +18,8 @@ export default [
         AbortSignal: "readonly", URLSearchParams: "readonly", crypto: "readonly",
         setTimeout: "readonly", clearTimeout: "readonly", setInterval: "readonly", clearInterval: "readonly",
         Int16Array: "readonly", CSS: "readonly", confirm: "readonly", structuredClone: "readonly",
-        L: "readonly"   // Leaflet, geladen via CDN-<script> in index.html
+        L: "readonly",  // Leaflet, geladen via CDN-<script> in index.html
+        d3: "readonly"  // d3-delaunay (Voronoi), geladen via CDN-<script> in index.html
       }
     },
     rules: {
