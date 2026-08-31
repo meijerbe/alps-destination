@@ -1,13 +1,14 @@
 # Browsertests
 
-Playwright-tests voor `index.html`. Ze draaien tegen de echte pagina in een echte
-browser, met Open-Meteo en Supabase afgevangen — geen netwerk, geen echte database,
-dus ze zijn snel en geven altijd hetzelfde antwoord.
+Playwright-tests voor de site (`index.html`, `styles.css`, `js/`). Ze draaien tegen de echte
+pagina in een echte browser, met Open-Meteo en Supabase afgevangen — geen netwerk, geen echte
+database, dus ze zijn snel en geven altijd hetzelfde antwoord.
 
 ```bash
 cd tests
 npm ci
 npx playwright install chromium   # eenmalig
+npm run lint    # snelle no-undef/dode-code-check op js/
 npm test
 ```
 
@@ -19,9 +20,9 @@ PLAYWRIGHT_CHROMIUM_PATH=/pad/naar/chromium npm test
 
 ## Waarom dit apart staat van de site
 
-De root van de repo heeft bewust géén `package.json`. `index.html` is een statisch
-bestand zonder build-stap, en dat moet zo blijven: Vercel serveert het gewoon, er is
-niets dat kan breken bij een deploy. Al het testgereedschap zit daarom hier.
+De root van de repo heeft bewust géén `package.json`. De site is statische bestanden zonder
+build-stap (`index.html`, `styles.css`, `js/*.js` als ES-modules), en dat moet zo blijven: Vercel
+serveert ze gewoon, er is niets dat kan breken bij een deploy. Al het testgereedschap zit daarom hier.
 
 ## Wat er getest wordt
 

@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// De site is één statisch bestand; de webserver hieronder serveert de repo-root.
+// De site is statische bestanden (geen build-stap); de webserver hieronder serveert de repo-root.
 export default defineConfig({
   testDir: "./specs",
   fullyParallel: true,

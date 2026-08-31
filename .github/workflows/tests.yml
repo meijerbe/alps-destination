@@ -23,6 +23,7 @@ jobs:
           cache-dependency-path: tests/package-lock.json
 
       - run: npm ci
+      - run: npm run lint
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
 
