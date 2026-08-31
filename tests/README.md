@@ -1,9 +1,8 @@
 # Browsertests
 
 Playwright-tests voor de site (`index.html`, `styles.css`, `js/`). Ze draaien tegen de echte
-pagina in een echte browser, met Open-Meteo (voorspelling én archief), Supabase, Leaflet en
-d3-delaunay afgevangen — geen netwerk, geen echte database, dus ze zijn snel en geven altijd
-hetzelfde antwoord.
+pagina in een echte browser, met Open-Meteo (voorspelling én archief) en Supabase afgevangen —
+geen netwerk, geen echte database, dus ze zijn snel en geven altijd hetzelfde antwoord.
 
 ```bash
 cd tests
@@ -43,14 +42,3 @@ De nagebouwde Supabase (`helpers/supabase.mjs`) doet expres een paar dingen na d
 de echte ook doet en waar we op stukliepen: een `generated always as identity`-kolom
 weigert een expliciete `id`, een upsert schrijft alleen de meegestuurde kolommen, en
 je eigen insert echoot via Realtime terug vóór je eigen `await` verdergaat.
-
-De kaart laadt Leaflet, d3-delaunay (de Voronoi-berekening achter de regio-vlakken) en de
-OpenTopoMap-tegels van buiten (jsdelivr, tile.opentopomap.org). In plaats van die zelf na te
-bouwen — te veel DOM/geometrie/events (Leaflet), of te veel reken-precisie om betrouwbaar te
-faken (d3-delaunay) — draaien de tests tegen de échte builds, vendored in `vendor/leaflet/` en
-`vendor/d3-delaunay/` (via `npm pack`, zie het commentaar in `helpers/maplibs.mjs`) en lokaal
-geserveerd; de tegels zelf worden vervangen door één transparant pixeltje, want de tests gaat
-het nooit om hoe een tegel eruitziet. `helpers/maplibs.mjs` exporteert `mockMapLibs(page)` voor
-alle drie tegelijk, en moet ná `withoutSupabase`/`mockSupabase` geregistreerd worden in een
-test — Playwright matcht routes in omgekeerde registratievolgorde, en anders vangt hun brede
-`cdn.jsdelivr.net/**`-abort deze bestanden ook af.

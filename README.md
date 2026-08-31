@@ -10,12 +10,10 @@ browser geladen, niets te bouwen.
 
 ## Wat er in zit
 
-**Kaart** — een echte topografische kaart van de Alpenboog (Leaflet + OpenTopoMap), met de 32
-regio's als gekleurde vlakken erop: een Voronoi-cel rond elk meetpunt, dus geen exacte grens —
-vlak bij een celrand kan het weer net zo goed op de buurregio lijken. Klik een regio om hem vast
-te zetten; de rest van het dashboard rekent daarna met die keuze.
-Hoveren toont de score, het gekozen kenmerk en de kernwaarden voor die regio. Regio's buiten je
-rijtijd zakken weg in plaats van te verdwijnen, zodat je ziet wat je laat liggen. Te kleuren op
+**Kaart** — de Alpenboog als rasterkaart, opgedeeld in 32 regio's. Elke cel hoort bij het
+dichtstbijzijnde regiomiddelpunt (Voronoi), geknipt op een grove omtrek van de Alpen. Klik een
+regio om hem vast te zetten; de rest van het dashboard rekent daarna met die keuze. Regio's buiten
+je rijtijd zakken weg in plaats van te verdwijnen, zodat je ziet wat je laat liggen. Te kleuren op
 score, neerslag, zon, temperatuur, wind of vriespunt — oranje is altijd gunstig, blauw altijd niet.
 
 Onder de kaart zit een schuif voor de dag. Helemaal links staat het gemiddelde over de hele
@@ -159,18 +157,6 @@ niet opnieuw hoeven uit te zoeken.
 - **Vercel** serveert statische bestanden. Er is met opzet géén `package.json` in de
   root, zodat er ook niets te bouwen valt; het testgereedschap staat in `tests/`.
 - **Open-Meteo** heeft geen sleutel nodig en is gratis voor dit gebruik.
-- **Leaflet + OpenTopoMap** voor de kaart: Leaflet is open source (BSD-2-Clause), heeft
-  geen build-stap nodig (net als de rest van de app — één `<script>`) en de tegels van
-  OpenTopoMap zijn zelf ook open (OpenStreetMap-data, CC-BY-SA), passen thematisch bij
-  een fiets/hike-app (reliëf, paden) en vragen geen sleutel of account. Beide komen via
-  jsdelivr binnen, dus die host staat naast Open-Meteo en Supabase in de CSP van
-  `vercel.json` (`script-src`/`style-src`/`img-src`). Het Mayrhofen-vertrekpunt is een
-  `L.circleMarker` (nooit `L.marker`), zodat Leaflet nooit zijn standaard marker-PNG's
-  van een ander CDN probeert te laden.
-- **d3-delaunay** (ISC-licentie, open source) berekent het Voronoi-diagram achter de
-  regio-vlakken op de kaart — 32 middelpunten in, 32 celranden uit. Klein (~19 KB
-  geminificeerd), geen afhankelijkheden, en precies dat ene stukje wiskunde dat je niet
-  met de hand wilt naschrijven. Komt ook via jsdelivr binnen.
 
 **Wanneer je dit wél moet omgooien:** als een los `js/*.js`-bestand zelf weer te groot
 wordt om in te werken, of als de app een reden krijgt om ergens *state* buiten de
@@ -184,13 +170,13 @@ De logica staat in `js/`, één onderwerp per bestand:
 | bestand | wat erin zit |
 | --- | --- |
 | `dom.js` | generieke hulpfuncties: `$`, `esc`, `clamp`, `fmt`, `slug`, datumnotatie |
-| `regions.js` | `REGIONS`, `WEIGHTS`, `PARTS` — de bestemmingen en de weging |
+| `regions.js` | `REGIONS`, `ARC`, `GEO`, `WEIGHTS`, `PARTS` — de bestemmingen en de weging |
 | `metrics.js` | `METRICS` — wat er te kleuren valt (score, mm, zon, …) |
 | `state.js` | de gedeelde `state`, cache, paklijst-vinkjes, de URL-hash |
 | `net.js` | de gedeelde fetch-met-terugval (`getJSON`) |
 | `weather.js` | scoreberekening, Open-Meteo ophalen, `derive()` |
 | `historical.js` | het 15-jaars-gemiddelde achter de bron-toggle *Historisch* |
-| `map.js` | de Leaflet-kaart: opbouw, de 32 Voronoi-vlakken en hun kleur/tooltip per render |
+| `map-geometry.js` / `map.js` | de rasterkaart en de kaart-render |
 | `dashboard.js` / `data-tab.js` | kerncijfers, föhnmeter, ranglijst, matrix, *onder de motorkap* |
 | `packing-data.js` / `packing.js` | de paklijst-inhoud en -logica |
 | `shopping.js` | de boodschappenlijst |
@@ -200,10 +186,12 @@ De logica staat in `js/`, één onderwerp per bestand:
 Meestal is maar één bestand relevant:
 
 - **Regio's** — `REGIONS` in `regions.js`. `lat`/`lon` is het punt waarvoor het weer wordt
-  opgehaald én het middelpunt waar de Voronoi-cel op de kaart omheen wordt berekend; `drive` is
-  de rijtijd vanaf Mayrhofen in uren (met de hand geschat, dus corrigeer gerust); `s` is een
-  kortere naam voor op de kaart; `side` is puur informatief. Een regio toevoegen of verplaatsen
-  hertekent de kaart vanzelf.
+  opgehaald én het middelpunt waar de kaart de cellen omheen legt; `drive` is de rijtijd vanaf
+  Mayrhofen in uren (met de hand geschat, dus corrigeer gerust); `s` is een kortere naam voor op
+  de kaart; `side` is puur informatief. Een regio toevoegen of verplaatsen hertekent de kaart vanzelf.
+- **Omtrek van de Alpen** — `ARC` in `regions.js`, een grove polygoon in lon/lat. Alleen bedoeld
+  om het raster af te knippen, het is geen grens.
+- **Rastergrofte** — `GEO.latStep` in `regions.js`. Kleiner = fijnere kaart en meer SVG.
 - **Weging** — `WEIGHTS` in `regions.js`, per profiel de weging van droogte, neerslagkans, zon,
   wind, temperatuur en vriespuntniveau. Sommeert per profiel naar 1.
 - **Scorecurves** — de functie `dayParts` in `weather.js`. Het tabblad *Onder de motorkap* laat
@@ -308,6 +296,4 @@ Die data staat lang genoeg vast (het is een klimatologisch gemiddelde) om 30 dag
 De belangrijkste staan in de app zelf, op het tabblad *Onder de motorkap*. Kort samengevat: de
 föhnmeter gebruikt naar zeeniveau herleide druk voor twee stations op verschillende hoogte, dus
 alleen het teken en de verandering zijn het signaal; de rastercel van het model is grover dan een
-Alpendal; en één meetpunt per regio is precies dat — een steekproef, geen dekking. Het vlak op de
-kaart kleurt wél de hele Voronoi-cel met die ene steekproef; dat maakt de kaart leesbaarder, maar
-suggereert niet meer precisie dan er is.
+Alpendal; en één meetpunt per regio is precies dat — een steekproef, geen dekking.

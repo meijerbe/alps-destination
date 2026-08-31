@@ -1,112 +1,14 @@
 /* ------------------------------------------------------------------
-   De kaart zelf: een Leaflet-kaart met OpenTopoMap als ondergrond, de
-   32 regio's als gekleurde Voronoi-vlakken erop, en de
-   dagschuif-synchronisatie.
-
-   `L` (Leaflet) en `d3` (d3-delaunay, voor de Voronoi-cellen) komen van
-   CDN-<script>'s in index.html (net als `window.supabase`) — globalen,
-   geen imports.
+   De kaart zelf: het SVG, de dagschuif-synchronisatie en de kaart
+   met dagcijfers voor de geselecteerde regio.
 ------------------------------------------------------------------- */
 import { $, esc, fmt, DAYS, dow, dm } from "./dom.js";
 import { METRICS, METRIC_NOTE } from "./metrics.js";
 import { REGIONS, COUNTRY, driveTxt, PROFILE_LABEL } from "./regions.js";
+import { MAP } from "./map-geometry.js";
 import { state } from "./state.js";
 import { selectedRegion, metricValue, scoreColor } from "./weather.js";
 import { histStatusNote } from "./historical.js";
-
-const BASE = { lat: 47.162, lon: 11.859, label: "MAYRHOFEN" };   // vertrekpunt, geen regio
-
-// Op deze breedtegraad is een lengtegraad merkbaar korter dan een breedtegraad
-// (~1° lon ≈ cos(46.5°) × 1° lat). Zonder correctie komt de Voronoi-berekening
-// (die gewoon Euclidisch rekent) uit op oost-west uitgerekte cellen. K
-// herschaalt de lengtegraad vóór het rekenen; bij het intekenen delen we 'm
-// er weer uit.
-const K = Math.cos(46.5 * Math.PI / 180);
-
-let leafletMap = null;
-const cells = new Map();   // regionnaam → L.Polygon (de Voronoi-cel van die regio)
-
-/** Bouwt de kaart en de 32 Voronoi-vlakken één keer op, vóór de eerste
- *  render(). `onSelect(naam)` wordt aangeroepen bij een klik op een vlak.
- *
- *  In een try/catch: Leaflet, d3-delaunay en de tegels komen van buiten
- *  (jsdelivr, tile.opentopomap.org) en kunnen om redenen buiten onze macht
- *  (ad-blocker, netwerkbeleid, CDN-storing) niet laden. Zonder deze
- *  vangrail stopt main.js' init-volgorde daar hard — dan werken de
- *  paklijst en de boodschappenlijst ook niet meer, terwijl die niets met
- *  de kaart te maken hebben. renderMap() controleert `leafletMap` en doet
- *  daarna netjes niets. */
-export function initMap(onSelect){
-  try{
-    leafletMap = L.map("mapview", { minZoom: 5, maxZoom: 17, scrollWheelZoom: false });
-    L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-      maxZoom: 17,
-      subdomains: "abc",
-      attribution: 'Kaartgegevens: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-auteurs, SRTM · '
-        + 'kaartweergave: © <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> '
-        + '(<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC-BY-SA</a>)'
-    }).addTo(leafletMap);
-
-    leafletMap.fitBounds(L.latLngBounds(REGIONS.map(rg=>[rg.lat, rg.lon])), { padding: [24, 24] });
-
-    // Voronoi-diagram op de 32 regio-middelpunten: elke cel is precies het
-    // gebied dat dichter bij die regio ligt dan bij enige andere — dus
-    // altijd inclusief het eigen middelpunt. Geclipt op een ruime
-    // bounding box rond de regio's (geen exacte Alpen-omtrek: dat vraagt
-    // vlak-in-vlak-clipping tegen een niet-convexe vorm, en de echte kaart
-    // eronder geeft nu toch al context aan de randcellen).
-    const lons = REGIONS.map(rg=>rg.lon), lats = REGIONS.map(rg=>rg.lat);
-    const pad = 0.6;
-    const bounds = [
-      (Math.min(...lons) - pad) * K, Math.min(...lats) - pad,
-      (Math.max(...lons) + pad) * K, Math.max(...lats) + pad
-    ];
-    const delaunay = d3.Delaunay.from(REGIONS.map(rg=>[rg.lon * K, rg.lat]));
-    const voronoi = delaunay.voronoi(bounds);
-
-    REGIONS.forEach((rg,i)=>{
-      const cell = voronoi.cellPolygon(i);
-      // cell is normaal altijd gevuld (elk punt is uniek) — de fallback is
-      // alleen een vangnet tegen toevallig samenvallende coördinaten.
-      const latlngs = cell
-        ? cell.map(([x,y])=>[y, x / K])
-        : [[rg.lat-.05,rg.lon-.05],[rg.lat-.05,rg.lon+.05],[rg.lat+.05,rg.lon+.05],[rg.lat+.05,rg.lon-.05]];
-      const poly = L.polygon(latlngs, {
-        weight: 1.5, color: "#fff", fillOpacity: .6, fillColor: "#8a9aa0"
-      }).addTo(leafletMap);
-      poly.bindTooltip("", { sticky: true, direction: "top", className: "maptip" });
-      poly.on("click", () => onSelect(rg.n));
-      cells.set(rg.n, poly);
-    });
-
-    L.circleMarker([BASE.lat, BASE.lon], {
-      radius: 6, weight: 2, color: "#fff", fillColor: "#2B2318", fillOpacity: 1, interactive: false
-    }).addTo(leafletMap)
-      .bindTooltip(BASE.label, { permanent: true, direction: "top", offset: [0, -4], className: "maplabel" });
-  }catch(err){
-    leafletMap = null;
-    console.error("Kaart kon niet laden:", err);
-    const el = $("mapview");
-    if(el) el.innerHTML = `<p class="status err" style="margin:0">Kaart kon niet laden — geen verbinding met de kaart-CDN of tegelserver. `
-      + `De rest van de pagina werkt gewoon door.</p>`;
-  }
-}
-
-function tooltipHtml(rg, p, M){
-  if(!p) return `<b>${esc(rg.n)}</b>geen data`;
-  const mean = metricValue(p, M);
-  const d0 = state.day >= 0 ? p.per[state.day] : null;
-  const head = state.metric === "score"
-    ? `<i>score ${fmt(p.total)}</i>`
-    : `<i>${esc(M.label)} ${M.txt(mean)}</i> · score ${fmt(p.total)}`;
-  return `<b>${esc(rg.n)}</b>`
-    + `${esc(rg.r)}, ${esc(COUNTRY[rg.c]||rg.c)} · ${driveTxt(rg)}<br>`
-    + head
-    + (p.far ? " · buiten rijtijd" : (p.rank ? " · nr " + p.rank : "")) + `<br>`
-    + (d0
-        ? `${d0.rain.toFixed(1)} mm · ${(d0.sun/3600).toFixed(1)} u zon · ${fmt(d0.tmax)} °C · wind ${fmt(d0.wind)}`
-        : `${p.rainSum.toFixed(1)} mm · ${p.sunAvg.toFixed(1)} u zon/dag · ${p.dryDays}/${p.per.length} droog`);
-}
 
 export function syncDay(v){
   state.day = state.day >= v.n ? v.n - 1 : Math.max(-1, state.day);
@@ -135,25 +37,50 @@ export function syncDay(v){
 }
 
 export function renderMap(v){
-  if(!leafletMap) return;   // kaart kon niet laden — initMap() liet al een melding staan
   const M = METRICS[state.metric];
   const by = {}; v.all.forEach(p=>by[p.n]=p);
   const sel = selectedRegion(v);
 
-  REGIONS.forEach(rg=>{
-    const cell = cells.get(rg.n);
-    const p = by[rg.n];
-    const val = p ? metricValue(p, M) : null;
-    const isSel = !!(sel && sel.n === rg.n);
-    cell.setStyle({
-      fillColor: val==null ? "#8a9aa0" : scoreColor(M.good(val)),
-      fillOpacity: p && p.far ? .15 : .6,
-      color: isSel ? "#2B2318" : "#fff",
-      weight: isSel ? 3 : 1.5
-    });
-    if(isSel) cell.bringToFront();
-    cell.setTooltipContent(tooltipHtml(rg, p, M));
-  });
+  const vals = REGIONS.map(rg=>{ const p=by[rg.n]; return p ? metricValue(p, M) : null; });
+  const fills = vals.map(x => x==null ? "#8a9aa0" : scoreColor(M.good(x)));
+
+  const rects = MAP.runs.map(r=>{
+    const p = by[REGIONS[r.r].n];
+    return `<rect class="c${p&&p.far?" far":""}" data-r="${r.r}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fills[r.r]}"/>`;
+  }).join("");
+
+  // labels plaatsen van groot naar klein; wat botst laten we weg
+  const taken = [{x0:MAP.base[0]-30, y0:MAP.base[1]-14, x1:MAP.base[0]+30, y1:MAP.base[1]+2}];
+  const fits = b => !taken.some(t => b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0);
+  const labels = [...MAP.labels].sort((a,b)=>b.cells-a.cells).map(L=>{
+    const rg = REGIONS[L.i], p = by[rg.n];
+    const txt = (rg.s || rg.n).toUpperCase();
+    const big = L.cells >= 40 && vals[L.i] != null;
+    const w = txt.length * 5.2, hh = big ? 21 : 10;
+    const box = {x0:L.x-w/2-1, y0:L.y-9, x1:L.x+w/2+1, y1:L.y-9+hh};
+    if(!fits(box)) return "";
+    taken.push(box);
+    const far = p && p.far ? " far" : "";
+    return `<text class="lb${far}" x="${L.x}" y="${L.y}">${esc(txt)}`
+      + (big ? `<tspan x="${L.x}" dy="10.5" style="font-size:10px;font-weight:600">${M.txt(vals[L.i])}</tspan>` : "")
+      + `</text>`;
+  }).join("");
+
+  const si = sel ? REGIONS.findIndex(r=>r.n===sel.n) : -1;
+  const ring = si >= 0 ? `<path class="selring" d="${MAP.outlines[si]}"/>` : "";
+  const bx = MAP.base[0], byy = MAP.base[1];
+
+  $("mapsvg").innerHTML =
+    `<svg viewBox="${MAP.viewBox}" role="img" aria-label="Kaart van de Alpen, regio's gekleurd naar ${esc(M.label)}">
+      <g>${rects}</g>
+      <path class="borders" d="${MAP.borders}"/>
+      ${ring}
+      <g>${labels}</g>
+      <g class="base">
+        <circle cx="${bx}" cy="${byy}" r="3.2"/>
+        <text x="${bx}" y="${(byy + 11).toFixed(1)}">MAYRHOFEN</text>
+      </g>
+    </svg>`;
 
   const a = v.dates[0], b = v.dates[v.n-1];
   const wat = state.metric === "score" ? "de score voor " + PROFILE_LABEL[state.profile].toLowerCase() : M.label;
@@ -165,8 +92,8 @@ export function renderMap(v){
     + `Klik een regio om hem vast te zetten; de paklijst rekent daarna met die regio.`;
   $("mapnote").innerHTML = `Kleur = ${esc(METRIC_NOTE[state.metric])}${state.histMode ? " (historisch gemiddelde, geen voorspelling)" : ""}`
     + (state.day >= 0 ? ` op die ene dag — de ranglijst en de kerncijfers blijven over de hele periode rekenen` : "")
-    + `. Weggevallen regio's vallen buiten je rijtijd. `
-    + `Vlakken zijn de Voronoi-cel rond het meetpunt van die regio, geen exacte grens — vlak bij een celrand kan het weer net zo goed op de andere regio lijken.`
+    + `. Weggezakte regio's vallen buiten je rijtijd. `
+    + `De vlakken zijn schematisch — elke cel hoort bij het dichtstbijzijnde regiomiddelpunt, het is geen grenskaart.`
     + (state.histMode ? histStatusNote(v.dates) : "");
 }
 
