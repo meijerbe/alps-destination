@@ -6,7 +6,7 @@ export const PACK = [
     {t:"Vignet Zwitserland (jaarvignet, 40 CHF)", when:c=>c.countries.has("CH"), why:c=>`${c.top.n} ligt in Zwitserland`},
     {t:"Contant geld voor Italiaanse tol", when:c=>c.countries.has("IT"), why:c=>`${c.top.n} ligt in Italië`},
     {t:"Vignet Slovenië", when:c=>c.countries.has("SI"), why:c=>`${c.top.n} ligt in Slovenië`},
-    {t:"Fietsdrager, sleutel en extra spanband", when:c=>c.profile==="bike"},
+    {t:"Fietsdrager, sleutel en extra spanband", when:c=>c.profiles.has("bike")},
     {t:"Reservelamp, gevarendriehoek, veiligheidshesjes (verplicht in IT/FR)"},
     {t:"Check winterbanden of kettingen", when:c=>c.minFrz<2100, why:c=>`vriespunt zakt tot ${Math.round(c.minFrz)} m`}
   ]},
@@ -37,7 +37,7 @@ export const PACK = [
     {t:"Lichte shirts en korte broek", when:c=>c.maxTemp>=24, why:c=>`tot ${Math.round(c.maxTemp)} °C`},
     {t:"Slippers en iets schoons voor 's avonds"}
   ]},
-  {g:"Op de fiets", when:c=>c.profile==="bike", personal:true, items:[
+  {g:"Op de fiets", when:c=>c.profiles.has("bike"), personal:true, items:[
     {t:"Helm, fietsschoenen, twee bidons"},
     {t:"Reserveband, plakset, banden­lichters, mini-pomp"},
     {t:"Kettingolie, multitool, extra derailleurhanger"},
@@ -46,7 +46,7 @@ export const PACK = [
     {t:"Fietscomputer, lader, routes offline gezet"},
     {t:"Achterlicht — verplicht in tunnels en galerijen"}
   ]},
-  {g:"Op pad", when:c=>c.profile==="hike", personal:true, items:[
+  {g:"Op pad", when:c=>c.profiles.has("hike"), personal:true, items:[
     {t:"Wandelschoenen ingelopen, wandelstokken"},
     {t:"Dagrugzak 25–30 l met regenhoes"},
     {t:"Kaart en GPX offline, kompas"},
@@ -54,7 +54,7 @@ export const PACK = [
     {t:"Thermoskan en lunchpakket"},
     {t:"Alpenvereinlidmaatschap of hutreserveringen"}
   ]},
-  {g:"Trailrunnen", when:c=>c.profile==="hike", personal:true, items:[
+  {g:"Trailrunnen", when:c=>c.profiles.has("hike"), personal:true, items:[
     {t:"Trailrunschoenen, ingelopen"},
     {t:"Hardloopvest met drinkblazen of flesjes"},
     {t:"Hardloopkleding die vocht afvoert, geen katoen"},
@@ -64,7 +64,7 @@ export const PACK = [
     {t:"Vouwbekertje voor de bevoorradingsposten"},
     {t:"Windjack in het vest, ook bij zon", why:c=>`boven 2000 m is het snel ${Math.round(c.minTemp-12)} °C`}
   ]},
-  {g:"Aan het water", when:c=>c.profile==="chill", personal:true, items:[
+  {g:"Aan het water", when:c=>c.profiles.has("chill"), personal:true, items:[
     {t:"Zwemkleding, snel drogende handdoek"},
     {t:"Waterschoenen — bergmeren zitten vol keien"},
     {t:"Koelbox of koeltas", when:c=>c.maxTemp>=24, why:c=>`tot ${Math.round(c.maxTemp)} °C`},
