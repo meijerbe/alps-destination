@@ -4,6 +4,8 @@
 import { clamp, darkMode } from "./dom.js";
 import { REGIONS, WEIGHTS, PARTS } from "./regions.js";
 import { state } from "./state.js";
+import { getJSON } from "./net.js";
+import { getHistoricalSnapshot } from "./historical.js";
 
 export function dayParts(d){
   return {
@@ -44,19 +46,6 @@ export const URLS = {
     + "?latitude=47.267,46.498&longitude=11.393,11.354"
     + "&hourly=pressure_msl&timezone=Europe%2FBerlin&forecast_days=10"
 };
-
-export async function getJSON(url, tries = 3){
-  for(let attempt = 1; ; attempt++){
-    try{
-      const res = await fetch(url, {signal: AbortSignal.timeout(15000)});
-      if(!res.ok) throw new Error("Open-Meteo antwoordde met status " + res.status);
-      return await res.json();
-    }catch(err){
-      if(attempt >= tries) throw err;
-      await new Promise(r => setTimeout(r, 400 * 2 ** (attempt - 1)));
-    }
-  }
-}
 
 export async function load(){
   const [raw, foehnRaw] = await Promise.all([getJSON(URLS.data), getJSON(URLS.foehn)]);
@@ -123,12 +112,17 @@ export function derive(){
   const start = clamp(state.start, 0, Math.max(0, total-2));
   const n = Math.min(state.days, total - start);
   const win = Math.min(3, n);
+  const dates = places[0].days.slice(start, start+n).map(d=>d.date);
+  // klimatologisch gemiddelde (15 jaar) voor exact dit kalendervenster — null
+  // tot ensureHistorical() het heeft opgehaald, zie render.js
+  const hist = getHistoricalSnapshot(dates);
 
   const all = places
     .map(p=>{
-      const per = p.days.slice(start, start+n).map(d=>{
+      const histRow = hist ? hist[p.n] : null;
+      const per = p.days.slice(start, start+n).map((d,k)=>{
         const parts = dayParts(d);
-        return {...d, parts, s: weigh(parts, w)};
+        return {...d, parts, s: weigh(parts, w), histRain: histRow ? histRow[k] ?? null : null};
       });
       const avgParts = {};
       PARTS.forEach(x => avgParts[x.k] = per.reduce((a,b)=>a+b.parts[x.k],0)/per.length);
@@ -154,7 +148,6 @@ export function derive(){
   const fwin = foehn.slice(start, start+n);
   const foehnAvg = fwin.length ? fwin.reduce((a,b)=>a+b.diff,0)/fwin.length : null;
 
-  const dates = places[0].days.slice(start, start+n).map(d=>d.date);
   return {all, scored, n, start, total, win, dates, foehn: fwin, foehnAvg};
 }
 
@@ -170,8 +163,12 @@ export function selectedRegion(v){
 export const foehnLabel = a =>
   a == null ? "geen data" : a > 2.5 ? "zuidkant droog" : a < -2.5 ? "noordkant droog" : "geen sturing";
 
-/* welke waarde kleurt de kaart: één dag, of het gemiddelde over de periode */
+/* welke waarde kleurt de kaart: één dag, of het gemiddelde over de periode.
+   Null-veilig: bij histRain kan een dag nog "onbekend" zijn (nog niet
+   opgehaald) — die telt dan niet mee in het gemiddelde, in plaats van als 0. */
 export function metricValue(p, M){
   const d = state.day >= 0 ? p.per[state.day] : null;
-  return d ? M.val(d) : p.per.reduce((a,x)=>a+M.val(x),0)/p.per.length;
+  if(d) return M.val(d);
+  const vals = p.per.map(M.val).filter(v => v != null);
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
 }

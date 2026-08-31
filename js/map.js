@@ -8,6 +8,7 @@ import { REGIONS, COUNTRY, driveTxt, PROFILE_LABEL } from "./regions.js";
 import { MAP } from "./map-geometry.js";
 import { state } from "./state.js";
 import { selectedRegion, metricValue, scoreColor } from "./weather.js";
+import { getHistoricalStatus, HIST_YEARS } from "./historical.js";
 
 export function syncDay(v){
   state.day = state.day >= v.n ? v.n - 1 : Math.max(-1, state.day);
@@ -92,7 +93,15 @@ export function renderMap(v){
   $("mapnote").innerHTML = `Kleur = ${esc(METRIC_NOTE[state.metric])}`
     + (state.day >= 0 ? ` op die ene dag — de ranglijst en de kerncijfers blijven over de hele periode rekenen` : "")
     + `. Weggezakte regio's vallen buiten je rijtijd. `
-    + `De vlakken zijn schematisch — elke cel hoort bij het dichtstbijzijnde regiomiddelpunt, het is geen grenskaart.`;
+    + `De vlakken zijn schematisch — elke cel hoort bij het dichtstbijzijnde regiomiddelpunt, het is geen grenskaart.`
+    + (state.metric === "histRain" ? histNote(v.dates) : "");
+}
+
+function histNote(dates){
+  const status = getHistoricalStatus(dates);
+  if(status === "ready") return "";
+  if(status === "failed") return ` <strong>Historische data ophalen is niet gelukt — probeer het over een paar minuten opnieuw.</strong>`;
+  return ` <strong>Historische data (${HIST_YEARS} jaar) wordt opgehaald — dit verschijnt vanzelf zodra dat klaar is.</strong>`;
 }
 
 export function renderSelCard(v){

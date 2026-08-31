@@ -14,13 +14,21 @@ browser geladen, niets te bouwen.
 dichtstbijzijnde regiomiddelpunt (Voronoi), geknipt op een grove omtrek van de Alpen. Klik een
 regio om hem vast te zetten; de rest van het dashboard rekent daarna met die keuze. Regio's buiten
 je rijtijd zakken weg in plaats van te verdwijnen, zodat je ziet wat je laat liggen. Te kleuren op
-score, neerslag, zon, temperatuur, wind of vriespunt — oranje is altijd gunstig, blauw altijd niet.
+score, neerslag, zon, temperatuur, wind, vriespunt of het historisch gemiddelde — oranje is altijd
+gunstig, blauw altijd niet.
 
 Onder de kaart zit een schuif voor de dag. Helemaal links staat het gemiddelde over de hele
 periode; schuif naar rechts en de kaart kleurt één dag tegelijk, met de föhnstand van die dag
 erbij. De afspeelknop loopt de dagen af, zodat je een front over de Alpen ziet trekken. In
 dagstand blijven de ranglijst en de kerncijfers over de hele periode rekenen — alleen de kaart
 zoomt in op die ene dag.
+
+**Historisch** — een aparte kaartkleur: geen voorspelling, maar het gemiddelde over de laatste 15
+jaar voor exact deze kalenderdagen (dezelfde datums, andere jaren). Nuttig als de 10-daagse
+voorspelling nog onzeker is maar je toch wilt weten welke regio's in deze periode van het jaar
+doorgaans droog zijn. Kost 15 extra verzoeken (één per jaar, telkens alle regio's tegelijk) en
+wordt daarom pas opgehaald zodra je 'm ook echt kiest, en daarna 30 dagen bewaard. Mislukt het
+ophalen een keer, dan probeert de pagina het na 10 minuten vanzelf opnieuw.
 
 **Lijstje** — dezelfde regio's als rangschikking, met de föhnmeter erboven en per regio een
 opbouw van de score: welk onderdeel de score trekt en welk onderdeel hem tegenhoudt.
@@ -60,7 +68,7 @@ regio staan allemaal in de hash. Een specifieke weergave is dus te bookmarken of
 ```
 
 `p` = `bike` | `hike` | `chill`, `d` = 2–10 dagen, `r` = 1–10 uur rijden (10 = alles),
-`s` = vertrekdag als index in de voorspelling, `m` = `score` | `rain` | `sun` | `tmax` | `wind` | `frz`,
+`s` = vertrekdag als index in de voorspelling, `m` = `score` | `rain` | `sun` | `tmax` | `wind` | `frz` | `histRain`,
 `g` = regionaam, `k` = dag binnen de periode (weglaten voor het gemiddelde),
 `t` = `map` | `rank` | `matrix` | `pack` | `shop` | `data`.
 
@@ -160,7 +168,9 @@ De logica staat in `js/`, één onderwerp per bestand:
 | `regions.js` | `REGIONS`, `ARC`, `GEO`, `WEIGHTS`, `PARTS` — de bestemmingen en de weging |
 | `metrics.js` | `METRICS` — wat er te kleuren valt (score, mm, zon, …) |
 | `state.js` | de gedeelde `state`, cache, paklijst-vinkjes, de URL-hash |
+| `net.js` | de gedeelde fetch-met-terugval (`getJSON`) |
 | `weather.js` | scoreberekening, Open-Meteo ophalen, `derive()` |
+| `historical.js` | het 15-jaars-gemiddelde achter de kaartmetric *Historisch* |
 | `map-geometry.js` / `map.js` | de rasterkaart en de kaart-render |
 | `dashboard.js` / `data-tab.js` | kerncijfers, föhnmeter, ranglijst, matrix, *onder de motorkap* |
 | `packing-data.js` / `packing.js` | de paklijst-inhoud en -logica |
@@ -269,6 +279,12 @@ Open-Meteo forecast API, best-match model, 10 dagen vooruit, geen API-sleutel. G
 calls per dag voor niet-commercieel gebruik; data onder CC BY 4.0. De app doet twee requests per
 koude load — één voor alle 32 regio's samen, één voor de twee drukstations — en haalt daarna alles
 uit de sessie-cache.
+
+Voor **Historisch** komt de neerslag van Open-Meteo's Historical Weather API
+(`archive-api.open-meteo.com`, ERA5-reanalyse, terug tot 1940) — zelfde vorm, geen sleutel, alleen
+alle 32 regio's tegelijk per jaar in plaats van per periode. Die data staat lang genoeg vast (het is
+een klimatologisch gemiddelde) om 30 dagen in `localStorage` te bewaren in plaats van in de
+sessie-cache.
 
 ## Kanttekeningen
 

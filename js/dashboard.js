@@ -161,10 +161,12 @@ export function renderMatrix(v){
   const t = $("matrix");
   if(!v.scored.length){ t.innerHTML = ""; $("mnote").textContent = ""; return; }
 
-  // sorteer op hoe goed de bestemming scoort op de getoonde metriek
+  // sorteer op hoe goed de bestemming scoort op de getoonde metriek — bij
+  // histRain kan een dag nog "onbekend" (null) zijn; die telt dan niet mee
   const rows = [...v.scored].map(p=>{
     const vals = p.per.map(d=>M.val(d));
-    return {p, vals, mean: vals.reduce((a,b)=>a+b,0)/vals.length,
+    const known = vals.filter(x => x != null);
+    return {p, vals, mean: known.length ? known.reduce((a,b)=>a+b,0)/known.length : null,
             goodMean: p.per.reduce((a,d)=>a+M.good(M.val(d)),0)/p.per.length};
   }).sort((a,b)=>b.goodMean-a.goodMean);
 

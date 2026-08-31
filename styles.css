@@ -82,13 +82,13 @@ h1{
   display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;
   padding:16px 0 20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:22px
 }
-.ctl{display:flex;flex-direction:column;gap:7px}
+.ctl{display:flex;flex-direction:column;gap:7px;min-width:0}
 .lab{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
-.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--paper);box-shadow:var(--shadow)}
+.seg{display:flex;max-width:100%;border:1px solid var(--line);border-radius:999px;overflow-x:auto;overflow-y:hidden;background:var(--paper);box-shadow:var(--shadow);-webkit-overflow-scrolling:touch}
 .seg button{
   font-family:var(--body);font-size:13px;font-weight:600;
   background:transparent;color:var(--rock);border:0;padding:7px 13px;cursor:pointer;
-  border-right:1px solid var(--line);white-space:nowrap
+  border-right:1px solid var(--line);white-space:nowrap;flex-shrink:0
 }
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--rock);color:var(--mist)}

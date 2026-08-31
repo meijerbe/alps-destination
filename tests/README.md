@@ -1,8 +1,8 @@
 # Browsertests
 
 Playwright-tests voor de site (`index.html`, `styles.css`, `js/`). Ze draaien tegen de echte
-pagina in een echte browser, met Open-Meteo en Supabase afgevangen — geen netwerk, geen echte
-database, dus ze zijn snel en geven altijd hetzelfde antwoord.
+pagina in een echte browser, met Open-Meteo (voorspelling én archief) en Supabase afgevangen —
+geen netwerk, geen echte database, dus ze zijn snel en geven altijd hetzelfde antwoord.
 
 ```bash
 cd tests
@@ -32,6 +32,7 @@ serveert ze gewoon, er is niets dat kan breken bij een deploy. Al het testgereed
 | `specs/paklijst.spec.js`  | vinkjes lokaal en gedeeld, notities, reset, foutafhandeling |
 | `specs/eigen-items.spec.js` | zelf toegevoegde paklijst-regels |
 | `specs/boodschappen.spec.js` | de boodschappenlijst |
+| `specs/historisch.spec.js` | de kaartmetric *Historisch* — laden, tussentijdse melding, mislukt ophalen |
 
 Een paar tests staan er om een fout die we eerder echt hadden vast te pinnen —
 die zijn als zodanig gemarkeerd in een comment. Haal ze niet weg omdat ze

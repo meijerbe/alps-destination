@@ -8,9 +8,13 @@ import { renderKpis, renderFoehn, renderRank, renderMatrix } from "./dashboard.j
 import { renderPack } from "./packing.js";
 import { renderShopping } from "./shopping.js";
 import { renderData } from "./data-tab.js";
+import { ensureHistorical } from "./historical.js";
 
 export function render(){
   const v = setLastView(derive());
+  // klimatologisch gemiddelde alleen ophalen als de gebruiker 'm ook echt
+  // wil zien — kost 15 verzoeken, niet iets om altijd standaard te doen
+  if(state.metric === "histRain") ensureHistorical(v.dates, render);
   syncDay(v);
   renderKpis(v);
   renderMap(v);
