@@ -4,7 +4,7 @@
 ------------------------------------------------------------------- */
 import { $, esc, cssEsc, slug } from "./dom.js";
 import { PACK } from "./packing-data.js";
-import { PROFILE_LABEL } from "./regions.js";
+import { PROFILE_LABEL, PROFILES } from "./regions.js";
 import { sb, supaEnabled, TRIP_ID, localId, supaErrText } from "./supabase-client.js";
 import { state, packDone } from "./state.js";
 import { focusOf } from "./weather.js";
@@ -211,7 +211,7 @@ export function handleCustomItemsChange(payload){
 function packContext(v){
   const top = focusOf(v);
   return {
-    profile: state.profile, n: v.n, top,
+    profiles: new Set(PROFILES), n: v.n, top,
     countries: new Set(["AT", top.c]),
     minFrz: top.minFrz, maxWind: top.maxWind, maxRain: top.maxRain,
     maxTemp: top.maxTemp, minTemp: top.minTemp, sunAvg: top.sunAvg,
@@ -289,8 +289,8 @@ export function renderPack(v){
     </section>`).join("");
 
   $("packsub").innerHTML =
-    `Afgestemd op <strong>${esc(PROFILE_LABEL[state.profile].toLowerCase())}</strong> en op de voorspelling voor `
-    + `<strong>${esc(c.top.n)}</strong> — de regio waar de kaart nu op staat. Regels met het label `
+    `Voor de hele vakantie — <strong>${PROFILES.map(p=>esc(PROFILE_LABEL[p].toLowerCase())).join(", ")}</strong> staan er samen in — `
+    + `en op de voorspelling voor <strong>${esc(c.top.n)}</strong> — de regio waar de kaart nu op staat. Regels met het label `
     + `<em>weer</em> staan er alleen in omdat de verwachting erom vraagt; ze verdwijnen weer als het weer draait. `
     + `Groepen met <em>ieder apart</em> hebben een vinkje per persoon. `
     + (supaEnabled
