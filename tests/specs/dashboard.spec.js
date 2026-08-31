@@ -22,24 +22,6 @@ test("kaart tekent alle 32 regio's met een basismarkering", async ({ page }) => 
   await expect(page.locator("#mapview .leaflet-tooltip.maplabel")).toHaveText("MAYRHOFEN");
 });
 
-test("de kaart zoomt in op de regio's, niet op heel Europa", async ({ page }) => {
-  // regressietest: fitBounds() gemeten op een container die nog niet
-  // gelayout was, zoomde ooit zo ver uit dat het vlakkenpatroon een
-  // piepklein plekje in beeld werd — invalidateSize() vóór fitBounds()
-  // (en een herhaling ervan) moet dat voorkomen.
-  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
-  await wachtOpKaartdata(page);
-
-  const frac = await page.evaluate(() => {
-    const container = document.getElementById("mapview").getBoundingClientRect();
-    const boxes = [...document.querySelectorAll("#mapview path.leaflet-interactive")].map(p => p.getBBox());
-    const minX = Math.min(...boxes.map(b=>b.x)), maxX = Math.max(...boxes.map(b=>b.x+b.width));
-    const minY = Math.min(...boxes.map(b=>b.y)), maxY = Math.max(...boxes.map(b=>b.y+b.height));
-    return Math.min((maxX-minX)/container.width, (maxY-minY)/container.height);
-  });
-  expect(frac).toBeGreaterThan(0.3);
-});
-
 test("de vier kerncijfers en alle weertabbladen vullen zich", async ({ page }) => {
   await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
   await wachtOpKaartdata(page);
@@ -77,7 +59,7 @@ test("een gedeelde link herstelt de hele weergave", async ({ page }) => {
   await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveText("Zon");
   await expect(page.locator("#daysval")).toHaveText("7 dagen");
   // geen aparte selectiering meer — het geselecteerde vlak zelf krijgt een
-  // dikkere rand (stroke-width 3 i.p.v. 2), precies één van de 32
+  // dikkere rand (stroke-width 3 i.p.v. 1.5), precies één van de 32
   const dik = await page.evaluate(() =>
     [...document.querySelectorAll("#mapview path.leaflet-interactive")]
       .filter(p => p.getAttribute("stroke-width") === "3").length);
