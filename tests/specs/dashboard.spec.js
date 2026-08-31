@@ -1,26 +1,30 @@
 import { test, expect } from "@playwright/test";
 import { mockWeather } from "../helpers/openmeteo.mjs";
 import { withoutSupabase } from "../helpers/supabase.mjs";
+import { mockMapLibs } from "../helpers/maplibs.mjs";
 
 test.beforeEach(async ({ page }) => {
   await mockWeather(page);
   await withoutSupabase(page);
+  await mockMapLibs(page);   // ná withoutSupabase, zie helpers/maplibs.mjs
 });
 
-test("kaart tekent alle 32 regio's met labels en de basismarkering", async ({ page }) => {
-  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
-  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+async function wachtOpKaartdata(page) {
+  await page.waitForFunction(() => document.getElementById("mapsub").textContent !== "—");
+}
 
-  const regios = await page.evaluate(() =>
-    new Set([...document.querySelectorAll(".mapwrap svg rect.c")].map(r => r.dataset.r)).size);
-  expect(regios).toBe(32);
-  await expect(page.locator(".mapwrap svg text.lb").first()).toBeAttached();
-  await expect(page.locator(".mapwrap svg .base text")).toHaveText("MAYRHOFEN");
+test("kaart tekent alle 32 regio's met een basismarkering", async ({ page }) => {
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
+  await wachtOpKaartdata(page);
+
+  await expect(page.locator("#mapview.leaflet-container")).toBeAttached();
+  await expect(page.locator("#mapview path.leaflet-interactive")).toHaveCount(32);
+  await expect(page.locator("#mapview .leaflet-tooltip.maplabel")).toHaveText("MAYRHOFEN");
 });
 
 test("de vier kerncijfers en alle weertabbladen vullen zich", async ({ page }) => {
   await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
-  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+  await wachtOpKaartdata(page);
   await expect(page.locator(".kpi")).toHaveCount(4);
 
   await page.locator("#tab-rank").click();
@@ -36,30 +40,35 @@ test("de vier kerncijfers en alle weertabbladen vullen zich", async ({ page }) =
 
 test("de dagschuif kleurt één dag en zet die in de URL", async ({ page }) => {
   await page.goto("/index.html#p=bike&d=5&r=10&s=0&m=rain&t=map");
-  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+  await wachtOpKaartdata(page);
 
-  const gemiddeld = await page.locator("#mapsvg").innerHTML();
+  const gemiddeld = await page.locator("#mapview").innerHTML();
   await page.locator("#daynext").click();
 
   await expect(page.locator("#daylabel")).toContainText("dag 1 van 5");
-  expect(await page.locator("#mapsvg").innerHTML()).not.toBe(gemiddeld);
+  expect(await page.locator("#mapview").innerHTML()).not.toBe(gemiddeld);
   expect(page.url()).toContain("k=0");
 });
 
 test("een gedeelde link herstelt de hele weergave", async ({ page }) => {
   await page.goto("/index.html#p=hike&d=7&r=6&s=2&m=sun&k=1&g=Dolomieten&t=map");
-  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+  await wachtOpKaartdata(page);
 
   await expect(page.locator("#selcard h3")).toHaveText("Dolomieten");
   await expect(page.locator("#profile button[aria-pressed=true]")).toHaveText("Hiken");
   await expect(page.locator("#mapmetric button[aria-pressed=true]")).toHaveText("Zon");
   await expect(page.locator("#daysval")).toHaveText("7 dagen");
-  await expect(page.locator(".selring")).toHaveCount(1);
+  // geen aparte selectiering meer — het geselecteerde vlak zelf krijgt een
+  // dikkere rand (stroke-width 3 i.p.v. 1.5), precies één van de 32
+  const dik = await page.evaluate(() =>
+    [...document.querySelectorAll("#mapview path.leaflet-interactive")]
+      .filter(p => p.getAttribute("stroke-width") === "3").length);
+  expect(dik).toBe(1);
 });
 
 test("de drie hoofdonderdelen wisselen en onthouden waar je was", async ({ page }) => {
   await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
-  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+  await wachtOpKaartdata(page);
 
   await page.locator("#tab-matrix").click();
   await page.locator("#top-shop").click();
@@ -71,13 +80,52 @@ test("de drie hoofdonderdelen wisselen en onthouden waar je was", async ({ page 
   await expect(page.locator("#panel-matrix")).toBeVisible();  // onthouden
 });
 
+test("klikken op een kaartvlak zet de selectie en tonen van de tooltip werkt", async ({ page }) => {
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
+  await wachtOpKaartdata(page);
+
+  await page.locator("#mapview path.leaflet-interactive").first().hover({ force: true });
+  await expect(page.locator("#mapview .leaflet-tooltip.maptip")).toBeVisible();
+  await expect(page.locator("#mapview .leaflet-tooltip.maptip")).toContainText("score");
+
+  await page.locator("#mapview path.leaflet-interactive").first().click({ force: true });
+  await expect(page.locator("#selcard h3")).toBeVisible();
+  expect(page.url()).toContain("g=");
+});
+
+test("als Leaflet niet laadt, blijft de rest van de pagina gewoon werken", async ({ page }) => {
+  // registreren ná beforeEach's mockLeaflet — laatst geregistreerd wint, dus
+  // deze abort overschrijft 'm specifiek voor deze test
+  await page.route("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js", r => r.abort());
+
+  // #mapsub blijft expres op "—" staan — renderMap() slaat zichzelf over
+  // zodra de kaart niet is geladen, dus wachtOpKaartdata() zou hier nooit
+  // resolven. De rest van render() (kpi's, tabbladen, paklijst) loopt gewoon door.
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
+  await expect(page.locator("#mapview .status.err")).toContainText("Kaart kon niet laden");
+  await expect(page.locator(".kpi")).toHaveCount(4);
+
+  await page.locator("#top-pack").click();
+  await expect(page.locator("#panel-pack")).toBeVisible();
+  await page.locator("#top-shop").click();
+  await expect(page.locator("#panel-shop")).toBeVisible();
+});
+
+test("als d3-delaunay niet laadt (Voronoi-berekening), dezelfde nette terugval", async ({ page }) => {
+  await page.route("https://cdn.jsdelivr.net/npm/d3-delaunay@6.0.4/dist/d3-delaunay.min.js", r => r.abort());
+
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
+  await expect(page.locator("#mapview .status.err")).toContainText("Kaart kon niet laden");
+  await expect(page.locator(".kpi")).toHaveCount(4);
+});
+
 test("geen console-fouten bij een normale sessie", async ({ page }) => {
   const fouten = [];
   page.on("pageerror", e => fouten.push(e.message));
   page.on("console", m => { if (m.type() === "error" && !/cdn\.jsdelivr|Failed to load resource/.test(m.text())) fouten.push(m.text()); });
 
   await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
-  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+  await wachtOpKaartdata(page);
   for (const t of ["tab-rank", "tab-matrix", "tab-data"]) await page.locator("#" + t).click();
   await page.locator("#top-pack").click();
   await page.locator("#top-shop").click();

@@ -7,7 +7,8 @@ import { state, readCache, writeCache, loadPack, readUrlState } from "./state.js
 import { load } from "./weather.js";
 import { render } from "./render.js";
 import { getLastView } from "./view.js";
-import { fillStart, syncControls } from "./ui.js";
+import { initMap } from "./map.js";
+import { fillStart, syncControls, selectRegion } from "./ui.js";
 import { supaEnabled } from "./supabase-client.js";
 import { loadNotes, loadPackState, loadCustomItems, syncMe, renderPack } from "./packing.js";
 import { loadShoppingState, renderShopping } from "./shopping.js";
@@ -73,5 +74,6 @@ loadNotes();
 loadPack();
 readUrlState();
 syncControls();
+initMap(selectRegion);   // vóór boot(): render() verwacht dat de vlakken al bestaan
 boot();
 initPackSync();

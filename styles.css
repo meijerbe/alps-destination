@@ -317,28 +317,22 @@ table.matrix thead th.avgh{border-left:1px solid var(--line)}
 .shoprow input:checked ~ .it{opacity:.42;text-decoration:line-through}
 .empty.shopempty{padding:20px 0}
 
-/* ---------- kaart ---------- */
+/* ---------- kaart (Leaflet + OpenTopoMap) ---------- */
 .mapwrap{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:var(--shadow)}
-.mapwrap svg{display:block;width:100%;height:auto;touch-action:manipulation}
-.mapwrap svg rect.c{stroke:none;cursor:pointer}
-.mapwrap svg rect.c.far{opacity:.2}
-.mapwrap svg path.borders{fill:none;stroke:var(--paper);stroke-width:1.1;opacity:.55;pointer-events:none}
-.mapwrap svg path.arc{fill:none;stroke:var(--rock);stroke-width:1.2;opacity:.28;pointer-events:none}
-.mapwrap svg path.selring{fill:none;stroke:var(--rock);stroke-width:3;pointer-events:none}
-.mapwrap svg text.lb{font-family:var(--mono);font-size:8.5px;fill:#fff;paint-order:stroke;
-  stroke:rgba(0,0,0,.55);stroke-width:2.2;stroke-linejoin:round;pointer-events:none;text-anchor:middle;letter-spacing:.02em}
-.mapwrap svg text.lb.far{opacity:.35}
-.mapwrap svg .base circle{fill:var(--rock);stroke:#fff;stroke-width:1.4}
-.mapwrap svg .base text{font-family:var(--mono);font-size:8.5px;fill:var(--rock);paint-order:stroke;
-  stroke:var(--paper);stroke-width:2.4;stroke-linejoin:round;text-anchor:middle}
-.maptip{
-  position:absolute;pointer-events:none;z-index:3;background:var(--rock);color:var(--mist);
-  font-family:var(--mono);font-size:10.5px;line-height:1.55;padding:8px 10px;border-radius:12px;
-  transform:translate(-50%,-115%);white-space:nowrap;opacity:0;transition:opacity .12s ease
+#mapview{height:clamp(320px,52vw,520px);border-radius:8px;overflow:hidden;touch-action:manipulation}
+/* Leaflet's eigen tooltip-doos overschreven naar de stijl van de rest van de app */
+#mapview .leaflet-tooltip.maptip{
+  background:var(--rock);color:var(--mist);border:0;box-shadow:none;
+  font-family:var(--mono);font-size:10.5px;line-height:1.55;padding:8px 10px;border-radius:12px;white-space:nowrap
 }
-.maptip.on{opacity:1}
-.maptip b{font-family:var(--disp);font-size:16px;font-weight:600;display:block;letter-spacing:-.01em}
-.maptip i{font-style:normal;color:var(--dry)}
+#mapview .leaflet-tooltip.maptip b{font-family:var(--disp);font-size:16px;font-weight:600;display:block;letter-spacing:-.01em}
+#mapview .leaflet-tooltip.maptip i{font-style:normal;color:var(--dry)}
+#mapview .leaflet-tooltip-top.maptip::before{border-top-color:var(--rock)}
+#mapview .leaflet-tooltip.maplabel{
+  background:var(--paper);color:var(--rock);border:1px solid var(--line);box-shadow:none;
+  font-family:var(--mono);font-size:8.5px;font-weight:600;letter-spacing:.02em;padding:2px 6px;border-radius:6px
+}
+#mapview .leaflet-tooltip-top.maplabel::before{border-top-color:var(--line)}
 .mapfoot{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;justify-content:space-between;margin-top:14px}
 .mapfoot .legend{flex:0 0 auto}
 .mapfoot .mnote{flex:1 1 300px}
