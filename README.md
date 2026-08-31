@@ -10,10 +10,11 @@ browser geladen, niets te bouwen.
 
 ## Wat er in zit
 
-**Kaart** — de Alpenboog als rasterkaart, opgedeeld in 32 regio's. Elke cel hoort bij het
-dichtstbijzijnde regiomiddelpunt (Voronoi), geknipt op een grove omtrek van de Alpen. Klik een
-regio om hem vast te zetten; de rest van het dashboard rekent daarna met die keuze. Regio's buiten
-je rijtijd zakken weg in plaats van te verdwijnen, zodat je ziet wat je laat liggen. Te kleuren op
+**Kaart** — een echte topografische kaart van de Alpenboog (Leaflet + OpenTopoMap), met de 32
+regio's als gekleurde stippen erop — elke stip is één meetpunt voor die regio, geen dekkingskaart.
+Klik een regio om hem vast te zetten; de rest van het dashboard rekent daarna met die keuze.
+Hoveren toont de score, het gekozen kenmerk en de kernwaarden voor die regio. Regio's buiten je
+rijtijd zakken weg in plaats van te verdwijnen, zodat je ziet wat je laat liggen. Te kleuren op
 score, neerslag, zon, temperatuur, wind of vriespunt — oranje is altijd gunstig, blauw altijd niet.
 
 Onder de kaart zit een schuif voor de dag. Helemaal links staat het gemiddelde over de hele
@@ -157,6 +158,14 @@ niet opnieuw hoeven uit te zoeken.
 - **Vercel** serveert statische bestanden. Er is met opzet géén `package.json` in de
   root, zodat er ook niets te bouwen valt; het testgereedschap staat in `tests/`.
 - **Open-Meteo** heeft geen sleutel nodig en is gratis voor dit gebruik.
+- **Leaflet + OpenTopoMap** voor de kaart: Leaflet is open source (BSD-2-Clause), heeft
+  geen build-stap nodig (net als de rest van de app — één `<script>`) en de tegels van
+  OpenTopoMap zijn zelf ook open (OpenStreetMap-data, CC-BY-SA), passen thematisch bij
+  een fiets/hike-app (reliëf, paden) en vragen geen sleutel of account. Beide komen via
+  jsdelivr binnen, dus die host staat naast Open-Meteo en Supabase in de CSP van
+  `vercel.json` (`script-src`/`style-src`/`img-src`). We gebruiken uitsluitend
+  `L.circleMarker` (nooit `L.marker`), zodat Leaflet nooit zijn standaard marker-PNG's
+  van een ander CDN probeert te laden.
 
 **Wanneer je dit wél moet omgooien:** als een los `js/*.js`-bestand zelf weer te groot
 wordt om in te werken, of als de app een reden krijgt om ergens *state* buiten de
@@ -176,7 +185,7 @@ De logica staat in `js/`, één onderwerp per bestand:
 | `net.js` | de gedeelde fetch-met-terugval (`getJSON`) |
 | `weather.js` | scoreberekening, Open-Meteo ophalen, `derive()` |
 | `historical.js` | het 15-jaars-gemiddelde achter de bron-toggle *Historisch* |
-| `map-geometry.js` / `map.js` | de rasterkaart en de kaart-render |
+| `map.js` | de Leaflet-kaart: opbouw, de 32 stippen en hun kleur/tooltip per render |
 | `dashboard.js` / `data-tab.js` | kerncijfers, föhnmeter, ranglijst, matrix, *onder de motorkap* |
 | `packing-data.js` / `packing.js` | de paklijst-inhoud en -logica |
 | `shopping.js` | de boodschappenlijst |
@@ -186,12 +195,9 @@ De logica staat in `js/`, één onderwerp per bestand:
 Meestal is maar één bestand relevant:
 
 - **Regio's** — `REGIONS` in `regions.js`. `lat`/`lon` is het punt waarvoor het weer wordt
-  opgehaald én het middelpunt waar de kaart de cellen omheen legt; `drive` is de rijtijd vanaf
-  Mayrhofen in uren (met de hand geschat, dus corrigeer gerust); `s` is een kortere naam voor op
-  de kaart; `side` is puur informatief. Een regio toevoegen of verplaatsen hertekent de kaart vanzelf.
-- **Omtrek van de Alpen** — `ARC` in `regions.js`, een grove polygoon in lon/lat. Alleen bedoeld
-  om het raster af te knippen, het is geen grens.
-- **Rastergrofte** — `GEO.latStep` in `regions.js`. Kleiner = fijnere kaart en meer SVG.
+  opgehaald én waar de stip op de kaart komt te staan; `drive` is de rijtijd vanaf Mayrhofen in
+  uren (met de hand geschat, dus corrigeer gerust); `s` is een kortere naam voor op de kaart;
+  `side` is puur informatief. Een regio toevoegen of verplaatsen hertekent de kaart vanzelf.
 - **Weging** — `WEIGHTS` in `regions.js`, per profiel de weging van droogte, neerslagkans, zon,
   wind, temperatuur en vriespuntniveau. Sommeert per profiel naar 1.
 - **Scorecurves** — de functie `dayParts` in `weather.js`. Het tabblad *Onder de motorkap* laat

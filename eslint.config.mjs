@@ -17,7 +17,8 @@ export default [
         location: "readonly", history: "readonly", fetch: "readonly",
         AbortSignal: "readonly", URLSearchParams: "readonly", crypto: "readonly",
         setTimeout: "readonly", clearTimeout: "readonly", setInterval: "readonly", clearInterval: "readonly",
-        Int16Array: "readonly", CSS: "readonly", confirm: "readonly", structuredClone: "readonly"
+        Int16Array: "readonly", CSS: "readonly", confirm: "readonly", structuredClone: "readonly",
+        L: "readonly"   // Leaflet, geladen via CDN-<script> in index.html
       }
     },
     rules: {

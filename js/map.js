@@ -1,14 +1,81 @@
 /* ------------------------------------------------------------------
-   De kaart zelf: het SVG, de dagschuif-synchronisatie en de kaart
-   met dagcijfers voor de geselecteerde regio.
+   De kaart zelf: een Leaflet-kaart met OpenTopoMap als ondergrond, de
+   32 regio's als gekleurde stippen erop, en de dagschuif-synchronisatie.
+
+   `L` komt van de Leaflet-CDN-<script> in index.html (net als
+   `window.supabase`) — een globale, geen import.
 ------------------------------------------------------------------- */
 import { $, esc, fmt, DAYS, dow, dm } from "./dom.js";
 import { METRICS, METRIC_NOTE } from "./metrics.js";
 import { REGIONS, COUNTRY, driveTxt, PROFILE_LABEL } from "./regions.js";
-import { MAP } from "./map-geometry.js";
 import { state } from "./state.js";
 import { selectedRegion, metricValue, scoreColor } from "./weather.js";
 import { histStatusNote } from "./historical.js";
+
+const BASE = { lat: 47.162, lon: 11.859, label: "MAYRHOFEN" };   // vertrekpunt, geen regio
+
+let leafletMap = null;
+const markers = new Map();   // regionnaam → L.CircleMarker
+
+/** Bouwt de kaart en de 32 stippen één keer op, vóór de eerste render().
+ *  `onSelect(naam)` wordt aangeroepen bij een klik op een regio-stip.
+ *
+ *  In een try/catch: Leaflet en de tegels komen van buiten (jsdelivr,
+ *  tile.opentopomap.org) en kunnen om redenen buiten onze macht (ad-blocker,
+ *  netwerkbeleid, CDN-storing) niet laden. Zonder deze vangrail stopt
+ *  main.js' init-volgorde daar hard — dan werken de paklijst en de
+ *  boodschappenlijst ook niet meer, terwijl die niets met de kaart te maken
+ *  hebben. renderMap() controleert `leafletMap` en doet daarna netjes niets. */
+export function initMap(onSelect){
+  try{
+    leafletMap = L.map("mapview", { minZoom: 5, maxZoom: 17, scrollWheelZoom: false });
+    L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+      maxZoom: 17,
+      subdomains: "abc",
+      attribution: 'Kaartgegevens: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-auteurs, SRTM · '
+        + 'kaartweergave: © <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> '
+        + '(<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC-BY-SA</a>)'
+    }).addTo(leafletMap);
+
+    leafletMap.fitBounds(L.latLngBounds(REGIONS.map(rg=>[rg.lat, rg.lon])), { padding: [24, 24] });
+
+    REGIONS.forEach(rg=>{
+      const marker = L.circleMarker([rg.lat, rg.lon], {
+        radius: 11, weight: 2, color: "#fff", fillOpacity: .92, fillColor: "#8a9aa0"
+      }).addTo(leafletMap);
+      marker.bindTooltip("", { sticky: true, direction: "top", className: "maptip" });
+      marker.on("click", () => onSelect(rg.n));
+      markers.set(rg.n, marker);
+    });
+
+    L.circleMarker([BASE.lat, BASE.lon], {
+      radius: 6, weight: 2, color: "#fff", fillColor: "#2B2318", fillOpacity: 1, interactive: false
+    }).addTo(leafletMap)
+      .bindTooltip(BASE.label, { permanent: true, direction: "top", offset: [0, -4], className: "maplabel" });
+  }catch(err){
+    leafletMap = null;
+    console.error("Kaart kon niet laden:", err);
+    const el = $("mapview");
+    if(el) el.innerHTML = `<p class="status err" style="margin:0">Kaart kon niet laden — geen verbinding met de kaart-CDN of tegelserver. `
+      + `De rest van de pagina werkt gewoon door.</p>`;
+  }
+}
+
+function tooltipHtml(rg, p, M){
+  if(!p) return `<b>${esc(rg.n)}</b>geen data`;
+  const mean = metricValue(p, M);
+  const d0 = state.day >= 0 ? p.per[state.day] : null;
+  const head = state.metric === "score"
+    ? `<i>score ${fmt(p.total)}</i>`
+    : `<i>${esc(M.label)} ${M.txt(mean)}</i> · score ${fmt(p.total)}`;
+  return `<b>${esc(rg.n)}</b>`
+    + `${esc(rg.r)}, ${esc(COUNTRY[rg.c]||rg.c)} · ${driveTxt(rg)}<br>`
+    + head
+    + (p.far ? " · buiten rijtijd" : (p.rank ? " · nr " + p.rank : "")) + `<br>`
+    + (d0
+        ? `${d0.rain.toFixed(1)} mm · ${(d0.sun/3600).toFixed(1)} u zon · ${fmt(d0.tmax)} °C · wind ${fmt(d0.wind)}`
+        : `${p.rainSum.toFixed(1)} mm · ${p.sunAvg.toFixed(1)} u zon/dag · ${p.dryDays}/${p.per.length} droog`);
+}
 
 export function syncDay(v){
   state.day = state.day >= v.n ? v.n - 1 : Math.max(-1, state.day);
@@ -37,50 +104,26 @@ export function syncDay(v){
 }
 
 export function renderMap(v){
+  if(!leafletMap) return;   // kaart kon niet laden — initMap() liet al een melding staan
   const M = METRICS[state.metric];
   const by = {}; v.all.forEach(p=>by[p.n]=p);
   const sel = selectedRegion(v);
 
-  const vals = REGIONS.map(rg=>{ const p=by[rg.n]; return p ? metricValue(p, M) : null; });
-  const fills = vals.map(x => x==null ? "#8a9aa0" : scoreColor(M.good(x)));
-
-  const rects = MAP.runs.map(r=>{
-    const p = by[REGIONS[r.r].n];
-    return `<rect class="c${p&&p.far?" far":""}" data-r="${r.r}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fills[r.r]}"/>`;
-  }).join("");
-
-  // labels plaatsen van groot naar klein; wat botst laten we weg
-  const taken = [{x0:MAP.base[0]-30, y0:MAP.base[1]-14, x1:MAP.base[0]+30, y1:MAP.base[1]+2}];
-  const fits = b => !taken.some(t => b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0);
-  const labels = [...MAP.labels].sort((a,b)=>b.cells-a.cells).map(L=>{
-    const rg = REGIONS[L.i], p = by[rg.n];
-    const txt = (rg.s || rg.n).toUpperCase();
-    const big = L.cells >= 40 && vals[L.i] != null;
-    const w = txt.length * 5.2, hh = big ? 21 : 10;
-    const box = {x0:L.x-w/2-1, y0:L.y-9, x1:L.x+w/2+1, y1:L.y-9+hh};
-    if(!fits(box)) return "";
-    taken.push(box);
-    const far = p && p.far ? " far" : "";
-    return `<text class="lb${far}" x="${L.x}" y="${L.y}">${esc(txt)}`
-      + (big ? `<tspan x="${L.x}" dy="10.5" style="font-size:10px;font-weight:600">${M.txt(vals[L.i])}</tspan>` : "")
-      + `</text>`;
-  }).join("");
-
-  const si = sel ? REGIONS.findIndex(r=>r.n===sel.n) : -1;
-  const ring = si >= 0 ? `<path class="selring" d="${MAP.outlines[si]}"/>` : "";
-  const bx = MAP.base[0], byy = MAP.base[1];
-
-  $("mapsvg").innerHTML =
-    `<svg viewBox="${MAP.viewBox}" role="img" aria-label="Kaart van de Alpen, regio's gekleurd naar ${esc(M.label)}">
-      <g>${rects}</g>
-      <path class="borders" d="${MAP.borders}"/>
-      ${ring}
-      <g>${labels}</g>
-      <g class="base">
-        <circle cx="${bx}" cy="${byy}" r="3.2"/>
-        <text x="${bx}" y="${(byy + 11).toFixed(1)}">MAYRHOFEN</text>
-      </g>
-    </svg>`;
+  REGIONS.forEach(rg=>{
+    const marker = markers.get(rg.n);
+    const p = by[rg.n];
+    const val = p ? metricValue(p, M) : null;
+    const isSel = !!(sel && sel.n === rg.n);
+    marker.setStyle({
+      fillColor: val==null ? "#8a9aa0" : scoreColor(M.good(val)),
+      fillOpacity: p && p.far ? .25 : .92,
+      color: isSel ? "#2B2318" : "#fff",
+      weight: isSel ? 4 : 2,
+      radius: isSel ? 13 : 11
+    });
+    if(isSel) marker.bringToFront();
+    marker.setTooltipContent(tooltipHtml(rg, p, M));
+  });
 
   const a = v.dates[0], b = v.dates[v.n-1];
   const wat = state.metric === "score" ? "de score voor " + PROFILE_LABEL[state.profile].toLowerCase() : M.label;
@@ -92,8 +135,8 @@ export function renderMap(v){
     + `Klik een regio om hem vast te zetten; de paklijst rekent daarna met die regio.`;
   $("mapnote").innerHTML = `Kleur = ${esc(METRIC_NOTE[state.metric])}${state.histMode ? " (historisch gemiddelde, geen voorspelling)" : ""}`
     + (state.day >= 0 ? ` op die ene dag — de ranglijst en de kerncijfers blijven over de hele periode rekenen` : "")
-    + `. Weggezakte regio's vallen buiten je rijtijd. `
-    + `De vlakken zijn schematisch — elke cel hoort bij het dichtstbijzijnde regiomiddelpunt, het is geen grenskaart.`
+    + `. Weggevallen regio's vallen buiten je rijtijd. `
+    + `Elke stip is één meetpunt voor die regio, geen dekkingskaart — het weer in de rest van de regio kan afwijken.`
     + (state.histMode ? histStatusNote(v.dates) : "");
 }
 

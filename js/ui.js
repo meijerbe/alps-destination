@@ -2,14 +2,13 @@
    Interactie: alle DOM-events op één plek, plus de kleine
    UI-synchronisatiefuncties die daarbij horen.
 ================================================================== */
-import { $, esc, fmt, clamp, DAYS, dow, dm } from "./dom.js";
-import { REGIONS, COUNTRY, driveTxt } from "./regions.js";
+import { $, clamp, DAYS, dow, dm } from "./dom.js";
 import { METRICS } from "./metrics.js";
 import { state, writeUrlState, readUrlState, DASH_TABS, TOP_TABS, TABS, topOf, packDone, savePack } from "./state.js";
 import { getLastView } from "./view.js";
 import { render } from "./render.js";
 import { toast } from "./toast.js";
-import { selectedRegion, metricValue } from "./weather.js";
+import { selectedRegion } from "./weather.js";
 import { supaEnabled } from "./supabase-client.js";
 import {
   setNote, addCustomItem, deleteCustomItem, setMe, syncMe,
@@ -326,42 +325,15 @@ $("start").addEventListener("change", e=>{
   if(state.data) render();
 });
 
-/* kaart: hover, tik en selectie */
-const tip = $("maptip");
-const regionAt = e => { const t = e.target.closest("rect.c"); return t ? +t.dataset.r : -1; };
-
-$("mapwrap").addEventListener("pointermove", e=>{
-  const i = regionAt(e);
-  const v = getLastView();
-  const p = i < 0 || !v ? null : v.all.find(x=>x.n === REGIONS[i].n);
-  if(!p){ tip.classList.remove("on"); return; }
-  const rg = REGIONS[i], M = METRICS[state.metric];
-  const mean = metricValue(p, M);
-  const d0 = state.day >= 0 ? p.per[state.day] : null;
-  const box = $("mapwrap").getBoundingClientRect();
-  tip.style.left = (e.clientX - box.left) + "px";
-  tip.style.top  = (e.clientY - box.top) + "px";
-  const head = state.metric === "score"
-    ? `<i>score ${fmt(p.total)}</i>`
-    : `<i>${esc(M.label)} ${M.txt(mean)}</i> · score ${fmt(p.total)}`;
-  tip.innerHTML = `<b>${esc(rg.n)}</b>`
-    + `${esc(rg.r)}, ${esc(COUNTRY[rg.c]||rg.c)} · ${driveTxt(rg)}<br>`
-    + head
-    + (p.far ? " · buiten rijtijd" : (p.rank ? " · nr " + p.rank : "")) + `<br>`
-    + (d0
-        ? `${d0.rain.toFixed(1)} mm · ${(d0.sun/3600).toFixed(1)} u zon · ${fmt(d0.tmax)} °C · wind ${fmt(d0.wind)}`
-        : `${p.rainSum.toFixed(1)} mm · ${p.sunAvg.toFixed(1)} u zon/dag · ${p.dryDays}/${p.per.length} droog`);
-  tip.classList.add("on");
-});
-$("mapwrap").addEventListener("pointerleave", ()=>tip.classList.remove("on"));
-$("mapwrap").addEventListener("click", e=>{
-  const i = regionAt(e);
-  if(i < 0) return;
-  const n = REGIONS[i].n;
+/* kaart: klik-om-te-selecteren. De kaart zelf is een Leaflet-instantie
+   (zie map.js); hover-inhoud en positionering doet Leaflet's eigen
+   tooltip, deze functie is alleen het klik-gedrag erachter — als
+   callback aan initMap() meegegeven vanuit main.js. */
+export function selectRegion(n){
   state.sel = state.sel === n ? null : n;
   writeUrlState();
   render();
-});
+}
 
 $("selcard").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
