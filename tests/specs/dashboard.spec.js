@@ -7,15 +7,41 @@ test.beforeEach(async ({ page }) => {
   await withoutSupabase(page);
 });
 
-test("kaart tekent alle 32 regio's met labels en de basismarkering", async ({ page }) => {
+test("kaart tekent alle 36 regio's met labels en de basismarkering", async ({ page }) => {
   await page.goto("/index.html#p=bike&d=5&r=10&s=0&t=map");
   await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
 
   const regios = await page.evaluate(() =>
     new Set([...document.querySelectorAll(".mapwrap svg rect.c")].map(r => r.dataset.r)).size);
-  expect(regios).toBe(32);
+  expect(regios).toBe(36);
   await expect(page.locator(".mapwrap svg text.lb").first()).toBeAttached();
   await expect(page.locator(".mapwrap svg .base text")).toHaveText("MAYRHOFEN");
+});
+
+test("het voorland staat apart van de boog: vier ijkpunten, gearceerd en met een eigen zin", async ({ page }) => {
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&m=rain&t=map");
+  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+
+  const ijkpunten = await page.evaluate(() =>
+    new Set([...document.querySelectorAll(".mapwrap svg rect.c.ref")].map(r => r.dataset.r)).size);
+  expect(ijkpunten).toBe(4);
+  await expect(page.locator(".mapwrap svg path.arcedge")).toBeAttached();
+  await expect(page.locator(".mapwrap svg .hatch rect").first()).toBeAttached();
+  await expect(page.locator("#mapnote")).toContainText("Voorland");
+  await expect(page.locator("#mapnote")).toContainText("Povlakte");
+
+  // ijkpunten zijn geen bestemming: niet in de ranglijst, wel aanklikbaar
+  await page.locator("#tab-rank").click();
+  await expect(page.locator(".row")).toHaveCount(32);
+});
+
+test("een ijkpunt aanklikken toont een kaart zonder ranglijst- en paklijstknoppen", async ({ page }) => {
+  await page.goto("/index.html#p=bike&d=5&r=10&s=0&m=rain&t=map&g=Povlakte");
+  await page.waitForSelector(".mapwrap svg rect.c", { state: "attached" });
+
+  await expect(page.locator("#selcard h3")).toHaveText("Povlakte");
+  await expect(page.locator("#selcard .meta")).toContainText("buiten de Alpen");
+  await expect(page.locator("#selcard button[data-go=pack]")).toHaveCount(0);
 });
 
 test("de vier kerncijfers en alle weertabbladen vullen zich", async ({ page }) => {

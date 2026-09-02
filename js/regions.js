@@ -1,7 +1,10 @@
 /* ==================================================================
    Bestemmingen, weging, metrieken
    `drive` = rijtijd vanaf Mayrhofen in uren (schatting),
-   `side`  = welke kant van de hoofdkam (informatief).
+   `side`  = welke kant van de hoofdkam (informatief),
+   `out`   = geen bestemming maar een ijkpunt buiten de Alpenboog:
+             die kleuren wel mee op de kaart, maar doen niet mee in de
+             ranglijst, de matrix of de paklijst.
 ================================================================== */
 export const REGIONS = [
   {n:"Zillertal",         r:"Tirol",            c:"AT", lat:47.20, lon:11.85, drive:0,   side:"noord",       base:true},
@@ -35,8 +38,20 @@ export const REGIONS = [
   {n:"Écrins",            r:"Briançonnais",     c:"FR", lat:44.85, lon:6.45,  drive:8,   side:"zuid"},
   {n:"Vercors",           r:"Isère",            c:"FR", lat:45.15, lon:5.75,  drive:8,   side:"noord"},
   {n:"Cuneese",           r:"Piemonte",         c:"IT", lat:44.55, lon:7.25,  drive:8.5, side:"zuid"},
-  {n:"Mercantour",        r:"Alpes-Maritimes",  c:"FR", lat:44.15, lon:7.05,  drive:9.5, side:"zuid"}
+  {n:"Mercantour",        r:"Alpes-Maritimes",  c:"FR", lat:44.15, lon:7.05,  drive:9.5, side:"zuid"},
+
+  /* Ijkpunten in het voorland, één per windstreek. Ze staan los van de
+     Alpenboog op de kaart en beantwoorden één vraag: ligt de bui over de
+     hele noordkant, of alleen tegen de bergen aan? */
+  {n:"Beiers Voorland", s:"Beieren",  r:"Oberbayern",  c:"DE", lat:48.05, lon:11.85, side:"noord", out:true},
+  {n:"Povlakte",                      r:"Lombardije",  c:"IT", lat:45.15, lon:10.45, side:"zuid",  out:true},
+  {n:"Rhônedal",                      r:"Drôme",       c:"FR", lat:44.60, lon:4.85,  side:"west",  out:true},
+  {n:"Pannonisch Voorland", s:"Pannonisch", r:"Burgenland", c:"AT", lat:47.35, lon:16.75, side:"oost", out:true}
 ];
+
+/* alleen de regio's waar je ook echt heen kunt */
+export const DESTINATIONS = REGIONS.filter(r=>!r.out);
+export const REFERENCES   = REGIONS.filter(r=>r.out);
 
 /* Grove omtrek van de Alpenboog (lon, lat), met de klok mee vanaf Nice.
    Schematisch: goed genoeg om de rasterkaart op te knippen, geen grens. */
@@ -49,7 +64,12 @@ export const ARC = [
   [9.30,45.85],[8.90,45.90],[8.55,45.85],[8.20,45.70],[7.95,45.55],[7.70,45.25],[7.40,44.95],[7.25,44.55],
   [7.35,44.15]
 ];
-export const GEO = {lon0:5.30, lon1:16.30, lat0:43.60, lat1:48.00, latStep:0.07, k:Math.cos(45.8*Math.PI/180), px:100};
+/* Het raster loopt nu ruimer dan de boog zelf, want de ijkpunten in het
+   voorland moeten er met hun straal (`outRad`, in breedtegraden) bij passen.
+   `outGap` is de vrije rand in cellen tussen zo'n vlek en de Alpen, zodat je
+   in één oogopslag ziet wat wél en niet in het gebergte ligt. */
+export const GEO = {lon0:4.00, lon1:17.60, lat0:43.55, lat1:48.65, latStep:0.07,
+                    k:Math.cos(45.8*Math.PI/180), px:100, outRad:0.5, outGap:2};
 
 export const WEIGHTS = {
   bike:  {dry:.34, prob:.18, sun:.20, wind:.18, temp:.10, snow:.00},
@@ -70,5 +90,5 @@ export const PARTS = [
 ];
 
 export const PROFILES = Object.keys(WEIGHTS);
-export const COUNTRY = {AT:"Oostenrijk", IT:"Italië", CH:"Zwitserland", FR:"Frankrijk", SI:"Slovenië"};
-export const driveTxt = p => p.drive===0 ? "basis" : p.drive+" u rijden";
+export const COUNTRY = {AT:"Oostenrijk", IT:"Italië", CH:"Zwitserland", FR:"Frankrijk", SI:"Slovenië", DE:"Duitsland"};
+export const driveTxt = p => p.out ? "ijkpunt buiten de Alpen" : p.drive===0 ? "basis" : p.drive+" u rijden";

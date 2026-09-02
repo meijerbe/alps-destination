@@ -9,7 +9,7 @@
    1940, gratis, geen sleutel) — dezelfde vorm als de forecast-call:
    alle regio's in één request per jaar. Geen "score" en geen "vriespunt"
    historisch: score leunt op neerslagkans (bestaat niet met terugwerkende
-   kracht) en vriespunt zou uurdata over 15 jaar × 32 regio's vergen —
+   kracht) en vriespunt zou uurdata over 15 jaar × alle regio's vergen —
    dat staat niet in verhouding tot wat het toevoegt.
 ------------------------------------------------------------------- */
 import { REGIONS } from "./regions.js";
