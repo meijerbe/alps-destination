@@ -1,7 +1,9 @@
 /* ------------------------------------------------------------------
    Kaartgeometrie. De Alpenboog wordt als raster van vierkante cellen
    opgedeeld; elke cel gaat naar de dichtstbijzijnde regio (Voronoi).
-   Eén keer berekend, daarna verandert alleen de kleur.
+   Rondom de boog liggen de ijkpunten uit het voorland: die krijgen een
+   losse ronde vlek binnen GEO.outRad, met GEO.outGap cellen lucht tussen
+   hen en het gebergte. Eén keer berekend, daarna verandert alleen de kleur.
 ------------------------------------------------------------------- */
 import { REGIONS, ARC, GEO } from "./regions.js";
 
@@ -23,20 +25,48 @@ export const MAP = (()=>{
   const cw = lonStep*GEO.k*GEO.px, ch = latStep*GEO.px;      // even breed als hoog
   const owner = new Int16Array(cols*rows).fill(-1);
   const cen = REGIONS.map(r=>prj(r.lon,r.lat));
+  const alpine = REGIONS.map((r,i)=>r.out ? -1 : i).filter(i=>i>=0);
+  const refs   = REGIONS.map((r,i)=>r.out ? i : -1).filter(i=>i>=0);
   const f1 = v => +v.toFixed(1);
+  const nearest = (list, X, Y) => {
+    let best=-1, bd=Infinity;
+    for(const i of list){
+      const dx=cen[i][0]-X, dy=cen[i][1]-Y, d=dx*dx+dy*dy;
+      if(d<bd){ bd=d; best=i; }
+    }
+    return {best, dist:Math.sqrt(bd)};
+  };
 
+  // 1. welke cellen liggen in de boog
+  const arc = new Uint8Array(cols*rows);
+  for(let ry=0; ry<rows; ry++){
+    const lat = GEO.lat1 - (ry+0.5)*latStep;
+    for(let cx=0; cx<cols; cx++){
+      if(inArc(GEO.lon0 + (cx+0.5)*lonStep, lat)) arc[ry*cols+cx]=1;
+    }
+  }
+  const nearArc = (c,r) => {
+    const g = GEO.outGap;
+    for(let r2=Math.max(0,r-g); r2<=Math.min(rows-1,r+g); r2++)
+      for(let c2=Math.max(0,c-g); c2<=Math.min(cols-1,c+g); c2++)
+        if(arc[r2*cols+c2]) return true;
+    return false;
+  };
+
+  // 2. boogcellen naar de dichtstbijzijnde bestemming, de rest naar een
+  //    ijkpunt in de buurt — en anders naar niemand
+  const outRadPx = GEO.outRad*GEO.px;
   for(let ry=0; ry<rows; ry++){
     const lat = GEO.lat1 - (ry+0.5)*latStep;
     for(let cx=0; cx<cols; cx++){
       const lon = GEO.lon0 + (cx+0.5)*lonStep;
-      if(!inArc(lon,lat)) continue;
       const X=(lon-GEO.lon0)*GEO.k*GEO.px, Y=(GEO.lat1-lat)*GEO.px;
-      let best=-1, bd=Infinity;
-      for(let i=0;i<cen.length;i++){
-        const dx=cen[i][0]-X, dy=cen[i][1]-Y, d=dx*dx+dy*dy;
-        if(d<bd){ bd=d; best=i; }
+      if(arc[ry*cols+cx]){
+        owner[ry*cols+cx] = nearest(alpine, X, Y).best;
+      }else if(refs.length && !nearArc(cx,ry)){
+        const hit = nearest(refs, X, Y);
+        if(hit.dist <= outRadPx) owner[ry*cols+cx] = hit.best;
       }
-      owner[ry*cols+cx]=best;
     }
   }
   const own = (c,r) => (c<0||r<0||c>=cols||r>=rows) ? -1 : owner[r*cols+c];
@@ -81,6 +111,9 @@ export const MAP = (()=>{
   }
 
   const outlines = REGIONS.map((_,i)=>edgePath((c,r)=>own(c,r)===i));
+  // de buitenrand van álles wat in de boog ligt: de contour die op de kaart
+  // "dit is de Alpen" zegt, los van de scheidingen tussen de regio's
+  const arcEdge = edgePath((c,r)=>{ const o=own(c,r); return o>=0 && !REGIONS[o].out; });
 
   // labelpositie = zwaartepunt van de cellen van die regio
   const acc = REGIONS.map(()=>({n:0,x:0,y:0}));
@@ -95,9 +128,10 @@ export const MAP = (()=>{
   const pad = 5;
 
   return {
-    W:f1(cols*cw), H:f1(rows*ch), runs, outlines, labels,
+    W:f1(cols*cw), H:f1(rows*ch), runs, outlines, labels, arcEdge,
     viewBox: [f1(x0-pad), f1(y0-pad), f1(x1-x0+2*pad), f1(y1-y0+2*pad)].join(" "),
-    borders: outlines.join(""),
+    borders:    outlines.filter((_,i)=>!REGIONS[i].out).join(""),
+    refBorders: outlines.filter((_,i)=> REGIONS[i].out).join(""),
     base: prj(11.859, 47.162).map(f1),
     cells: acc.map(a=>a.n)
   };

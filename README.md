@@ -2,7 +2,9 @@
 
 Ons weerdashboard voor de Alpen. Eén statisch bestand dat 32 Alpenregio's op een kaart zet en
 kleurt naar het weer voor een actieve vakantie — fietsen, hiken of aan het water hangen —
-zodat we kunnen bepalen waar we heen gaan als het Mayrhofen-weekend erop zit.
+zodat we kunnen bepalen waar we heen gaan als het Mayrhofen-weekend erop zit. Rondom de boog
+liggen nog vier ijkpunten in het voorland, zodat je ziet of een hele flank droog ligt of dat
+de bui alleen tegen de bergen aan stuwt.
 
 Geen build-stap, geen dependencies, geen API-sleutel. `index.html` bevat de opmaak, `styles.css`
 de stijl en `js/` de logica als losse ES-modules (`<script type="module">`) — rechtstreeks door de
@@ -15,6 +17,15 @@ dichtstbijzijnde regiomiddelpunt (Voronoi), geknipt op een grove omtrek van de A
 regio om hem vast te zetten; de rest van het dashboard rekent daarna met die keuze. Regio's buiten
 je rijtijd zakken weg in plaats van te verdwijnen, zodat je ziet wat je laat liggen. Te kleuren op
 score, neerslag, zon, temperatuur, wind of vriespunt — oranje is altijd gunstig, blauw altijd niet.
+
+**Voorland** — losse, gearceerde vlekken rondom de boog: Beiers Voorland (noord), Povlakte (zuid),
+Rhônedal (west) en Pannonisch Voorland (oost). Ze kleuren op dezelfde schaal mee, maar het zijn
+geen bestemmingen: ze staan niet in de ranglijst, niet in de matrix en niet in de paklijst. Ze
+beantwoorden één vraag — regent het over een hele flank, of alleen tegen de kam? De dikke contour
+om de boog en de arcering laten zien wat binnen en wat buiten de Alpen ligt; onder de kaart staan
+de millimeters per ijkpunt met de conclusie erbij ("de zuidkant ligt droog, ten noorden van de kam
+niet"). Zo zie je de föhnmeter, die uit één drukverschil komt, bevestigd of tegengesproken door de
+neerslag zelf.
 
 Onder de kaart zit een schuif voor de dag. Helemaal links staat het gemiddelde over de hele
 periode; schuif naar rechts en de kaart kleurt één dag tegelijk, met de föhnstand van die dag
@@ -170,7 +181,7 @@ De logica staat in `js/`, één onderwerp per bestand:
 | bestand | wat erin zit |
 | --- | --- |
 | `dom.js` | generieke hulpfuncties: `$`, `esc`, `clamp`, `fmt`, `slug`, datumnotatie |
-| `regions.js` | `REGIONS`, `ARC`, `GEO`, `WEIGHTS`, `PARTS` — de bestemmingen en de weging |
+| `regions.js` | `REGIONS`, `ARC`, `GEO`, `WEIGHTS`, `PARTS` — de bestemmingen, de ijkpunten en de weging |
 | `metrics.js` | `METRICS` — wat er te kleuren valt (score, mm, zon, …) |
 | `state.js` | de gedeelde `state`, cache, paklijst-vinkjes, de URL-hash |
 | `net.js` | de gedeelde fetch-met-terugval (`getJSON`) |
@@ -189,6 +200,11 @@ Meestal is maar één bestand relevant:
   opgehaald én het middelpunt waar de kaart de cellen omheen legt; `drive` is de rijtijd vanaf
   Mayrhofen in uren (met de hand geschat, dus corrigeer gerust); `s` is een kortere naam voor op
   de kaart; `side` is puur informatief. Een regio toevoegen of verplaatsen hertekent de kaart vanzelf.
+- **Ijkpunten buiten de Alpen** — dezelfde lijst, maar met `out:true` en zonder `drive`. Die
+  krijgen geen Voronoi-cel in de boog maar een eigen ronde vlek van `GEO.outRad` breedtegraden,
+  met `GEO.outGap` cellen lucht ertussen, en blijven buiten ranglijst, matrix en paklijst. Ligt
+  een nieuw ijkpunt buiten `GEO.lon0/lon1/lat0/lat1`, dan moet dat kader mee opgerekt worden.
+  `side` (`noord`/`zuid`) bepaalt welk paar de zin onder de kaart vergelijkt.
 - **Omtrek van de Alpen** — `ARC` in `regions.js`, een grove polygoon in lon/lat. Alleen bedoeld
   om het raster af te knippen, het is geen grens.
 - **Rastergrofte** — `GEO.latStep` in `regions.js`. Kleiner = fijnere kaart en meer SVG.
@@ -282,12 +298,13 @@ alle policies in `schema.sql`.
 
 Open-Meteo forecast API, best-match model, 10 dagen vooruit, geen API-sleutel. Gratis tot 10.000
 calls per dag voor niet-commercieel gebruik; data onder CC BY 4.0. De app doet twee requests per
-koude load — één voor alle 32 regio's samen, één voor de twee drukstations — en haalt daarna alles
+koude load — één voor alle 36 punten samen (32 regio's plus 4 ijkpunten), één voor de twee
+drukstations — en haalt daarna alles
 uit de sessie-cache.
 
 Voor de bron **Historisch** komen neerslag, zon, temperatuur en wind van Open-Meteo's Historical
 Weather API (`archive-api.open-meteo.com`, ERA5-reanalyse, terug tot 1940) — zelfde vorm, geen
-sleutel, alleen alle 32 regio's en alle vier velden tegelijk per jaar in plaats van per periode.
+sleutel, alleen alle 36 punten en alle vier velden tegelijk per jaar in plaats van per periode.
 Die data staat lang genoeg vast (het is een klimatologisch gemiddelde) om 30 dagen in
 `localStorage` te bewaren in plaats van in de sessie-cache.
 

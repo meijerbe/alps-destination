@@ -7,7 +7,7 @@ import { METRICS, METRIC_NOTE } from "./metrics.js";
 import { REGIONS, COUNTRY, driveTxt, PROFILE_LABEL } from "./regions.js";
 import { MAP } from "./map-geometry.js";
 import { state } from "./state.js";
-import { selectedRegion, metricValue, scoreColor } from "./weather.js";
+import { selectedRegion, metricValue, scoreColor, foreland } from "./weather.js";
 import { histStatusNote } from "./historical.js";
 
 export function syncDay(v){
@@ -36,6 +36,19 @@ export function syncDay(v){
   }
 }
 
+/* Eén zin onder de kaart: hoe nat is het net buiten de bergen? Dat is wat de
+   ijkpunten toevoegen — een bui die ook over Beieren of de Povlakte ligt is
+   iets anders dan stuwing tegen de kam. */
+function forelandNote(v){
+  const f = foreland(v);
+  const named = f.refs.filter(p=>p.mm != null);
+  if(!named.length) return "";
+  const per = state.day >= 0 ? "" : " per dag";
+  const cijfers = named.map(p=>`${esc(p.n)} ${p.mm.toFixed(1)}`).join(", ");
+  return `<br>Voorland${per}: ${cijfers} mm`
+    + (f.verdict ? ` — <strong>${esc(f.verdict)}</strong>.` : ".");
+}
+
 export function renderMap(v){
   const M = METRICS[state.metric];
   const by = {}; v.all.forEach(p=>by[p.n]=p);
@@ -46,8 +59,13 @@ export function renderMap(v){
 
   const rects = MAP.runs.map(r=>{
     const p = by[REGIONS[r.r].n];
-    return `<rect class="c${p&&p.far?" far":""}" data-r="${r.r}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fills[r.r]}"/>`;
+    const cls = "c" + (p && p.far ? " far" : "") + (REGIONS[r.r].out ? " ref" : "");
+    return `<rect class="${cls}" data-r="${r.r}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fills[r.r]}"/>`;
   }).join("");
+  // arcering over het voorland: zelfde kleur, maar meteen zichtbaar dat het
+  // buiten de Alpen ligt
+  const hatch = MAP.runs.filter(r=>REGIONS[r.r].out).map(r=>
+    `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="url(#hatch)"/>`).join("");
 
   // labels plaatsen van groot naar klein; wat botst laten we weg
   const taken = [{x0:MAP.base[0]-30, y0:MAP.base[1]-14, x1:MAP.base[0]+30, y1:MAP.base[1]+2}];
@@ -60,7 +78,7 @@ export function renderMap(v){
     const box = {x0:L.x-w/2-1, y0:L.y-9, x1:L.x+w/2+1, y1:L.y-9+hh};
     if(!fits(box)) return "";
     taken.push(box);
-    const far = p && p.far ? " far" : "";
+    const far = (p && p.far ? " far" : "") + (rg.out ? " ref" : "");
     return `<text class="lb${far}" x="${L.x}" y="${L.y}">${esc(txt)}`
       + (big ? `<tspan x="${L.x}" dy="10.5" style="font-size:10px;font-weight:600">${M.txt(vals[L.i])}</tspan>` : "")
       + `</text>`;
@@ -71,9 +89,17 @@ export function renderMap(v){
   const bx = MAP.base[0], byy = MAP.base[1];
 
   $("mapsvg").innerHTML =
-    `<svg viewBox="${MAP.viewBox}" role="img" aria-label="Kaart van de Alpen, regio's gekleurd naar ${esc(M.label)}">
+    `<svg viewBox="${MAP.viewBox}" role="img" aria-label="Kaart van de Alpen met het voorland eromheen, regio's gekleurd naar ${esc(M.label)}">
+      <defs>
+        <pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="5"/>
+        </pattern>
+      </defs>
       <g>${rects}</g>
+      <g class="hatch">${hatch}</g>
       <path class="borders" d="${MAP.borders}"/>
+      <path class="refborders" d="${MAP.refBorders}"/>
+      <path class="arcedge" d="${MAP.arcEdge}"/>
       ${ring}
       <g>${labels}</g>
       <g class="base">
@@ -87,13 +113,18 @@ export function renderMap(v){
   const wanneer = state.day >= 0
     ? `op ${DAYS[dow(v.dates[state.day])]} ${dm(v.dates[state.day])}`
     : `gemiddeld over ${v.n} dagen — ${DAYS[dow(a)]} ${dm(a)} t/m ${DAYS[dow(b)]} ${dm(b)}`;
+  const nRef = REGIONS.filter(r=>r.out).length;
   $("mapsub").textContent =
-    `${REGIONS.length} regio's in de Alpenboog, gekleurd naar ${wat}, ${wanneer}. `
+    `${REGIONS.length - nRef} regio's in de Alpenboog plus ${nRef} ijkpunten in het voorland eromheen, `
+    + `gekleurd naar ${wat}, ${wanneer}. `
     + `Klik een regio om hem vast te zetten; de paklijst rekent daarna met die regio.`;
   $("mapnote").innerHTML = `Kleur = ${esc(METRIC_NOTE[state.metric])}${state.histMode ? " (historisch gemiddelde, geen voorspelling)" : ""}`
     + (state.day >= 0 ? ` op die ene dag — de ranglijst en de kerncijfers blijven over de hele periode rekenen` : "")
     + `. Weggezakte regio's vallen buiten je rijtijd. `
     + `De vlakken zijn schematisch — elke cel hoort bij het dichtstbijzijnde regiomiddelpunt, het is geen grenskaart.`
+    + ` <strong>Binnen de dikke contour ligt de Alpenboog</strong>; de gearceerde vlekken eromheen zijn ijkpunten in het `
+    + `voorland — die tellen niet mee in de ranglijst, ze laten alleen zien of een hele flank droog ligt.`
+    + forelandNote(v)
     + (state.histMode ? histStatusNote(v.dates) : "");
 }
 
@@ -116,7 +147,9 @@ export function renderSelCard(v){
         <div>
           <h3>${esc(p.n)}</h3>
           <p class="meta">${esc(p.r)}, ${esc(COUNTRY[p.c]||p.c)} · ${driveTxt(p)} · ${esc(p.side)}
-            ${p.far ? "· <strong>buiten je rijtijdfilter</strong>" : (p.rank ? "· nummer " + p.rank + " van " + v.scored.length : "")}</p>
+            ${p.out ? "· <strong>geen bestemming, ijkpunt voor de " + esc(p.side) + "kant</strong>"
+                    : p.far ? "· <strong>buiten je rijtijdfilter</strong>"
+                    : (p.rank ? "· nummer " + p.rank + " van " + v.scored.length : "")}</p>
         </div>
         <div style="text-align:right">
           <div class="sc">${fmt(p.total)}</div>
@@ -127,10 +160,13 @@ export function renderSelCard(v){
         `<div class="cell${i===state.day?" now":""}" style="background:${scoreColor(d.s)}" title="${d.date}: score ${fmt(d.s)}, ${d.rain.toFixed(1)} mm"><span>${d.rain >= 9.5 ? fmt(d.rain) : d.rain.toFixed(1)}</span></div>`).join("")}</div>
       <div class="striplabels">${p.per.map(d=>`<div class="${dow(d.date)>=5?"we":""}">${DAYS[dow(d.date)]}</div>`).join("")}</div>
       <div class="facts">${facts.map(x=>`<div><div class="k">${x[0]}</div><div class="v">${x[1]}</div></div>`).join("")}</div>
+      ${p.out ? `<p class="whynote" style="margin-top:14px">Dit ligt buiten de Alpenboog: een ijkpunt om te zien
+        of de neerslag over de hele ${esc(p.side)}kant hangt of alleen tegen de bergen aan stuwt. Het doet niet mee
+        in de ranglijst en niet in de paklijst.</p>` : ""}
       <p class="whynote" style="margin-top:14px">Beste aaneengesloten venster: <strong>${DAYS[dow(wd.from)]} ${dm(wd.from)} – ${DAYS[dow(wd.to)]} ${dm(wd.to)}</strong> (score ${fmt(wd.avg)}).</p>
       <div class="acts">
-        <button type="button" data-go="rank">Opbouw van de score</button>
-        <button type="button" data-go="pack">Paklijst hiervoor</button>
+        ${p.out ? "" : `<button type="button" data-go="rank">Opbouw van de score</button>
+        <button type="button" data-go="pack">Paklijst hiervoor</button>`}
         ${p.far ? `<button type="button" data-drive="${Math.ceil(p.drive)}">Rijtijd naar ${Math.ceil(p.drive)} u</button>` : ""}
         ${state.sel===p.n ? `<button type="button" data-go="clear">Selectie loslaten</button>` : ""}
       </div>

@@ -144,11 +144,13 @@ export function derive(){
         minTemp: Math.min(...per.map(d=>d.tmax)),
         maxRain: Math.max(...per.map(d=>d.rain)),
         window: bestWindow(per, win),
-        far: p.drive > state.drive
+        far: !p.out && p.drive > state.drive
       };
     });
 
-  const scored = all.filter(p=>!p.far).sort((a,b)=>b.total-a.total);
+  // de ijkpunten in het voorland kleuren wel de kaart, maar zijn geen
+  // bestemming: ze blijven uit de ranglijst, de matrix en de paklijst
+  const scored = all.filter(p=>!p.far && !p.out).sort((a,b)=>b.total-a.total);
   scored.forEach((p,i)=>{ p.rank = i+1; });
 
   const fwin = foehn.slice(start, start+n);
@@ -168,6 +170,35 @@ export function selectedRegion(v){
 
 export const foehnLabel = a =>
   a == null ? "geen data" : a > 2.5 ? "zuidkant droog" : a < -2.5 ? "noordkant droog" : "geen sturing";
+
+/* ==================================================================
+   Voorland: ligt de bui over een hele flank, of alleen tegen de bergen?
+   Neerslag per dag op de ijkpunten buiten de boog — dezelfde dag of
+   dezelfde periode als de kaart nu toont.
+================================================================== */
+const DRY_MM = 1.5;   // mm per dag waaronder we een dag droog noemen
+
+export function rainPerDay(p){
+  const get = d => state.histMode ? d.histRain : d.rain;
+  const days = state.day >= 0 ? [p.per[state.day]] : p.per;
+  const vals = days.filter(Boolean).map(get).filter(v => v != null);
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+}
+
+export function foreland(v){
+  const refs = v.all.filter(p=>p.out).map(p=>({...p, mm: rainPerDay(p)}));
+  const side = s => refs.find(p=>p.side === s && p.mm != null) || null;
+  const north = side("noord"), south = side("zuid");
+  let verdict = null;
+  if(north && south){
+    const dryN = north.mm < DRY_MM, dryS = south.mm < DRY_MM;
+    verdict = dryN && dryS ? "beide flanken liggen droog — wat er valt, valt in de bergen zelf"
+      : dryN ? "de noordkant ligt droog, ten zuiden van de kam niet"
+      : dryS ? "de zuidkant ligt droog, ten noorden van de kam niet"
+      : "geen van beide flanken ligt droog";
+  }
+  return {refs, north, south, verdict};
+}
 
 /* Welke kant van een metriek (val of histVal) op dit moment geldt — bepaalt
    zowel de kaart als de matrix, dus hier op één plek in plaats van dubbel. */

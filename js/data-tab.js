@@ -2,7 +2,7 @@
    Ruwe data: laten zien wat er binnenkomt en wat ermee gebeurt
 ------------------------------------------------------------------- */
 import { $, esc, fmt, clamp, DAYS, dow, dm } from "./dom.js";
-import { REGIONS, PARTS, WEIGHTS, PROFILE_LABEL } from "./regions.js";
+import { REGIONS, DESTINATIONS, PARTS, WEIGHTS, PROFILE_LABEL } from "./regions.js";
 import { state } from "./state.js";
 import { URLS, dayParts, weigh, scoreColor } from "./weather.js";
 
@@ -49,12 +49,12 @@ export function renderData(v){
     {k:"Opgehaald", v:new Date(state.fetchedAt).toLocaleString("nl-NL",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}),
      n:`${fresh < 60000 ? "zojuist" : Math.round(fresh/60000) + " min geleden"} · ${state.fromCache ? "uit de sessie-cache" : "vers opgehaald"} · cache vervalt na 30 min`},
     {k:"Omvang", v:`${punten.toLocaleString("nl-NL")} waarden`,
-     n:`${REGIONS.length} regio's × ${days} dagen × 8 dagvelden, plus ${REGIONS.length*days*24} uurwaarden vriespunt en ${2*days*24} uurwaarden druk · rekentijd server ${gen.toFixed(1)} ms`}
+     n:`${REGIONS.length} punten (${DESTINATIONS.length} regio's + ${REGIONS.length-DESTINATIONS.length} ijkpunten) × ${days} dagen × 8 dagvelden, plus ${REGIONS.length*days*24} uurwaarden vriespunt en ${2*days*24} uurwaarden druk · rekentijd server ${gen.toFixed(1)} ms`}
   ].map(t=>`<div class="card"><div class="k">${esc(t.k)}</div><div class="v">${esc(t.v)}</div><div class="n">${t.n}</div></div>`).join("");
 
   const showUrl = (u) => esc(u).replace(/&amp;/g, "<i>&amp;</i>").replace(/(daily|hourly|latitude|longitude|timezone|forecast_days)=/g, "<b>$1</b>=");
   $("reqs").innerHTML = [
-    ["Verzoek 1 — weer voor alle regio's", URLS.data, `${REGIONS.length} coördinatenparen in één request; het antwoord is een array met één object per regio, in dezelfde volgorde.`],
+    ["Verzoek 1 — weer voor alle regio's", URLS.data, `${REGIONS.length} coördinatenparen in één request — de ${DESTINATIONS.length} bestemmingen plus de ${REGIONS.length-DESTINATIONS.length} ijkpunten in het voorland; het antwoord is een array met één object per punt, in dezelfde volgorde.`],
     ["Verzoek 2 — luchtdruk voor de föhnmeter", URLS.foehn, "Twee stations: Innsbruck (574 m) en Bolzano (262 m), alleen uurlijkse druk op zeeniveau."]
   ].map(([t,u,n])=>`
     <div class="req">
@@ -69,7 +69,7 @@ export function renderData(v){
 
   // ruwe dagwaarden
   $("dataplace").innerHTML = v.all.map(x=>
-    `<option value="${esc(x.n)}"${x.n===p.n?" selected":""}>${esc(x.n)} — ${esc(x.r)}${x.far?" (buiten rijtijd)":""}</option>`).join("");
+    `<option value="${esc(x.n)}"${x.n===p.n?" selected":""}>${esc(x.n)} — ${esc(x.r)}${x.out?" (voorland)":x.far?" (buiten rijtijd)":""}</option>`).join("");
   const D = o.daily || {};
   $("rawtable").innerHTML = `
     <thead><tr>

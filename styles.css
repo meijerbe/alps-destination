@@ -322,12 +322,21 @@ table.matrix thead th.avgh{border-left:1px solid var(--line)}
 .mapwrap svg{display:block;width:100%;height:auto;touch-action:manipulation}
 .mapwrap svg rect.c{stroke:none;cursor:pointer}
 .mapwrap svg rect.c.far{opacity:.2}
-.mapwrap svg path.borders{fill:none;stroke:var(--paper);stroke-width:1.1;opacity:.55;pointer-events:none}
+.mapwrap svg path.borders,
+.mapwrap svg path.refborders{fill:none;stroke:var(--paper);stroke-width:1.1;opacity:.55;pointer-events:none}
 .mapwrap svg path.arc{fill:none;stroke:var(--rock);stroke-width:1.2;opacity:.28;pointer-events:none}
+/* de dikke contour om de Alpenboog: alles daarbinnen is bestemming, de
+   gearceerde vlekken erbuiten zijn ijkpunten in het voorland */
+.mapwrap svg path.arcedge{fill:none;stroke:var(--rock);stroke-width:2.4;opacity:.8;
+  stroke-linejoin:round;pointer-events:none}
+.mapwrap svg path.refborders{stroke-dasharray:3 2.5;opacity:.75}
+.mapwrap svg pattern#hatch line{stroke:var(--rock);stroke-width:1;opacity:.35}
+.mapwrap svg .hatch rect{pointer-events:none}
 .mapwrap svg path.selring{fill:none;stroke:var(--rock);stroke-width:3;pointer-events:none}
 .mapwrap svg text.lb{font-family:var(--mono);font-size:8.5px;fill:#fff;paint-order:stroke;
   stroke:rgba(0,0,0,.55);stroke-width:2.2;stroke-linejoin:round;pointer-events:none;text-anchor:middle;letter-spacing:.02em}
 .mapwrap svg text.lb.far{opacity:.35}
+.mapwrap svg text.lb.ref{letter-spacing:.12em;font-style:italic}
 .mapwrap svg .base circle{fill:var(--rock);stroke:#fff;stroke-width:1.4}
 .mapwrap svg .base text{font-family:var(--mono);font-size:8.5px;fill:var(--rock);paint-order:stroke;
   stroke:var(--paper);stroke-width:2.4;stroke-linejoin:round;text-anchor:middle}
@@ -341,6 +350,9 @@ table.matrix thead th.avgh{border-left:1px solid var(--line)}
 .maptip i{font-style:normal;color:var(--dry)}
 .mapfoot{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;justify-content:space-between;margin-top:14px}
 .mapfoot .legend{flex:0 0 auto}
+.legend .legref{display:inline-flex;align-items:center;gap:6px}
+.legend .legref i{width:14px;height:10px;border-radius:2px;border:1px dashed var(--line);
+  background:repeating-linear-gradient(45deg, var(--line) 0 1px, transparent 1px 4px)}
 .mapfoot .mnote{flex:1 1 300px}
 .pick2{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;margin-bottom:16px}
 
