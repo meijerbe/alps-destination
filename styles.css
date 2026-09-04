@@ -76,6 +76,10 @@ body{
 .refresh:hover{border-color:var(--slate)}
 .refresh:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
 .refresh[disabled]{opacity:.4;cursor:progress}
+a.refresh{text-decoration:none;display:inline-block}
+
+/* ---------- trailrun.html: eigen, lichtere paginakop (geen bergscene, dat is weer-decor) ---------- */
+.trailhero{padding:18px 22px 20px;background:var(--paper);border-radius:16px;box-shadow:var(--shadow);margin:0 0 22px}
 h1{
   font-family:var(--disp);font-weight:700;font-size:clamp(36px,7.5vw,58px);
   line-height:1;letter-spacing:-.025em;margin:0

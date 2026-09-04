@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { mockWeather } from "../helpers/openmeteo.mjs";
 import { mockSupabase, withoutSupabase } from "../helpers/supabase.mjs";
 
-const RACE = "/index.html#p=bike&d=5&r=10&s=0&t=race";
+const RACE = "/trailrun.html";
 
 // Eén loper neerzetten en zijn referentieloop invullen. Het kaartje heeft de
 // naam alleen als input-waarde, dus zoeken op tekst werkt hier niet — vandaar
@@ -38,7 +38,6 @@ test("een loper toevoegen levert een schatting, een venster en een kloktijd op",
   await expect(k.locator(".rout")).toContainText("80% kans tussen");
   await expect(k.locator(".rout")).toContainText("binnen rond");
 
-  await expect(page.locator("#top-race .count")).toHaveText("1");
   await expect(page.locator("#racetable tbody tr")).toHaveCount(1);
   await expect(page.locator("#racetimeline svg")).toBeVisible();
   await expect(page.locator("#racedensity svg")).toBeVisible();
@@ -126,7 +125,6 @@ test("verwijderen haalt de loper uit de lijst én uit de grafieken", async ({ pa
 
   await expect(page.locator(".runner")).toHaveCount(0);
   await expect(page.locator("#racetable tbody tr")).toHaveCount(0);
-  await expect(page.locator("#top-race .count")).toHaveText("");
 });
 
 test("onzin in het tijdveld wordt geweigerd, niet stilzwijgend geslikt", async ({ page }) => {
@@ -184,17 +182,17 @@ test("een wijziging van de ander komt binnen zonder verversen", async ({ page })
   await expect(page.locator("#racetable tbody tr")).toHaveCount(2);
 });
 
-// regressie: met vier tabbladen paste de bovenste balk niet meer op een
-// telefoon, waardoor "Trailrun" half buiten beeld viel en de hele pagina
-// horizontaal ging schuiven
-test("de bovenbalk past op een telefoon, ook met vier tabbladen", async ({ page, isMobile }) => {
+// regressie: op de weerpagina brak de bovenbalk ooit op een telefoon zodra
+// er een tabblad bijkwam — die valkuil geldt hier niet meer (geen tabbladen,
+// eigen pagina), maar horizontaal schuiven door een te brede grafiek of
+// tabel kan nog steeds gebeuren, dus dat blijft de moeite van bewaken waard
+test("de pagina schuift niet horizontaal op een telefoon", async ({ page, isMobile }) => {
   test.skip(!isMobile, "gaat alleen over de smalle weergave");
   await page.goto(RACE);
   await page.waitForSelector("#panel-race");
+  await zetLoper(page, 0, {naam:"Berend", race:"muz30", dist:21.1, gain:80, tijd:"1:47", grond:"weg"});
 
-  const knop = await page.locator("#top-race").boundingBox();
   const breed = await page.evaluate(() => document.documentElement.clientWidth);
-  expect(knop.x + knop.width).toBeLessThanOrEqual(breed);
   expect(await page.evaluate(() => document.body.scrollWidth)).toBeLessThanOrEqual(breed);
 });
 
@@ -366,5 +364,49 @@ test.describe("automatisch ophalen", () => {
 
     await expect(page.locator("#toast")).toContainText("Automatisch ophalen lukt niet");
     await expect(page.locator("#fieldpaste")).toHaveValue("");
+  });
+});
+
+// De RK50 2025 heeft een meegeleverde uitslag (D-U-V, 316 finishers), zodat
+// het histogram er al staat zonder dat iemand eerst zelf iets plakt.
+test.describe("meegeleverde uitslag (RK50 2025)", () => {
+  test("staat er meteen, met de bron erbij, zonder te plakken", async ({ page }) => {
+    await page.goto(RACE);
+    await page.waitForSelector("#panel-race");
+    await page.locator("#fieldrace").selectOption("rk50");
+
+    await expect(page.locator("#racefield .card").first()).toContainText("316");
+    await expect(page.locator("#fieldpaste")).not.toHaveValue("");
+    await expect(page.locator("#racefield .mnote").first()).toContainText("Standaard meegeleverd");
+    await expect(page.locator("#racefield .mnote").first()).toContainText("D-U-V");
+    // niemand heeft dit geplakt, dus géén "geplakt door"-regel
+    await expect(page.locator("#racefield")).not.toContainText("Geplakt door");
+  });
+
+  test("een eigen plak vervangt de meegeleverde uitslag", async ({ page }) => {
+    await page.goto(RACE);
+    await page.waitForSelector("#panel-race");
+    await page.locator("#fieldrace").selectOption("rk50");
+    await expect(page.locator("#racefield .card").first()).toContainText("316");
+
+    await page.locator("#fieldpaste").fill("1 x 5:00:00\n2 y 5:30:00\n3 z 6:00:00");
+    await expect(page.locator("#racefield .card").first()).toContainText("3");
+    await expect(page.locator("#racefield")).not.toContainText("Standaard meegeleverd");
+
+    // en blijft na een herlaadbeurt de eigen versie, niet terug naar de meegeleverde
+    await page.reload();
+    await page.waitForSelector("#panel-race");
+    await page.locator("#fieldrace").selectOption("rk50");
+    await expect(page.locator("#racefield .card").first()).toContainText("3");
+  });
+
+  test("andere wedstrijden en edities hebben geen meegeleverde uitslag", async ({ page }) => {
+    await page.goto(RACE);
+    await page.waitForSelector("#panel-race");
+    await expect(page.locator("#racefield .empty")).toBeVisible();   // muz30/2025
+
+    await page.locator("#fieldrace").selectOption("rk50");
+    await page.locator("#fieldyear").selectOption("2024");
+    await expect(page.locator("#racefield .empty")).toBeVisible();   // rk50/2024
   });
 });
