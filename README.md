@@ -51,8 +51,9 @@ opbouw van de score: welk onderdeel de score trekt en welk onderdeel hem tegenho
 buien in plaats van naar een goede week.
 
 *Kaart*, *Lijstje*, *Per dag* en *Onder de motorkap* zitten samen onder de bovenste schakelaar
-**Waar naartoe** — dat gaat over het kiezen van een bestemming. **Paklijst** en **Boodschappen**
-zijn eigen tabbladen ernaast: dat gaat over wat je meeneemt, niet over waar je heen gaat.
+**Waar naartoe** — dat gaat over het kiezen van een bestemming. **Paklijst**, **Boodschappen** en
+**Trailrun** zijn eigen tabbladen ernaast: dat gaat over wat je meeneemt en wat je gaat lopen, niet
+over waar je heen gaat.
 
 **Onder de motorkap** — de twee API-verzoeken die de pagina doet, de onbewerkte dagwaarden zoals
 Open-Meteo ze teruggeeft, en de hele rekensom van ruwe waarde via normalisatie en weging naar de
@@ -67,6 +68,16 @@ zelf toegevoegd item ook een vinkje per persoon. Elk item heeft een notitieveld.
 
 **Boodschappen** — een losse lijst, geen relatie met de paklijst en geen weerlogica: typen, Enter,
 klaar. Afgevinkte producten zakken naar onderen; *Wis afgevinkte* ruimt ze in één keer op.
+
+**Trailrun** — schat de finishtijden voor Mayrhofen Ultraks (RK50, MUZ30, MUZ14). Staat helemaal los
+van het weerdashboard; het deelt alleen de pagina. Je vult per persoon één loop in waarvan de tijd
+bekend is, en de app rekent die om naar de wedstrijd: hoogtemeters worden effectieve kilometers, de
+tijd wordt over die afstand uitgerekt (Riegel), en er komt een terrein- en techniekfactor bij. De
+uitkomst is geen getal maar een venster — met de kloktijd erbij, want de drie afstanden starten op
+verschillende tijden en de vraag aan de finish is *wanneer staan we daar*. Er zitten vijf grafieken
+onder: de finishvensters op de klok, de kansverdeling per persoon, een tabel, een warmtekaart met
+onderlinge kansen ("wie is er eerder binnen"), en een histogram van een eerdere editie als je de
+uitslag erin plakt. Hoe het rekent staat onderaan het tabblad zelf, formule en al.
 
 Zonder Supabase (zie hieronder) blijven vinkjes, notities, eigen paklijst-items en de boodschappen-
 lijst per browser bewaard. Mét Supabase staat alles gedeeld en zie je elkaars wijzigingen vanzelf
@@ -86,7 +97,7 @@ gekozen regio staan allemaal in de hash. Een specifieke weergave is dus te bookm
 `h` = `1` voor de historische bron (weglaten voor de voorspelling; `m=score` of `m=frz` samen met
 `h=1` valt terug op `rain`, die twee bestaan niet historisch),
 `g` = regionaam, `k` = dag binnen de periode (weglaten voor het gemiddelde),
-`t` = `map` | `rank` | `matrix` | `pack` | `shop` | `data`.
+`t` = `map` | `rank` | `matrix` | `pack` | `shop` | `race` | `data`.
 
 ## Deployen op Vercel
 
@@ -139,8 +150,8 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-52 browsertests over kaart, tabbladen, paklijst en boodschappen, op desktop en
-mobiel, in ongeveer twintig seconden. Open-Meteo en Supabase worden afgevangen, dus
+93 browsertests over kaart, tabbladen, paklijst, boodschappen en de trailrun-schatter, op desktop en
+mobiel, in ongeveer veertig seconden. Open-Meteo en Supabase worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
 Daarnaast een ESLint-check (`npm run lint`) die alleen op `no-undef` en dode code let —
 geen stijlregels, wel de klasse fout (een vergeten import) die anders pas in de browser
@@ -191,6 +202,9 @@ De logica staat in `js/`, één onderwerp per bestand:
 | `dashboard.js` / `data-tab.js` | kerncijfers, föhnmeter, ranglijst, matrix, *onder de motorkap* |
 | `packing-data.js` / `packing.js` | de paklijst-inhoud en -logica |
 | `shopping.js` | de boodschappenlijst |
+| `race-data.js` | de drie wedstrijden en de knoppen van het loopmodel |
+| `race-model.js` | het rekenmodel: effectieve km, Riegel, spreiding, onderlinge kansen |
+| `race.js` | het trailrun-tabblad: opslag, invulkaartjes en de grafieken |
 | `supabase-client.js` / `realtime.js` | de Supabase-verbinding en live sync |
 | `render.js` / `ui.js` / `main.js` | de render-regisseur, alle DOM-events, en het opstarten |
 
@@ -218,6 +232,13 @@ Meestal is maar één bestand relevant:
   krijgt een vinkje per persoon in plaats van één gedeeld vinkje. Zelf toegevoegde regels (via het
   `+`-veld onderaan een groep) staan niet in deze array — die leven in `packing_custom_items` (of
   lokaal, zonder Supabase) en volgen automatisch de `personal`-instelling van hun groep.
+- **Wedstrijden** — `RACES` in `race-data.js`: afstand, hoogtemeters en starttijd van de RK50,
+  MUZ30 en MUZ14, zoals ze op de officiële streckenpagina staan (editie 2026). In de app zelf zijn
+  ze bij te stellen — dat blijft per browser bewaard en overschrijft deze waarden. Klopt de folder
+  echt niet, pas ze hier aan; dan geldt het voor iedereen.
+- **Het loopmodel** — de knoppen (`CLIMB`, `DUUR`, `GROND`, `TECH`) staan er vlak onder, met per
+  optie de factor die hij zet. De formules zelf staan in `race-model.js`, en het tabblad legt ze
+  onderaan uit — pas je een factor aan, dan verandert die uitleg mee.
 - **Cache** — `CACHE_TTL` (30 min) in `state.js` bepaalt hoe lang een resultaat in
   `sessionStorage` blijft staan. De knop *Ververs* omzeilt de cache altijd.
 
@@ -250,12 +271,13 @@ een Supabase-project in, dan staat het gedeeld voor jullie allebei.
    - Open **SQL Editor → New query** in Supabase, plak de inhoud van
      [`supabase/schema.sql`](supabase/schema.sql) en klik **Run**.
 
-   Beide manieren zetten dezelfde drie tabellen neer — `packing_state` (vinkjes/notities),
-   `packing_custom_items` (zelf toegevoegde paklijst-regels) en `shopping_items`
-   (boodschappenlijst) — elk met rijbeveiliging die de sleutel beperkt tot rijen van deze ene reis.
+   Beide manieren zetten dezelfde vier tabellen neer — `packing_state` (vinkjes/notities),
+   `packing_custom_items` (zelf toegevoegde paklijst-regels), `shopping_items` (boodschappenlijst)
+   en `race_runners` (de lopers van het trailrun-tabblad) — elk met rijbeveiliging die de sleutel
+   beperkt tot rijen van deze ene reis.
    Het script is veilig om zo vaak te draaien als je wilt, en controleert zichzelf: staat er iets
    niet goed, dan krijg je een foutmelding in plaats van stil half werk. Bij de handmatige route
-   hoort onderaan een tabel met **twaalf rijen** te verschijnen, vier policies per tabel; bij de
+   hoort onderaan een tabel met **zestien rijen** te verschijnen, vier policies per tabel; bij de
    automatische route is een groene run in de Actions-tab het teken. Zie je in de app *"de
    database laat dit nog niet toe"*, dan is dit de stap die je opnieuw moet doen.
 3. Ga naar **Settings → API** en kopieer de **Project URL** en de publieke sleutel (de klassieke
@@ -291,7 +313,7 @@ voor iets gevoeligers. Verwijderen kan zonder bevestiging — het ×'je is met o
 lijkt om te tikken (zie `.itemdel` in de CSS), en je krijgt een toast met wát er weg is.
 
 **Voor de volgende reis** — wis de tabellen (`truncate packing_state, packing_custom_items,
-shopping_items;` in de SQL Editor) of pas de `TRIP_ID`-constante aan én de bijbehorende waarde in
+shopping_items, race_runners;` in de SQL Editor) of pas de `TRIP_ID`-constante aan én de bijbehorende waarde in
 alle policies in `schema.sql`.
 
 ## Databron

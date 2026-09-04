@@ -15,6 +15,13 @@
   --rule:rgba(61,107,92,.05);
   --sink:rgba(43,35,24,.04);
   --shadow:0 1px 2px rgba(43,35,24,.05), 0 10px 24px -16px rgba(43,35,24,.45);
+  /* Grafiekkleuren voor de drie wedstrijden. Apart van --dry/--wet/--slate,
+     want die drie liggen te dicht bij elkaar om naast elkaar te lezen (en voor
+     kleurenblinden helemaal). Deze drie zijn afgeleid van Okabe-Ito en
+     gecontroleerd op onderling verschil bij deutaan-, protaan- en tritaanzicht. */
+  --rc1:#D55E00;
+  --rc2:#0072B2;
+  --rc3:#009E73;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --disp:"Fraunces",Georgia,"Times New Roman",serif;
   --body:"Nunito",system-ui,-apple-system,sans-serif;
@@ -36,6 +43,9 @@
     --rule:rgba(130,187,164,.05);
     --sink:rgba(243,234,220,.045);
     --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 24px -16px rgba(0,0,0,.8);
+    --rc1:#D9762E;
+    --rc2:#3F94D6;
+    --rc3:#12A882;
   }
 }
 *{box-sizing:border-box}
@@ -119,7 +129,12 @@ input[type=range]{width:170px;accent-color:var(--slate)}
 .toplevel button[aria-selected="true"]{background:var(--rock);color:var(--mist)}
 .toplevel button:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
 .toplevel .count{font-family:var(--mono);font-size:10px;font-weight:400;opacity:.75;margin-left:7px}
-@media (max-width:560px){.toplevel{width:100%}.toplevel button{flex:1;padding:8px 10px;text-align:center}}
+/* Vier tabbladen passen niet meer naast elkaar op een telefoon: laten
+   afbreken naar twee rijen van twee, in plaats van de laatste af te snijden. */
+@media (max-width:560px){
+  .toplevel{width:100%;flex-wrap:wrap}
+  .toplevel button{flex:1 1 calc(50% - 5px);padding:8px 10px;text-align:center}
+}
 
 /* ---------- tabs ---------- */
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}
@@ -317,6 +332,74 @@ table.matrix thead th.avgh{border-left:1px solid var(--line)}
 .shoprow input:checked ~ .it{opacity:.42;text-decoration:line-through}
 .empty.shopempty{padding:20px 0}
 
+/* ---------- trailrun ---------- */
+.courses{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+@media (max-width:760px){.courses{grid-template-columns:1fr}}
+.course{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px 10px;
+  box-shadow:var(--shadow);border-top:3px solid var(--rc)}
+.course .cn{font-family:var(--disp);font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.course .cn span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  opacity:.55;font-weight:400;margin-top:3px}
+.course .cflds{display:flex;gap:8px;margin-top:10px}
+.course .cflds label{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.course .clink{margin-top:9px;background:none;border:0;padding:0;cursor:pointer;color:var(--slate);
+  font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-decoration:underline dotted}
+
+.raceadd{flex-wrap:wrap}
+.raceadd select{flex:0 0 auto}
+.runner{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:13px 15px 11px;
+  box-shadow:var(--shadow);margin-bottom:12px;border-left:3px solid var(--rc)}
+.runner .rtop{display:flex;gap:8px;align-items:center}
+.rname{flex:1;min-width:0;font-family:var(--disp);font-size:22px;font-weight:600;letter-spacing:-.01em;
+  color:var(--rock);background:transparent;border:0;border-bottom:1px dashed transparent;padding:1px 0;outline:none}
+.rname:hover{border-bottom-color:var(--line)}
+.rname:focus{border-bottom-color:var(--slate)}
+.runner .rrace{flex:0 0 auto}
+.runner .rref{font-size:12.5px;color:var(--ink3);margin:8px 0 0}
+.runner .rref span{opacity:.7}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin-top:11px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld input,.fld select,.course input{font-family:var(--mono);font-size:12.5px;color:var(--rock);
+  background:var(--sink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;
+  outline:none;width:100%;min-width:0;max-width:none}
+.fld input:focus,.fld select:focus,.course input:focus{border-color:var(--slate)}
+.rout{font-family:var(--mono);font-size:12px;color:var(--ink2);line-height:1.6;
+  margin:12px 0 0;padding-top:10px;border-top:1px solid var(--hair)}
+.rout b{color:var(--rock);font-weight:600}
+.rout i{opacity:.7}
+
+/* de grafieken: assen en labels recessief, de data niet */
+.timeline{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  box-shadow:var(--shadow);padding:12px 14px;margin-bottom:14px}
+svg.chart{display:block;width:100%;height:auto}
+svg.chart .grid{stroke:var(--line);stroke-width:1}
+svg.chart text{font-family:var(--mono)}
+svg.chart .ax{font-size:9.5px;fill:var(--ink4)}
+svg.chart .ax.mid{fill:var(--ink3)}
+svg.chart .nm{font-family:var(--body);font-size:12.5px;font-weight:600;fill:var(--rock)}
+svg.chart .val{font-size:10px;fill:var(--ink3)}
+svg.chart .onderweg{stroke-width:1.5;stroke-dasharray:2 3;opacity:.55}
+svg.chart .mediaan{stroke-width:2}
+svg.chart rect.bin{fill:var(--ink4);opacity:.42}
+svg.chart .veldmed{stroke:var(--rock);stroke-width:1.5;stroke-dasharray:4 3;opacity:.6}
+.chartleg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:10px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--ink3)}
+.chartleg span{display:inline-flex;align-items:center;gap:6px}
+.chartleg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chartleg .lgnote{opacity:.75}
+.cards6{grid-template-columns:repeat(3,1fr)}
+@media (max-width:700px){.cards6{grid-template-columns:repeat(2,1fr)}}
+table.dt.heat{min-width:420px}
+table.dt.heat td{text-align:center;font-weight:600}
+table.dt.heat td:first-child{text-align:left;font-weight:400}
+table.dt.heat td.zelf{opacity:.3;font-weight:400}
+table.dt.heat tbody tr:hover td{background:none}
+.paste{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11.5px;line-height:1.6;
+  color:var(--rock);background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:11px 13px;outline:none;box-shadow:var(--shadow);resize:vertical;margin-bottom:16px}
+.paste:focus{border-color:var(--slate)}
+.caveats.plaats{margin-top:14px;font-size:13px}
+
 /* ---------- kaart ---------- */
 .mapwrap{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:var(--shadow)}
 .mapwrap svg{display:block;width:100%;height:auto;touch-action:manipulation}
@@ -455,6 +538,9 @@ footer a{color:var(--slate)}
   .kpis{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:560px){
+  .courses{gap:8px}
+  .rgrid{grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+  .rname{font-size:19px}
   .row{grid-template-columns:22px 1fr auto;gap:9px}
   .name{font-size:20px}
   .score{font-size:22px}

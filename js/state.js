@@ -8,8 +8,8 @@ import { PACK } from "./packing-data.js";
 import { slug } from "./dom.js";
 
 export const DASH_TABS = ["map","rank","matrix","data"];
-export const TOP_TABS = ["dash","pack","shop"];
-export const TABS = [...DASH_TABS, "pack", "shop"];
+export const TOP_TABS = ["dash","pack","shop","race"];
+export const TABS = [...DASH_TABS, "pack", "shop", "race"];
 export const topOf = t => DASH_TABS.includes(t) ? "dash" : t;
 
 export const CACHE_KEY = "basiskamp:v2";
