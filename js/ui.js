@@ -21,7 +21,7 @@ import {
 } from "./shopping.js";
 import {
   addRunner, patchRunner, deleteRunner, loadRaceState, renderRace, renderRaceOutputs,
-  setClimb, setCourse, resetCourse, setFieldRace, setFieldText, runners
+  setClimb, setCourse, resetCourse, setFieldRace, setFieldText, setFieldYear, runners
 } from "./race.js";
 import { PRESETS } from "./race-data.js";
 import { parseDur, fmtDur, parseClock } from "./race-model.js";
@@ -407,6 +407,7 @@ $("racelist").addEventListener("click", e=>{
   deleteRunner(b.dataset.runner);
 });
 $("fieldrace").addEventListener("change", e=>setFieldRace(e.target.value));
+$("fieldyear").addEventListener("change", e=>setFieldYear(+e.target.value));
 let veldTimer;
 $("fieldpaste").addEventListener("input", e=>{
   clearTimeout(veldTimer);

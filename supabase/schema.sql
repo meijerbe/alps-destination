@@ -1,5 +1,5 @@
 -- A&B op reis — gedeelde paklijst, eigen paklijst-items, boodschappenlijst en
--- de lopers van het trailrun-tabblad
+-- de lopers en de geplakte uitslagen van het trailrun-tabblad
 -- Uitvoeren in Supabase: Project → SQL Editor → New query → plakken → Run.
 --
 -- Veilig om zo vaak opnieuw te draaien als je wilt. De policies worden in één
@@ -70,6 +70,20 @@ create table if not exists public.race_runners (
   updated_at   timestamptz not null default now()
 );
 
+-- de uitslag van een eerdere editie, zoals iemand hem uit de uitslagenpagina
+-- heeft geplakt: alleen de tijden, geen namen. Eén rij per wedstrijd, zodat
+-- één van jullie hem plakt en de rest hem meteen heeft.
+create table if not exists public.race_results (
+  id           bigint generated always as identity primary key,
+  trip         text not null default 'ab-op-reis',
+  race         text not null check (race in ('rk50', 'muz30', 'muz14')),
+  jaar         integer not null default 2025,
+  times        text not null default '',       -- één tijd per regel, u:mm:ss
+  updated_by   text,
+  updated_at   timestamptz not null default now(),
+  unique (trip, race)
+);
+
 -- Rijbeveiliging, realtime en policies — voor elke tabel exact hetzelfde.
 --
 -- Er zit geen login achter: de publieke sleutel mag precies de rijen van déze
@@ -78,7 +92,7 @@ create table if not exists public.race_runners (
 do $$
 declare
   reis  text   := 'ab-op-reis';
-  tabs  text[] := array['packing_state', 'packing_custom_items', 'shopping_items', 'race_runners'];
+  tabs  text[] := array['packing_state', 'packing_custom_items', 'shopping_items', 'race_runners', 'race_results'];
   t     text;
 begin
   -- "policy ... does not exist, skipping" bij elke drop is hier verwacht gedrag
@@ -124,7 +138,7 @@ end $$;
 -- heeft of niet meedoet met Realtime. Beter luid falen dan stil half werken.
 do $$
 declare
-  tabs text[] := array['packing_state', 'packing_custom_items', 'shopping_items', 'race_runners'];
+  tabs text[] := array['packing_state', 'packing_custom_items', 'shopping_items', 'race_runners', 'race_results'];
   t    text;
   n    int;
 begin
@@ -140,12 +154,12 @@ begin
       raise exception 'Tabel % doet niet mee met Realtime', t;
     end if;
   end loop;
-  raise notice 'Alles staat goed: 4 tabellen, elk 4 policies, alle vier live.';
+  raise notice 'Alles staat goed: 5 tabellen, elk 4 policies, alle vijf live.';
 end $$;
 
--- ter controle in beeld: zestien rijen, vier per tabel
+-- ter controle in beeld: twintig rijen, vier per tabel
 select tablename, policyname, cmd
 from pg_policies
 where schemaname = 'public'
-  and tablename in ('packing_state', 'packing_custom_items', 'shopping_items', 'race_runners')
+  and tablename in ('packing_state', 'packing_custom_items', 'shopping_items', 'race_runners', 'race_results')
 order by tablename, cmd;

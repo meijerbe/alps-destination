@@ -143,6 +143,18 @@ test("onzin in het tijdveld wordt geweigerd, niet stilzwijgend geslikt", async (
 test.describe("zonder Supabase (alles lokaal)", () => {
   test.beforeEach(async ({ page }) => { await withoutSupabase(page); });
 
+  test("een geplakte uitslag overleeft een herlaadbeurt", async ({ page }) => {
+    await page.goto(RACE);
+    await page.waitForSelector("#panel-race");
+    await page.locator("#fieldpaste").fill("1 x 3:12:44\n2 y 3.20.01\n3 z 4:05:59");
+    await expect(page.locator("#racefield .card").first()).toContainText("3");
+
+    await page.reload();
+    await page.waitForSelector("#panel-race");
+    await expect(page.locator("#fieldpaste")).toHaveValue("3:12:44\n3:20:01\n4:05:59");
+    await expect(page.locator("#racefield")).toContainText("Mediaan");
+  });
+
   test("lopers en routes overleven een herlaadbeurt", async ({ page }) => {
     await page.goto(RACE);
     await page.waitForSelector("#panel-race");
@@ -205,4 +217,56 @@ test("een wijziging van de ander overschrijft niet wat je aan het typen bent", a
   await expect(page.locator(".runner")).toHaveCount(2);
   await expect(k.locator("[data-f=ref_time]")).toHaveValue("2:0");
   await expect(k.locator("[data-f=ref_time]")).toBeFocused();
+});
+
+test("de geplakte uitslag wordt gedeeld en houdt alleen de tijden over", async ({ page }) => {
+  await page.goto(RACE);
+  await page.waitForSelector("#panel-race");
+
+  await page.locator("#fieldpaste").fill(
+    "1  Anna Huber  AUT  3:12:44\n2  Lukas Mair  AUT  3.20.01\nrommel zonder tijd\n3  Eva Gruber  GER  4:05:59");
+  await expect(page.locator("#racefield .card").first()).toContainText("3");
+
+  // wat er de database in gaat: de tijden, niet de namen
+  const rijen = await page.evaluate(() => [...window.__tables.race_results.values()]);
+  expect(rijen).toHaveLength(1);
+  expect(rijen[0].race).toBe("muz30");
+  expect(rijen[0].times).toBe("3:12:44\n3:20:01\n4:05:59");
+  expect(rijen[0].times).not.toContain("Anna");
+
+  // en de ander ziet hem binnenkomen zonder te verversen
+  await page.locator("#fieldrace").selectOption("muz14");
+  await page.evaluate(() => window.__fire("race_results", "INSERT", {
+    id: 7, trip: "ab-op-reis", race: "muz14", jaar: 2025,
+    times: "1:31:02\n1:44:19\n2:02:55", updated_by: "B", updated_at: "2026-09-01T10:00:00.000Z"
+  }));
+  await expect(page.locator("#racefield")).toContainText("Geplakt door B");
+  await expect(page.locator("#racefield .card").first()).toContainText("3");
+});
+
+test("de link wijst naar de uitslag van de gekozen wedstrijd en editie", async ({ page }) => {
+  await page.goto(RACE);
+  await page.waitForSelector("#panel-race");
+
+  const link = page.locator("#fieldlink .uitslaglink");
+  await expect(link).toHaveAttribute("href", /mayrhofen-ultraks-zillertal-2025-muz30$/);
+
+  await page.locator("#fieldrace").selectOption("rk50");
+  await page.locator("#fieldyear").selectOption("2024");
+  await expect(link).toHaveAttribute("href", /mayrhofen-ultraks-zillertal-2024-rk50$/);
+  await expect(link).toContainText("RK50 2024");
+});
+
+test("elke wedstrijd houdt zijn eigen uitslag", async ({ page }) => {
+  await page.goto(RACE);
+  await page.waitForSelector("#panel-race");
+  await page.locator("#fieldpaste").fill("1 x 3:12:44\n2 y 3:20:01\n3 z 4:05:59");
+  await expect(page.locator("#racefield .card").first()).toContainText("3");
+
+  await page.locator("#fieldrace").selectOption("muz14");
+  await expect(page.locator("#fieldpaste")).toHaveValue("");
+  await expect(page.locator("#racefield .empty")).toBeVisible();
+
+  await page.locator("#fieldrace").selectOption("muz30");
+  await expect(page.locator("#fieldpaste")).toHaveValue("3:12:44\n3:20:01\n4:05:59");
 });

@@ -11,8 +11,10 @@ export const STUB = `
 (function(){
   const tables = {};
   const T = n => (tables[n] ||= new Map());
-  const nextId = { packing_state:1, packing_custom_items:1, shopping_items:1, race_runners:1 };
-  const pk = (t,r) => t === "packing_state" ? r.trip+"|"+r.item_key+"|"+r.scope : String(r.id);
+  const nextId = { packing_state:1, packing_custom_items:1, shopping_items:1, race_runners:1, race_results:1 };
+  const pk = (t,r) => t === "packing_state" ? r.trip+"|"+r.item_key+"|"+r.scope
+            : t === "race_results" ? r.trip+"|"+r.race
+            : String(r.id);
   const subs = [];
 
   window.__tables = tables;
@@ -77,18 +79,21 @@ export const STUB = `
           };
         },
         delete(){
-          return {
-            eq(col, val){
-              return {
-                then(resolve){
-                  if(fail(resolve)) return;
-                  const row = [...T(table).values()].find(r => String(r[col]) === String(val));
-                  if(row){ T(table).delete(pk(table,row)); window.__fire(table, "DELETE", null, row); }
-                  resolve({error:null});
-                }
-              };
+          // PostgREST laat meerdere filters achter elkaar toe en wist álles wat
+          // erop past — niet alleen de eerste rij. Dat maakt hier verschil zodra
+          // je op iets anders dan de primaire sleutel wist (trip + race).
+          const f = {};
+          const q = {
+            eq(col, val){ f[col] = val; return q; },
+            then(resolve){
+              if(fail(resolve)) return;
+              const rows = [...T(table).values()]
+                .filter(r => Object.entries(f).every(([c,v]) => String(r[c]) === String(v)));
+              rows.forEach(row => { T(table).delete(pk(table,row)); window.__fire(table, "DELETE", null, row); });
+              resolve({error:null});
             }
           };
+          return q;
         },
         upsert(rowOrRows){
           return {
