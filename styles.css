@@ -398,8 +398,9 @@ table.dt.heat tbody tr:hover td{background:none}
 .fieldlink a{color:var(--slate)}
 .fieldlink .uitslaglink{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
   text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:6px 11px;margin-right:10px;
-  display:inline-block;white-space:nowrap}
+  display:inline-block;white-space:nowrap;background:transparent;color:var(--slate);cursor:pointer}
 .fieldlink .uitslaglink:hover{border-color:var(--slate)}
+.fieldlink button.uitslaglink:disabled{opacity:.55;cursor:progress}
 .paste{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11.5px;line-height:1.6;
   color:var(--rock);background:var(--paper);border:1px solid var(--line);border-radius:12px;
   padding:11px 13px;outline:none;box-shadow:var(--shadow);resize:vertical;margin-bottom:16px}

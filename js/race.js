@@ -196,6 +196,50 @@ export function handleResultsChange(payload){
   renderField();
 }
 
+/* ---------- automatisch ophalen, met plakken als terugval ----------
+   Deze pagina draait in de bezoekers eigen browser, niet in een sandbox —
+   dus reikwijdte is geen probleem. Wat wél in de weg zit is CORS: Rate My
+   Trail moet expliciet toestaan dat een andere site zijn HTML uitleest, en
+   dat weten we pas als iemand hier echt op klikt. Lukt het niet, dan is de
+   plakknop ernaast nog steeds gewoon de weg. */
+async function haalPagina(url){
+  const r = await fetch(url, {mode:"cors"});
+  if(!r.ok) throw new Error("http " + r.status);
+  return r.text();
+}
+
+export async function probeerAutomatisch(){
+  const btn = document.getElementById("fieldfetch");
+  const race = raceOpts.fieldRace;
+  const jaar = (uitslagen.get(race) || {}).jaar || JAREN[0];
+  const url = uitslagUrl(race, jaar);
+
+  if(btn){ btn.disabled = true; btn.dataset.busy = "1"; btn.textContent = "Ophalen…"; }
+  try{
+    let html = await haalPagina(url);
+    let paginas = 1;
+    // grotere velden staan over meerdere pagina's; doorbladeren tot een
+    // pagina niets nieuws oplevert of niet meer bestaat
+    for(let p = 2; p <= 8; p++){
+      let extra;
+      try{ extra = await haalPagina(`${url}/${p}`); }
+      catch{ break; }
+      if(!/\d{1,2}[:.][0-5]\d[:.][0-5]\d/.test(extra)) break;
+      html += "\n" + extra;
+      paginas = p;
+    }
+    const tijden = parseResults(html);
+    if(!tijden.length) throw new Error("geen tijden op de pagina gevonden");
+    await setFieldText(toonResults(tijden));
+    toast(`Uitslag opgehaald: ${tijden.length} tijden${paginas > 1 ? ` over ${paginas} pagina's` : ""}.`);
+  }catch(err){
+    console.warn("[trailrun] automatisch ophalen mislukt:", err);
+    toast("Automatisch ophalen lukt niet vanuit de browser — de bron blokkeert dit meestal voor andere sites (CORS).\nPlak de uitslag zelf hieronder.", 6000);
+  }finally{
+    if(btn){ btn.disabled = false; delete btn.dataset.busy; btn.textContent = "Probeer automatisch op te halen"; }
+  }
+}
+
 /* ---------- de lijst lopers, op volgorde van toevoegen ---------- */
 const sorted = () => [...runners.values()]
   .sort((a,b) => String(a.created_at||"").localeCompare(String(b.created_at||"")));
@@ -495,9 +539,9 @@ function renderField({forceer=false} = {}){
   jsel.value = String(jaar);
 
   const naam = raceById(raceOpts.fieldRace).n;
-  $("fieldlink").innerHTML =
-    `<a class="uitslaglink" href="${uitslagUrl(raceOpts.fieldRace, jaar)}" target="_blank" rel="noopener">Uitslag ${esc(naam)} ${jaar} openen ↗</a>`
-    + `<span class="bronnen">daar alles selecteren en hieronder plakken. Staat die editie er niet, probeer dan `
+  $("fieldlinktext").innerHTML =
+    `<a class="uitslaglink" href="${uitslagUrl(raceOpts.fieldRace, jaar)}" target="_blank" rel="noopener">of open 'm zelf ↗</a>`
+    + `<span class="bronnen"> — daar alles selecteren en hieronder plakken. Staat die editie er niet, probeer dan `
     + BRONNEN.map(b => `<a href="${b.url}" target="_blank" rel="noopener" title="${esc(b.note)}">${esc(b.lab)}</a>`).join(", ")
     + `. Ranglijsten als UTMB en ITRA tellen alleen wie in hún klassement meedoet, dus daar is het veld kleiner en sneller dan het echt was.</span>`;
 

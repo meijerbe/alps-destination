@@ -248,13 +248,12 @@ test("de link wijst naar de uitslag van de gekozen wedstrijd en editie", async (
   await page.goto(RACE);
   await page.waitForSelector("#panel-race");
 
-  const link = page.locator("#fieldlink .uitslaglink");
+  const link = page.locator("#fieldlinktext .uitslaglink");
   await expect(link).toHaveAttribute("href", /mayrhofen-ultraks-zillertal-2025-muz30$/);
 
   await page.locator("#fieldrace").selectOption("rk50");
   await page.locator("#fieldyear").selectOption("2024");
   await expect(link).toHaveAttribute("href", /mayrhofen-ultraks-zillertal-2024-rk50$/);
-  await expect(link).toContainText("RK50 2024");
 });
 
 test("elke wedstrijd houdt zijn eigen uitslag", async ({ page }) => {
@@ -269,4 +268,85 @@ test("elke wedstrijd houdt zijn eigen uitslag", async ({ page }) => {
 
   await page.locator("#fieldrace").selectOption("muz30");
   await expect(page.locator("#fieldpaste")).toHaveValue("3:12:44\n3:20:01\n4:05:59");
+});
+
+// De pagina draait in de bezoekers eigen browser, dus reikwijdte is geen
+// probleem — de knop mag echt fetch() proberen. Wat wél in de weg zit is
+// CORS, en dat weten we pas als de bron daadwerkelijk antwoordt. Deze tests
+// nemen de rol van "de bron" over met page.route, zodat zowel het gelukte
+// pad als de terugval op plakken zonder een echt netwerk getest worden.
+test.describe("automatisch ophalen", () => {
+  const URL1 = "https://de.ratemytrail.com/results/mayrhofen-ultraks-zillertal-2025-muz30";
+
+  test("lukt het, dan vult de knop de uitslag automatisch in en deelt hem", async ({ page }) => {
+    await page.route(URL1, route => route.fulfill({
+      status: 200, contentType: "text/html",
+      body: "<table><tr><td>1</td><td>Anna Huber</td><td>3:12:44</td></tr>"
+          + "<tr><td>2</td><td>Lukas Mair</td><td>3:20:01</td></tr></table>"
+    }));
+    await page.route(URL1 + "/2", route => route.fulfill({ status: 404, body: "" }));
+
+    await page.goto(RACE);
+    await page.waitForSelector("#panel-race");
+    await page.locator("#fieldfetch").click();
+
+    await expect(page.locator("#toast")).toContainText("2 tijden");
+    await expect(page.locator("#fieldpaste")).toHaveValue("3:12:44\n3:20:01");
+    await expect(page.locator("#racefield .card").first()).toContainText("2");
+    await expect(page.locator("#fieldfetch")).toBeEnabled();
+
+    // gedeeld, net als een handmatige plak
+    const rijen = await page.evaluate(() => [...window.__tables.race_results.values()]);
+    expect(rijen).toHaveLength(1);
+    expect(rijen[0].times).toBe("3:12:44\n3:20:01");
+  });
+
+  test("bladert door naar een volgende pagina als die bestaat", async ({ page }) => {
+    await page.route(URL1, route => route.fulfill({
+      status: 200, contentType: "text/html", body: "1 Anna 3:12:44\n2 Piet 3:20:01"
+    }));
+    await page.route(URL1 + "/2", route => route.fulfill({
+      status: 200, contentType: "text/html", body: "3 Eva 4:05:59"
+    }));
+    await page.route(URL1 + "/3", route => route.fulfill({ status: 404, body: "" }));
+
+    await page.goto(RACE);
+    await page.waitForSelector("#panel-race");
+    await page.locator("#fieldfetch").click();
+
+    await expect(page.locator("#toast")).toContainText("3 tijden");
+    await expect(page.locator("#toast")).toContainText("2 pagina's");
+    await expect(page.locator("#racefield .card").first()).toContainText("3");
+  });
+
+  test("lukt het niet (CORS-achtige blokkade), dan blijft plakken gewoon werken", async ({ page }) => {
+    await page.route(URL1, route => route.abort("failed"));
+
+    await page.goto(RACE);
+    await page.waitForSelector("#panel-race");
+    await page.locator("#fieldfetch").click();
+
+    await expect(page.locator("#toast")).toContainText("Automatisch ophalen lukt niet");
+    await expect(page.locator("#toast")).toContainText("CORS");
+    await expect(page.locator("#fieldpaste")).toHaveValue("");
+    await expect(page.locator("#fieldfetch")).toBeEnabled();
+    await expect(page.locator("#fieldfetch")).toHaveText("Probeer automatisch op te halen");
+
+    // en de weg die altijd werkt, werkt nog steeds
+    await page.locator("#fieldpaste").fill("1 x 3:12:44");
+    await expect(page.locator("#racefield .card").first()).toContainText("1");
+  });
+
+  test("een pagina zonder tijden telt niet als gelukt", async ({ page }) => {
+    await page.route(URL1, route => route.fulfill({
+      status: 200, contentType: "text/html", body: "<html><body>geen resultaten</body></html>"
+    }));
+
+    await page.goto(RACE);
+    await page.waitForSelector("#panel-race");
+    await page.locator("#fieldfetch").click();
+
+    await expect(page.locator("#toast")).toContainText("Automatisch ophalen lukt niet");
+    await expect(page.locator("#fieldpaste")).toHaveValue("");
+  });
 });

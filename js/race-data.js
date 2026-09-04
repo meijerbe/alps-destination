@@ -67,19 +67,24 @@ export const PRESETS = [
   {id:"rk50",   lab:"RK50 eerder",      dist:50.5, gain:3200}
 ];
 
-/* Waar de uitslag van een eerdere editie staat. De app haalt hem niet zelf op:
-   deze lijsten staan op de site van de tijdwaarneming en van de ranglijsten,
-   zonder open API en zonder CORS, dus ook je browser mag er niet bij. Vandaar
-   een linkje naar de goede pagina, waarna je hem plakt.
+/* Waar de uitslag van een eerdere editie staat. Deze lijsten staan niet als
+   open data op te vragen, dus "Probeer automatisch op te halen" in race.js is
+   een gok: het lukt alleen als de bron dat van een andere site toelaat (CORS),
+   en dat weet je pas als iemand er in de browser echt op klikt. Rate My Trail
+   is de enige met een voorspelbare URL per wedstrijd en editie — vandaar dat
+   alleen die hier een `uitslagUrl` heeft. Voor de rest is er een linkje naar
+   de goede pagina, waarna je hem met de hand plakt; dat werkt altijd.
 
-   Let op wélke bron je pakt: Rate My Trail en de tijdwaarneming hebben iedereen
-   die finishte, UTMB en ITRA alleen wie in hun ranglijst meetelt. Dat scheelt
-   in aantal (voor de MUZ30 van 2025: 288 tegenover 412) en dus in spreiding. */
+   Let op wélke bron je pakt: Rate My Trail, D-U-V en de tijdwaarneming hebben
+   iedereen die finishte, UTMB en ITRA alleen wie in hun ranglijst meetelt. Dat
+   scheelt in aantal (voor de MUZ30 van 2025: 288 tegenover 412) en dus in
+   spreiding. */
 export const JAREN = [2025, 2024, 2023];
 export const uitslagUrl = (raceId, jaar) =>
   `https://de.ratemytrail.com/results/mayrhofen-ultraks-zillertal-${jaar}-${raceId}`;
 export const BRONNEN = [
   {lab: "Time2Win", url: "https://time2win.at/", note: "de officiële tijdwaarneming"},
+  {lab: "D-U-V", url: "https://statistik.d-u-v.org/", note: "zoek op Mayrhofen Ultraks — vaak ook oudere edities"},
   {lab: "ITRA",     url: "https://itra.run/Races/RaceDetails/107137", note: "editie 2025, alle afstanden"},
   {lab: "UTMB Index", url: "https://utmb.world/utmb-index/races/22357.mayrhofenultrakszillertalmuz30.2025", note: "MUZ30 2025"}
 ];

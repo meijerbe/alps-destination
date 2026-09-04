@@ -79,14 +79,15 @@ onder: de finishvensters op de klok, de kansverdeling per persoon, een tabel, ee
 onderlinge kansen ("wie is er eerder binnen"), en een histogram van een eerdere editie als je de
 uitslag erin plakt. Hoe het rekent staat onderaan het tabblad zelf, formule en al.
 
-Dat plakken is met opzet de enige route naar echte uitslagen: er zit geen verzonnen veld in de app.
-De uitslagen staan op de site van de tijdwaarneming en van de ranglijsten, zonder open API en zonder
-CORS, dus noch de app noch een agent kan ze ophalen — een link naar de goede pagina en één keer
-plakken is wat er wél kan. Het tabblad zet die link klaar per wedstrijd en editie. Er worden alleen
-tijden bewaard, geen namen, en de lijst staat gedeeld (`race_results`), dus één van jullie plakt hem
-en de rest heeft hem. Let op wélke bron je pakt: de tijdwaarneming en Rate My Trail hebben iedereen
-die finishte, UTMB en ITRA alleen wie in hun ranglijst meetelt — voor de MUZ30 van 2025 scheelt dat
-288 tegenover 412 finishers, en dus in spreiding.
+Er zit met opzet geen verzonnen veld in de app: alleen echte uitslagen. *Probeer automatisch op te
+halen* haalt de uitslag van Rate My Trail rechtstreeks op in je eigen browser — dat lukt alleen als
+die site dat van een andere site toelaat (CORS), en dat weet je pas als je er echt op klikt. Lukt het
+niet, dan blijft plakken de weg die altijd werkt: de link ernaast opent de goede pagina, alles
+selecteren en hieronder plakken. Er worden alleen tijden bewaard, geen namen, en de lijst staat
+gedeeld (`race_results`), dus één van jullie hoeft het maar één keer te doen. Let op wélke bron je
+gebruikt: de tijdwaarneming, D-U-V en Rate My Trail hebben iedereen die finishte, UTMB en ITRA alleen
+wie in hun ranglijst meetelt — voor de MUZ30 van 2025 scheelt dat 288 tegenover 412 finishers, en dus
+in spreiding.
 
 Zonder Supabase (zie hieronder) blijven vinkjes, notities, eigen paklijst-items en de boodschappen-
 lijst per browser bewaard. Mét Supabase staat alles gedeeld en zie je elkaars wijzigingen vanzelf
@@ -135,8 +136,9 @@ gecachete oude `js/main.js` naast een verse `index.html` kunnen komen te staan. 
 Content-Security-Policy die `default-src
 'none'` als basis neemt en per soort bestand precies openzet wat nodig is: `'self'` voor de eigen
 `styles.css` en `js/*.js`, `cdn.jsdelivr.net` voor de Supabase-client, Google Fonts (css) en
-`fonts.gstatic.com` (de fontbestanden) voor de typografie, en `api.open-meteo.com` plus
-`*.supabase.co` (ook `wss://`, voor Realtime) voor data.
+`fonts.gstatic.com` (de fontbestanden) voor de typografie, en `api.open-meteo.com`,
+`*.supabase.co` (ook `wss://`, voor Realtime) plus `de.ratemytrail.com` (voor *Probeer automatisch
+op te halen* op het trailrun-tabblad) voor data.
 
 > Zet je Vercel Web Analytics of Speed Insights aan, dan injecteert Vercel een script vanaf
 > `/_vercel/insights/…`. `script-src` staat al open voor `'self'`; voeg dan ook `'self'` toe aan
@@ -159,7 +161,7 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-103 browsertests over kaart, tabbladen, paklijst, boodschappen en de trailrun-schatter, op desktop en
+111 browsertests over kaart, tabbladen, paklijst, boodschappen en de trailrun-schatter, op desktop en
 mobiel, in ongeveer vijfenveertig seconden. Open-Meteo en Supabase worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
 Daarnaast een ESLint-check (`npm run lint`) die alleen op `no-undef` en dode code let —
