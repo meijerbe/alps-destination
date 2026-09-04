@@ -79,6 +79,15 @@ onder: de finishvensters op de klok, de kansverdeling per persoon, een tabel, ee
 onderlinge kansen ("wie is er eerder binnen"), en een histogram van een eerdere editie als je de
 uitslag erin plakt. Hoe het rekent staat onderaan het tabblad zelf, formule en al.
 
+Dat plakken is met opzet de enige route naar echte uitslagen: er zit geen verzonnen veld in de app.
+De uitslagen staan op de site van de tijdwaarneming en van de ranglijsten, zonder open API en zonder
+CORS, dus noch de app noch een agent kan ze ophalen — een link naar de goede pagina en één keer
+plakken is wat er wél kan. Het tabblad zet die link klaar per wedstrijd en editie. Er worden alleen
+tijden bewaard, geen namen, en de lijst staat gedeeld (`race_results`), dus één van jullie plakt hem
+en de rest heeft hem. Let op wélke bron je pakt: de tijdwaarneming en Rate My Trail hebben iedereen
+die finishte, UTMB en ITRA alleen wie in hun ranglijst meetelt — voor de MUZ30 van 2025 scheelt dat
+288 tegenover 412 finishers, en dus in spreiding.
+
 Zonder Supabase (zie hieronder) blijven vinkjes, notities, eigen paklijst-items en de boodschappen-
 lijst per browser bewaard. Mét Supabase staat alles gedeeld en zie je elkaars wijzigingen vanzelf
 verschijnen, zonder te hoeven verversen.
@@ -150,8 +159,8 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-93 browsertests over kaart, tabbladen, paklijst, boodschappen en de trailrun-schatter, op desktop en
-mobiel, in ongeveer veertig seconden. Open-Meteo en Supabase worden afgevangen, dus
+103 browsertests over kaart, tabbladen, paklijst, boodschappen en de trailrun-schatter, op desktop en
+mobiel, in ongeveer vijfenveertig seconden. Open-Meteo en Supabase worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
 Daarnaast een ESLint-check (`npm run lint`) die alleen op `no-undef` en dode code let —
 geen stijlregels, wel de klasse fout (een vergeten import) die anders pas in de browser
@@ -202,7 +211,7 @@ De logica staat in `js/`, één onderwerp per bestand:
 | `dashboard.js` / `data-tab.js` | kerncijfers, föhnmeter, ranglijst, matrix, *onder de motorkap* |
 | `packing-data.js` / `packing.js` | de paklijst-inhoud en -logica |
 | `shopping.js` | de boodschappenlijst |
-| `race-data.js` | de drie wedstrijden en de knoppen van het loopmodel |
+| `race-data.js` | de drie wedstrijden, de knoppen van het loopmodel en de uitslagenbronnen |
 | `race-model.js` | het rekenmodel: effectieve km, Riegel, spreiding, onderlinge kansen |
 | `race.js` | het trailrun-tabblad: opslag, invulkaartjes en de grafieken |
 | `supabase-client.js` / `realtime.js` | de Supabase-verbinding en live sync |
@@ -271,13 +280,14 @@ een Supabase-project in, dan staat het gedeeld voor jullie allebei.
    - Open **SQL Editor → New query** in Supabase, plak de inhoud van
      [`supabase/schema.sql`](supabase/schema.sql) en klik **Run**.
 
-   Beide manieren zetten dezelfde vier tabellen neer — `packing_state` (vinkjes/notities),
-   `packing_custom_items` (zelf toegevoegde paklijst-regels), `shopping_items` (boodschappenlijst)
-   en `race_runners` (de lopers van het trailrun-tabblad) — elk met rijbeveiliging die de sleutel
-   beperkt tot rijen van deze ene reis.
+   Beide manieren zetten dezelfde vijf tabellen neer — `packing_state` (vinkjes/notities),
+   `packing_custom_items` (zelf toegevoegde paklijst-regels), `shopping_items` (boodschappenlijst),
+   `race_runners` (de lopers van het trailrun-tabblad) en `race_results` (de geplakte uitslag van
+   een eerdere editie, alleen de tijden) — elk met rijbeveiliging die de sleutel beperkt tot rijen
+   van deze ene reis.
    Het script is veilig om zo vaak te draaien als je wilt, en controleert zichzelf: staat er iets
    niet goed, dan krijg je een foutmelding in plaats van stil half werk. Bij de handmatige route
-   hoort onderaan een tabel met **zestien rijen** te verschijnen, vier policies per tabel; bij de
+   hoort onderaan een tabel met **twintig rijen** te verschijnen, vier policies per tabel; bij de
    automatische route is een groene run in de Actions-tab het teken. Zie je in de app *"de
    database laat dit nog niet toe"*, dan is dit de stap die je opnieuw moet doen.
 3. Ga naar **Settings → API** en kopieer de **Project URL** en de publieke sleutel (de klassieke
@@ -313,7 +323,7 @@ voor iets gevoeligers. Verwijderen kan zonder bevestiging — het ×'je is met o
 lijkt om te tikken (zie `.itemdel` in de CSS), en je krijgt een toast met wát er weg is.
 
 **Voor de volgende reis** — wis de tabellen (`truncate packing_state, packing_custom_items,
-shopping_items, race_runners;` in de SQL Editor) of pas de `TRIP_ID`-constante aan én de bijbehorende waarde in
+shopping_items, race_runners, race_results;` in de SQL Editor) of pas de `TRIP_ID`-constante aan én de bijbehorende waarde in
 alle policies in `schema.sql`.
 
 ## Databron

@@ -394,6 +394,12 @@ table.dt.heat td{text-align:center;font-weight:600}
 table.dt.heat td:first-child{text-align:left;font-weight:400}
 table.dt.heat td.zelf{opacity:.3;font-weight:400}
 table.dt.heat tbody tr:hover td{background:none}
+.fieldlink{margin:0 0 14px;font-size:13px;color:var(--ink3);line-height:1.7;max-width:82ch}
+.fieldlink a{color:var(--slate)}
+.fieldlink .uitslaglink{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:6px 11px;margin-right:10px;
+  display:inline-block;white-space:nowrap}
+.fieldlink .uitslaglink:hover{border-color:var(--slate)}
 .paste{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11.5px;line-height:1.6;
   color:var(--rock);background:var(--paper);border:1px solid var(--line);border-radius:12px;
   padding:11px 13px;outline:none;box-shadow:var(--shadow);resize:vertical;margin-bottom:16px}

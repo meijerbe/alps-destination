@@ -301,13 +301,22 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
   <div id="racehead"></div>
 
   <h3 class="sub">Hoe deed het veld het</h3>
-  <p class="subnote">Plak hier de uitslag van een eerdere editie (kopiëren van de uitslagenpagina mag met plaats
-  en naam en al — alles wat op <code>u:mm:ss</code> lijkt wordt eruit gevist). Dan zie je de spreiding van het
-  echte veld en waar de schattingen daarin landen. Blijft in deze browser, wordt niet gedeeld.</p>
-  <div class="ctl" style="margin-bottom:12px">
-    <label class="lab" for="fieldrace">Wedstrijd</label>
-    <select class="pick" id="fieldrace"></select>
+  <p class="subnote">Dit is het enige stuk van dit tabblad dat niet uit een model komt maar uit de werkelijkheid,
+  en daarom het meest waard. De app kan de uitslag niet zelf ophalen — die lijsten staan op de site van de
+  tijdwaarneming en zijn niet als open data op te vragen — maar met de link hieronder is het twee klikken:
+  openen, alles selecteren, hier plakken. Alles wat op <code>u:mm:ss</code> lijkt wordt eruit gevist, de rest
+  (plaats, naam, land) mag blijven staan en wordt weggegooid: er worden alleen tijden bewaard.</p>
+  <div class="pick2">
+    <div class="ctl">
+      <label class="lab" for="fieldrace">Wedstrijd</label>
+      <select class="pick" id="fieldrace"></select>
+    </div>
+    <div class="ctl">
+      <label class="lab" for="fieldyear">Editie</label>
+      <select class="pick" id="fieldyear"></select>
+    </div>
   </div>
+  <p class="fieldlink" id="fieldlink"></p>
   <textarea id="fieldpaste" class="paste" rows="4" placeholder="1  Anna Huber  AUT  3:12:44&#10;2  Lukas Mair  AUT  3:20:01&#10;…"></textarea>
   <div id="racefield"></div>
 

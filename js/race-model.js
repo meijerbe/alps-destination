@@ -134,15 +134,22 @@ export function pBefore(a, b){
 /* ---------- uitslagen van een eerdere editie ---------- */
 
 // Plakt iemand een uitslagenlijst, dan pikken we per regel de eerste tijd die
-// op h:mm:ss lijkt. Rommel eromheen (plaats, naam, categorie) mag blijven staan.
+// op u:mm:ss lijkt — met dubbele punt of punt als scheidingsteken, want dat
+// verschilt per uitslagensite. Rommel eromheen (plaats, naam, land, categorie)
+// mag gewoon blijven staan.
 export function parseResults(text){
   const out = [];
   String(text || "").split(/[\n\r]+/).forEach(line => {
-    const m = line.match(/(?<!\d)(\d{1,2}):([0-5]\d):([0-5]\d)(?!\d)/);
+    const m = line.match(/(?<![\d.:])(\d{1,2})[:.]([0-5]\d)[:.]([0-5]\d)(?![\d.:])/);
     if(m) out.push((+m[1])*3600 + (+m[2])*60 + (+m[3]));
   });
   return out.sort((a,b) => a - b);
 }
+
+// De opgeschoonde lijst zoals we hem bewaren en delen: alleen de tijden,
+// geen namen — dat scheelt ruimte en er hoeft niemands naam de database in.
+export const toonResults = tijden =>
+  tijden.map(t => `${Math.floor(t/3600)}:${String(Math.floor(t%3600/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`).join("\n");
 
 export function statsOf(sorted){
   const n = sorted.length;

@@ -5,10 +5,10 @@
    race-model.js, zodat het na te rekenen is zonder DOM eromheen.
 ================================================================== */
 import { $, esc } from "./dom.js";
-import { RACES, raceById, CLIMB, DUUR, GROND, TECH, PRESETS } from "./race-data.js";
+import { RACES, raceById, CLIMB, DUUR, GROND, TECH, PRESETS, JAREN, uitslagUrl, BRONNEN } from "./race-data.js";
 import {
   predict, pBefore, pFirst, pUnder, density,
-  fmtDur, fmtClock, fmtPace, parseResults, statsOf, placeOf
+  fmtDur, fmtClock, fmtPace, parseResults, toonResults, statsOf, placeOf
 } from "./race-model.js";
 import { sb, supaEnabled, TRIP_ID, localId, supaErrText } from "./supabase-client.js";
 import { me } from "./packing.js";
@@ -18,6 +18,7 @@ const RUN_KEY  = "abopreis:race:v1";
 const OPTS_KEY = "abopreis:raceopts:v1";
 
 export let runners = new Map();   // "<id>" → rij
+export let uitslagen = new Map(); // "<race>" → {race, jaar, times, updated_by, updated_at}
 export let raceOpts = {climb:"normaal", courses:{}, results:{}, fieldRace:"muz30"};
 
 const nl = n => String(n).replace(".", ",");
@@ -43,16 +44,32 @@ function loadRunnersLocal(){
 }
 function saveRunnersLocal(){ try{ localStorage.setItem(RUN_KEY, JSON.stringify([...runners.values()])); }catch{} }
 
+// Zonder Supabase leven de geplakte uitslagen in raceOpts.results, mét
+// Supabase in race_results — één rij per wedstrijd, zodat één van jullie
+// hem plakt en de rest hem meteen heeft.
+function uitslagenLokaal(){
+  uitslagen = new Map(Object.entries(raceOpts.results || {})
+    .filter(([, v]) => v)
+    .map(([race, v]) => [race, typeof v === "string"
+      ? {race, jaar: JAREN[0], times: v}
+      : {race, jaar: v.jaar || JAREN[0], times: v.times || ""}]));
+}
+
 export async function loadRaceState(){
   loadOpts();
-  if(!supaEnabled){ loadRunnersLocal(); return; }
+  if(!supaEnabled){ loadRunnersLocal(); uitslagenLokaal(); return; }
   try{
-    const {data, error} = await sb.from("race_runners").select("*").eq("trip", TRIP_ID).order("created_at");
-    if(error) throw error;
-    runners = new Map(data.map(r => [String(r.id), r]));
+    const [lopers, lijsten] = await Promise.all([
+      sb.from("race_runners").select("*").eq("trip", TRIP_ID).order("created_at"),
+      sb.from("race_results").select("*").eq("trip", TRIP_ID)
+    ]);
+    if(lopers.error) throw lopers.error;
+    runners = new Map(lopers.data.map(r => [String(r.id), r]));
+    if(lijsten.error) throw lijsten.error;
+    uitslagen = new Map(lijsten.data.map(r => [r.race, r]));
   }catch(err){
     console.error("[trailrun] laden mislukt:", err);
-    toast("Lopers laden mislukt\n" + supaErrText(err), 5000);
+    toast("Trailrun laden mislukt\n" + supaErrText(err), 5000);
   }
 }
 
@@ -130,8 +147,54 @@ export function setCourse(id, patch){
   renderRaceOutputs();
 }
 export function resetCourse(id){ delete raceOpts.courses[id]; saveOpts(); renderRace(); }
-export function setFieldRace(id){ raceOpts.fieldRace = id; saveOpts(); renderField(); }
-export function setFieldText(txt){ raceOpts.results[raceOpts.fieldRace] = txt; saveOpts(); renderField(); }
+export function setFieldRace(id){ raceOpts.fieldRace = id; saveOpts(); renderField({forceer:true}); }
+
+export async function setFieldText(txt){
+  const race = raceOpts.fieldRace;
+  const tijden = parseResults(txt);
+  const oud = uitslagen.get(race);
+  const jaar = oud ? oud.jaar : JAREN[0];
+  // alleen de tijden bewaren, geen namen: dat scheelt ruimte en er hoeft
+  // niemands naam de database in om een spreiding te kunnen tekenen
+  const times = toonResults(tijden);
+  if(oud && oud.times === times) return;
+  const rij = {race, jaar, times, updated_by: me, updated_at: new Date().toISOString()};
+  tijden.length ? uitslagen.set(race, rij) : uitslagen.delete(race);
+  renderField();
+  await bewaarUitslag(race, rij, tijden.length);
+}
+
+export async function setFieldYear(jaar){
+  const race = raceOpts.fieldRace;
+  const oud = uitslagen.get(race) || {race, times: ""};
+  const rij = {...oud, race, jaar, updated_by: me, updated_at: new Date().toISOString()};
+  uitslagen.set(race, rij);
+  renderField({forceer:true});
+  await bewaarUitslag(race, rij, true);
+}
+
+async function bewaarUitslag(race, rij, houden){
+  if(!supaEnabled){
+    raceOpts.results = Object.fromEntries([...uitslagen].map(([k, v]) => [k, {jaar: v.jaar, times: v.times}]));
+    saveOpts();
+    return;
+  }
+  try{
+    const {error} = houden
+      ? await sb.from("race_results").upsert({trip: TRIP_ID, ...rij}, {onConflict: "trip,race"})
+      : await sb.from("race_results").delete().eq("trip", TRIP_ID).eq("race", race);
+    if(error) throw error;
+  }catch(err){
+    console.error("[trailrun] uitslag bewaren mislukt:", err);
+    toast("Uitslag bewaren mislukt\n" + supaErrText(err), 5000);
+  }
+}
+
+export function handleResultsChange(payload){
+  if(payload.eventType === "DELETE") uitslagen.delete(payload.old.race);
+  else uitslagen.set(payload.new.race, payload.new);
+  renderField();
+}
 
 /* ---------- de lijst lopers, op volgorde van toevoegen ---------- */
 const sorted = () => [...runners.values()]
@@ -410,24 +473,47 @@ function renderHead(preds){
 /* ==================================================================
    Grafiek 4 — het veld van een eerdere editie
 ================================================================== */
-function renderField(){
+function renderField({forceer=false} = {}){
   const sel = $("fieldrace");
   if(sel.options.length !== RACES.length){
     sel.innerHTML = RACES.map(r => `<option value="${r.id}">${esc(r.n)}</option>`).join("");
   }
   sel.value = raceOpts.fieldRace;
-  const txt = raceOpts.results[raceOpts.fieldRace] || "";
+  const rij = uitslagen.get(raceOpts.fieldRace);
+  const jaar = rij ? rij.jaar : JAREN[0];
+  const txt = rij ? rij.times : "";
   const box = $("fieldpaste");
-  if(box.value !== txt && document.activeElement !== box) box.value = txt;
+  // niet overschrijven terwijl iemand in het veld staat te plakken of te typen —
+  // behalve als hij zelf van wedstrijd of editie wisselt, want dan hóórt er
+  // iets anders te staan
+  if(box.value !== txt && (forceer || document.activeElement !== box)) box.value = txt;
+
+  const jsel = $("fieldyear");
+  if(jsel.options.length !== JAREN.length){
+    jsel.innerHTML = JAREN.map(j => `<option value="${j}">${j}</option>`).join("");
+  }
+  jsel.value = String(jaar);
+
+  const naam = raceById(raceOpts.fieldRace).n;
+  $("fieldlink").innerHTML =
+    `<a class="uitslaglink" href="${uitslagUrl(raceOpts.fieldRace, jaar)}" target="_blank" rel="noopener">Uitslag ${esc(naam)} ${jaar} openen ↗</a>`
+    + `<span class="bronnen">daar alles selecteren en hieronder plakken. Staat die editie er niet, probeer dan `
+    + BRONNEN.map(b => `<a href="${b.url}" target="_blank" rel="noopener" title="${esc(b.note)}">${esc(b.lab)}</a>`).join(", ")
+    + `. Ranglijsten als UTMB en ITRA tellen alleen wie in hún klassement meedoet, dus daar is het veld kleiner en sneller dan het echt was.</span>`;
 
   const tijden = parseResults(txt);
   const st = statsOf(tijden);
   const host = $("racefield");
   if(!st){
-    host.innerHTML = `<p class="empty">Nog geen uitslag geplakt voor ${esc(raceById(raceOpts.fieldRace).n)}.</p>`;
+    host.innerHTML = `<p class="empty">Nog geen uitslag geplakt voor ${esc(naam)} — gebruik de link hierboven.</p>`;
     return;
   }
   const mijn = predictions().filter(x => x.r.race === raceOpts.fieldRace);
+
+  const bron = rij && rij.updated_by
+    ? `<p class="mnote">Geplakt door ${esc(rij.updated_by)}${rij.updated_at ? " op " + new Date(rij.updated_at).toLocaleDateString("nl-NL", {day:"2-digit", month:"short"}) : ""}`
+      + (supaEnabled ? " — iedereen ziet dezelfde lijst." : " — blijft in deze browser.") + `</p>`
+    : "";
 
   const kaarten = [
     ["Finishers", String(st.n)],
@@ -438,7 +524,7 @@ function renderField(){
     ["Laatste", fmtDur(st.max)]
   ].map(([k,v]) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
 
-  host.innerHTML = `<div class="cards cards6">${kaarten}</div>`
+  host.innerHTML = bron + `<div class="cards cards6">${kaarten}</div>`
     + histogram(tijden, st, mijn)
     + (mijn.length ? `<ul class="caveats plaats">` + mijn.map(({r,p}) => {
         const plaats = placeOf(tijden, p.secs);
