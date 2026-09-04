@@ -32,6 +32,7 @@ serveert ze gewoon, er is niets dat kan breken bij een deploy. Al het testgereed
 | `specs/paklijst.spec.js`  | vinkjes lokaal en gedeeld, notities, reset, foutafhandeling |
 | `specs/eigen-items.spec.js` | zelf toegevoegde paklijst-regels |
 | `specs/boodschappen.spec.js` | de boodschappenlijst |
+| `specs/trailrun.spec.js` | de finishtijd-schatter — schatting en venster, aangepaste routes, onderlinge kansen, geplakte uitslag, opslag en de bovenbalk op een telefoon |
 | `specs/historisch.spec.js` | de bron-toggle Prognose/Historisch — laden, metriekkeuze, Score/Vriespunt uitschakelen, matrix-sync, tussentijdse melding, mislukt ophalen |
 
 Een paar tests staan er om een fout die we eerder echt hadden vast te pinnen —

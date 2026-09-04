@@ -11,6 +11,7 @@ import { fillStart, syncControls } from "./ui.js";
 import { supaEnabled } from "./supabase-client.js";
 import { loadNotes, loadPackState, loadCustomItems, syncMe, renderPack } from "./packing.js";
 import { loadShoppingState, renderShopping } from "./shopping.js";
+import { loadRaceState, renderRace } from "./race.js";
 import { subscribeShared } from "./realtime.js";
 
 async function boot({force=false} = {}){
@@ -63,9 +64,10 @@ function initPackSync(){
     syncMe();
     subscribeShared();
   }
-  Promise.all([loadPackState(), loadCustomItems(), loadShoppingState()]).then(()=>{
+  Promise.all([loadPackState(), loadCustomItems(), loadShoppingState(), loadRaceState()]).then(()=>{
     const v = getLastView();
     if(v){ renderPack(v); renderShopping(); }
+    renderRace();
   });
 }
 

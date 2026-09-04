@@ -11,7 +11,7 @@ export const STUB = `
 (function(){
   const tables = {};
   const T = n => (tables[n] ||= new Map());
-  const nextId = { packing_state:1, packing_custom_items:1, shopping_items:1 };
+  const nextId = { packing_state:1, packing_custom_items:1, shopping_items:1, race_runners:1 };
   const pk = (t,r) => t === "packing_state" ? r.trip+"|"+r.item_key+"|"+r.scope : String(r.id);
   const subs = [];
 

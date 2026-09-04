@@ -1,4 +1,5 @@
--- A&B op reis — gedeelde paklijst, eigen paklijst-items en boodschappenlijst
+-- A&B op reis — gedeelde paklijst, eigen paklijst-items, boodschappenlijst en
+-- de lopers van het trailrun-tabblad
 -- Uitvoeren in Supabase: Project → SQL Editor → New query → plakken → Run.
 --
 -- Veilig om zo vaak opnieuw te draaien als je wilt. De policies worden in één
@@ -48,6 +49,27 @@ create table if not exists public.shopping_items (
   updated_at   timestamptz not null default now()
 );
 
+-- de deelnemers aan Mayrhofen Ultraks met hun referentieprestatie; het
+-- rekenmodel staat in de app (js/race-model.js), hier staat alleen de invoer
+create table if not exists public.race_runners (
+  id           bigint generated always as identity primary key,
+  trip         text not null default 'ab-op-reis',
+  name         text not null,
+  race         text not null default 'muz30' check (race in ('rk50', 'muz30', 'muz14')),
+  ref_dist     numeric not null default 21.1,      -- km van de referentieloop
+  ref_gain     integer not null default 80,        -- hoogtemeters daarvan
+  ref_secs     integer not null default 6300,      -- de tijd erover, in seconden
+  duur         text not null default 'gemiddeld',  -- duurbasis  → Riegel-exponent
+  grond        text not null default 'weg',        -- ondergrond → terreinfactor
+  tech         text not null default 'gemiddeld',  -- bergervaring
+  adjust       integer not null default 0,         -- handmatige bijstelling in %
+  target_secs  integer,                            -- streeftijd, mag leeg
+  created_by   text,
+  updated_by   text,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
 -- Rijbeveiliging, realtime en policies — voor elke tabel exact hetzelfde.
 --
 -- Er zit geen login achter: de publieke sleutel mag precies de rijen van déze
@@ -56,7 +78,7 @@ create table if not exists public.shopping_items (
 do $$
 declare
   reis  text   := 'ab-op-reis';
-  tabs  text[] := array['packing_state', 'packing_custom_items', 'shopping_items'];
+  tabs  text[] := array['packing_state', 'packing_custom_items', 'shopping_items', 'race_runners'];
   t     text;
 begin
   -- "policy ... does not exist, skipping" bij elke drop is hier verwacht gedrag
@@ -102,7 +124,7 @@ end $$;
 -- heeft of niet meedoet met Realtime. Beter luid falen dan stil half werken.
 do $$
 declare
-  tabs text[] := array['packing_state', 'packing_custom_items', 'shopping_items'];
+  tabs text[] := array['packing_state', 'packing_custom_items', 'shopping_items', 'race_runners'];
   t    text;
   n    int;
 begin
@@ -118,12 +140,12 @@ begin
       raise exception 'Tabel % doet niet mee met Realtime', t;
     end if;
   end loop;
-  raise notice 'Alles staat goed: 3 tabellen, elk 4 policies, alle drie live.';
+  raise notice 'Alles staat goed: 4 tabellen, elk 4 policies, alle vier live.';
 end $$;
 
--- ter controle in beeld: twaalf rijen, vier per tabel
+-- ter controle in beeld: zestien rijen, vier per tabel
 select tablename, policyname, cmd
 from pg_policies
 where schemaname = 'public'
-  and tablename in ('packing_state', 'packing_custom_items', 'shopping_items')
+  and tablename in ('packing_state', 'packing_custom_items', 'shopping_items', 'race_runners')
 order by tablename, cmd;
