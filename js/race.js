@@ -5,7 +5,7 @@
    race-model.js, zodat het na te rekenen is zonder DOM eromheen.
 ================================================================== */
 import { $, esc } from "./dom.js";
-import { RACES, raceById, CLIMB, DUUR, GROND, TECH, PRESETS, JAREN, uitslagUrl, BRONNEN } from "./race-data.js";
+import { RACES, raceById, CLIMB, DUUR, GROND, TECH, PRESETS, JAREN, uitslagUrl, duvUrl, BRONNEN } from "./race-data.js";
 import {
   predict, pBefore, pFirst, pUnder, density,
   fmtDur, fmtClock, fmtPace, parseResults, toonResults, statsOf, placeOf
@@ -539,8 +539,10 @@ function renderField({forceer=false} = {}){
   jsel.value = String(jaar);
 
   const naam = raceById(raceOpts.fieldRace).n;
+  const duv = duvUrl(raceOpts.fieldRace, jaar);
   $("fieldlinktext").innerHTML =
     `<a class="uitslaglink" href="${uitslagUrl(raceOpts.fieldRace, jaar)}" target="_blank" rel="noopener">of open 'm zelf ↗</a>`
+    + (duv ? `<a class="uitslaglink" href="${duv}" target="_blank" rel="noopener">D-U-V ${esc(naam)} ${jaar} ↗</a>` : "")
     + `<span class="bronnen"> — daar alles selecteren en hieronder plakken. Staat die editie er niet, probeer dan `
     + BRONNEN.map(b => `<a href="${b.url}" target="_blank" rel="noopener" title="${esc(b.note)}">${esc(b.lab)}</a>`).join(", ")
     + `. Ranglijsten als UTMB en ITRA tellen alleen wie in hún klassement meedoet, dus daar is het veld kleiner en sneller dan het echt was.</span>`;

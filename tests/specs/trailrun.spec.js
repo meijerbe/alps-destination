@@ -256,6 +256,24 @@ test("de link wijst naar de uitslag van de gekozen wedstrijd en editie", async (
   await expect(link).toHaveAttribute("href", /mayrhofen-ultraks-zillertal-2024-rk50$/);
 });
 
+// regressie: D-U-V heeft geen voorspelbare URL per wedstrijd, dus die link
+// verschijnt alleen als het event-ID bekend is (nu: RK50 2025) — en verdwijnt
+// weer zodra je naar een combinatie wisselt die we niet kennen
+test("de D-U-V-link verschijnt alleen voor een bekende editie", async ({ page }) => {
+  await page.goto(RACE);
+  await page.waitForSelector("#panel-race");
+
+  await expect(page.locator("#fieldlinktext .uitslaglink")).toHaveCount(1);  // muz30/2025: geen D-U-V bekend
+
+  await page.locator("#fieldrace").selectOption("rk50");
+  await expect(page.locator("#fieldlinktext .uitslaglink")).toHaveCount(2);
+  const duv = page.locator("#fieldlinktext .uitslaglink", { hasText: "D-U-V" });
+  await expect(duv).toHaveAttribute("href", "https://statistik.d-u-v.org/getresultevent.php?event=117893");
+
+  await page.locator("#fieldyear").selectOption("2024");
+  await expect(page.locator("#fieldlinktext .uitslaglink")).toHaveCount(1);  // rk50/2024: ook niet bekend
+});
+
 test("elke wedstrijd houdt zijn eigen uitslag", async ({ page }) => {
   await page.goto(RACE);
   await page.waitForSelector("#panel-race");
