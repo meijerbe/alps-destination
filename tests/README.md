@@ -32,7 +32,7 @@ serveert ze gewoon, er is niets dat kan breken bij een deploy. Al het testgereed
 | `specs/paklijst.spec.js`  | vinkjes lokaal en gedeeld, notities, reset, foutafhandeling |
 | `specs/eigen-items.spec.js` | zelf toegevoegde paklijst-regels |
 | `specs/boodschappen.spec.js` | de boodschappenlijst |
-| `specs/trailrun.spec.js` | de finishtijd-schatter — schatting en venster, aangepaste routes, onderlinge kansen, de geplakte uitslag (delen, alleen tijden bewaren, per wedstrijd apart), automatisch ophalen (gelukt, doorbladeren, CORS-terugval, lege pagina) via gemockte routes, opslag en de bovenbalk op een telefoon |
+| `specs/trailrun.spec.js` | trailrun.html (losse pagina): schatting en venster, aangepaste routes, onderlinge kansen, de geplakte uitslag (delen, alleen tijden bewaren, per wedstrijd apart), de meegeleverde RK50 2025-uitslag als bodem, automatisch ophalen (gelukt, doorbladeren, CORS-terugval, lege pagina) via gemockte routes, opslag en geen horizontaal schuiven op een telefoon |
 | `specs/historisch.spec.js` | de bron-toggle Prognose/Historisch — laden, metriekkeuze, Score/Vriespunt uitschakelen, matrix-sync, tussentijdse melding, mislukt ophalen |
 
 Een paar tests staan er om een fout die we eerder echt hadden vast te pinnen —

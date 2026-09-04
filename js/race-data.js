@@ -77,11 +77,22 @@ export const PRESETS = [
 
    Let op wélke bron je pakt: Rate My Trail, D-U-V en de tijdwaarneming hebben
    iedereen die finishte, UTMB en ITRA alleen wie in hun ranglijst meetelt. Dat
-   scheelt in aantal (voor de MUZ30 van 2025: 288 tegenover 412) en dus in
-   spreiding. */
+   scheelt in aantal (voor de MUZ30 van 2025: 288 tegenover 412; voor de RK50
+   van 2025 telt D-U-V 316) en dus in spreiding. */
 export const JAREN = [2025, 2024, 2023];
 export const uitslagUrl = (raceId, jaar) =>
   `https://de.ratemytrail.com/results/mayrhofen-ultraks-zillertal-${jaar}-${raceId}`;
+
+// D-U-V heeft geen voorspelbare URL per wedstrijd — elk evenement heeft een
+// los toegekend event-ID, alleen te vinden door het zelf op te zoeken. Hier
+// staat wat we al hebben; groei 'm bij zodra iemand een editie opzoekt en het
+// ID doorgeeft (event=<id> uit de adresbalk van statistik.d-u-v.org).
+export const DUV_EVENTS = {"rk50-2025": 117893};
+export const duvUrl = (raceId, jaar) => {
+  const id = DUV_EVENTS[`${raceId}-${jaar}`];
+  return id ? `https://statistik.d-u-v.org/getresultevent.php?event=${id}` : null;
+};
+
 export const BRONNEN = [
   {lab: "Time2Win", url: "https://time2win.at/", note: "de officiële tijdwaarneming"},
   {lab: "D-U-V", url: "https://statistik.d-u-v.org/", note: "zoek op Mayrhofen Ultraks — vaak ook oudere edities"},

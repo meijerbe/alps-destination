@@ -133,18 +133,22 @@ export function pBefore(a, b){
 
 /* ---------- uitslagen van een eerdere editie ---------- */
 
-// Plukt elke tijd die op u:mm:ss lijkt uit de tekst — met dubbele punt of punt
-// als scheidingsteken, want dat verschilt per uitslagensite. Rommel eromheen
-// (plaats, naam, land, categorie, HTML-tags) mag gewoon blijven staan.
+// Plukt per regel de eerste tijd die op u:mm:ss lijkt — met dubbele punt of
+// punt als scheidingsteken, want dat verschilt per uitslagensite. Rommel
+// eromheen (plaats, naam, land, categorie) mag gewoon blijven staan.
 //
-// Kijkt over de hele tekst, niet per regel: een geplakte lijst heeft doorgaans
-// één tijd per regel, maar rechtstreeks opgehaalde HTML (zie race.js,
-// probeerAutomatisch) staat vaak op nauwelijks regels — soms is de hele
-// pagina er één. Per regel de eerste match pakken zou dan bijna alles missen.
+// Bewust de EERSTE match per regel, niet allemaal: D-U-V (en andere uitgebreide
+// uitslagen) zet naast de officiële tijd ook een leeftijdsgecorrigeerde tijd op
+// dezelfde regel, en die is geen kloktijd — meetellen zou elk veld stiekem
+// verdubbelen met verzonnen extra "finishers". Zie race.js voor de tegenhanger:
+// rechtstreeks opgehaalde HTML heeft zelden echte regeleinden, dus die wordt
+// eerst op rijgrenzen geknipt vóórdat hij hier binnenkomt.
 export function parseResults(text){
-  const re = /(?<![\d.:])(\d{1,2})[:.]([0-5]\d)[:.]([0-5]\d)(?![\d.:])/g;
-  const out = [...String(text || "").matchAll(re)]
-    .map(m => (+m[1])*3600 + (+m[2])*60 + (+m[3]));
+  const out = [];
+  String(text || "").split(/[\n\r]+/).forEach(line => {
+    const m = line.match(/(?<![\d.:])(\d{1,2})[:.]([0-5]\d)[:.]([0-5]\d)(?![\d.:])/);
+    if(m) out.push((+m[1])*3600 + (+m[2])*60 + (+m[3]));
+  });
   return out.sort((a,b) => a - b);
 }
 

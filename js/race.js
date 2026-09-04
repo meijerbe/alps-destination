@@ -5,14 +5,20 @@
    race-model.js, zodat het na te rekenen is zonder DOM eromheen.
 ================================================================== */
 import { $, esc } from "./dom.js";
-import { RACES, raceById, CLIMB, DUUR, GROND, TECH, PRESETS, JAREN, uitslagUrl, BRONNEN } from "./race-data.js";
+import { RACES, raceById, CLIMB, DUUR, GROND, TECH, PRESETS, JAREN, uitslagUrl, duvUrl, BRONNEN } from "./race-data.js";
 import {
   predict, pBefore, pFirst, pUnder, density,
   fmtDur, fmtClock, fmtPace, parseResults, toonResults, statsOf, placeOf
 } from "./race-model.js";
 import { sb, supaEnabled, TRIP_ID, localId, supaErrText } from "./supabase-client.js";
-import { me } from "./packing.js";
+import { defaultResultsFor } from "./race-results-default.js";
 import { toast } from "./toast.js";
+
+// De trailrun-pagina staat los van het weerdashboard, en dus ook los van de
+// "wie ben jij"-toggle daar (packing.js) — geen A/B hier, dus created_by en
+// updated_by blijven leeg. Komt er via Realtime een rij binnen die wél een
+// naam draagt (van een andere client), dan tonen we die gewoon; renderField()
+// handelt een lege updated_by al af.
 
 const RUN_KEY  = "abopreis:race:v1";
 const OPTS_KEY = "abopreis:raceopts:v1";
@@ -79,8 +85,7 @@ export async function addRunner(name, raceId){
   const row = {
     trip: TRIP_ID, name, race: raceId || "muz30",
     ref_dist: 21.1, ref_gain: 80, ref_secs: 6300,
-    duur: "gemiddeld", grond: "weg", tech: "gemiddeld", adjust: 0, target_secs: null,
-    created_by: me
+    duur: "gemiddeld", grond: "weg", tech: "gemiddeld", adjust: 0, target_secs: null
   };
   if(!supaEnabled){
     const id = localId();
@@ -103,11 +108,11 @@ export async function addRunner(name, raceId){
 export async function patchRunner(id, patch){
   const cur = runners.get(String(id));
   if(!cur) return;
-  runners.set(String(id), {...cur, ...patch, updated_by: me, updated_at: new Date().toISOString()});
+  runners.set(String(id), {...cur, ...patch, updated_at: new Date().toISOString()});
   if(!supaEnabled){ saveRunnersLocal(); return; }
   try{
     const {error} = await sb.from("race_runners")
-      .update({...patch, updated_by: me, updated_at: new Date().toISOString()}).eq("id", id);
+      .update({...patch, updated_at: new Date().toISOString()}).eq("id", id);
     if(error) throw error;
   }catch(err){
     console.error("[trailrun] bijwerken mislukt:", err);
@@ -158,7 +163,7 @@ export async function setFieldText(txt){
   // niemands naam de database in om een spreiding te kunnen tekenen
   const times = toonResults(tijden);
   if(oud && oud.times === times) return;
-  const rij = {race, jaar, times, updated_by: me, updated_at: new Date().toISOString()};
+  const rij = {race, jaar, times, updated_at: new Date().toISOString()};
   tijden.length ? uitslagen.set(race, rij) : uitslagen.delete(race);
   renderField();
   await bewaarUitslag(race, rij, tijden.length);
@@ -167,7 +172,7 @@ export async function setFieldText(txt){
 export async function setFieldYear(jaar){
   const race = raceOpts.fieldRace;
   const oud = uitslagen.get(race) || {race, times: ""};
-  const rij = {...oud, race, jaar, updated_by: me, updated_at: new Date().toISOString()};
+  const rij = {...oud, race, jaar, updated_at: new Date().toISOString()};
   uitslagen.set(race, rij);
   renderField({forceer:true});
   await bewaarUitslag(race, rij, true);
@@ -208,6 +213,13 @@ async function haalPagina(url){
   return r.text();
 }
 
+// Rechtstreeks opgehaalde HTML heeft zelden echte regeleinden — soms staat de
+// hele pagina op één regel — terwijl parseResults() bewust de eerste tijd per
+// regel pakt (zie race-model.js: een tweede tijd op dezelfde regel is meestal
+// geen kloktijd, zoals D-U-V's leeftijdsgecorrigeerde tijd). Knip daarom eerst
+// op de gangbare rijgrenzen, zodat elke tabelrij weer zijn eigen regel krijgt.
+const naarRegels = html => html.replace(/<\/tr>|<br\s*\/?>/gi, "\n");
+
 export async function probeerAutomatisch(){
   const btn = document.getElementById("fieldfetch");
   const race = raceOpts.fieldRace;
@@ -228,7 +240,7 @@ export async function probeerAutomatisch(){
       html += "\n" + extra;
       paginas = p;
     }
-    const tijden = parseResults(html);
+    const tijden = parseResults(naarRegels(html));
     if(!tijden.length) throw new Error("geen tijden op de pagina gevonden");
     await setFieldText(toonResults(tijden));
     toast(`Uitslag opgehaald: ${tijden.length} tijden${paginas > 1 ? ` over ${paginas} pagina's` : ""}.`);
@@ -317,7 +329,6 @@ function renderRoster(){
     kies.innerHTML = RACES.map(r => `<option value="${r.id}">${esc(r.n)}</option>`).join("");
     kies.value = "muz30";
   }
-  $("racecount").textContent = rows.length ? String(rows.length) : "";
   $("racesub").textContent = supaEnabled
     ? "Gedeeld: wat jij invult zien de anderen ook. Eén loop per persoon volstaat — hoe beter die op Mayrhofen lijkt, hoe scherper de schatting."
     : "Blijft in deze browser — koppel Supabase (zie README) om 'm te delen. Eén loop per persoon volstaat, hoe beter die op Mayrhofen lijkt hoe scherper de schatting.";
@@ -525,7 +536,11 @@ function renderField({forceer=false} = {}){
   sel.value = raceOpts.fieldRace;
   const rij = uitslagen.get(raceOpts.fieldRace);
   const jaar = rij ? rij.jaar : JAREN[0];
-  const txt = rij ? rij.times : "";
+  // niemand geplakt? kijk of er een meegeleverde uitslag is voor deze
+  // combinatie — plakt iemand er straks overheen, dan wint dat altijd
+  // (setFieldText schrijft naar `uitslagen`, dit blijft alleen de bodem)
+  const standaard = rij ? null : defaultResultsFor(raceOpts.fieldRace, jaar);
+  const txt = rij ? rij.times : (standaard ? standaard.times : "");
   const box = $("fieldpaste");
   // niet overschrijven terwijl iemand in het veld staat te plakken of te typen —
   // behalve als hij zelf van wedstrijd of editie wisselt, want dan hóórt er
@@ -539,8 +554,10 @@ function renderField({forceer=false} = {}){
   jsel.value = String(jaar);
 
   const naam = raceById(raceOpts.fieldRace).n;
+  const duv = duvUrl(raceOpts.fieldRace, jaar);
   $("fieldlinktext").innerHTML =
     `<a class="uitslaglink" href="${uitslagUrl(raceOpts.fieldRace, jaar)}" target="_blank" rel="noopener">of open 'm zelf ↗</a>`
+    + (duv ? `<a class="uitslaglink" href="${duv}" target="_blank" rel="noopener">D-U-V ${esc(naam)} ${jaar} ↗</a>` : "")
     + `<span class="bronnen"> — daar alles selecteren en hieronder plakken. Staat die editie er niet, probeer dan `
     + BRONNEN.map(b => `<a href="${b.url}" target="_blank" rel="noopener" title="${esc(b.note)}">${esc(b.lab)}</a>`).join(", ")
     + `. Ranglijsten als UTMB en ITRA tellen alleen wie in hún klassement meedoet, dus daar is het veld kleiner en sneller dan het echt was.</span>`;
@@ -557,6 +574,10 @@ function renderField({forceer=false} = {}){
   const bron = rij && rij.updated_by
     ? `<p class="mnote">Geplakt door ${esc(rij.updated_by)}${rij.updated_at ? " op " + new Date(rij.updated_at).toLocaleDateString("nl-NL", {day:"2-digit", month:"short"}) : ""}`
       + (supaEnabled ? " — iedereen ziet dezelfde lijst." : " — blijft in deze browser.") + `</p>`
+    : standaard
+    ? `<p class="mnote">Standaard meegeleverd — bron <a href="${standaard.bronUrl}" target="_blank" rel="noopener">${esc(standaard.bron)}</a>,
+        opgehaald ${new Date(standaard.opgehaald).toLocaleDateString("nl-NL", {day:"2-digit", month:"short", year:"numeric"})}.
+        Plak je een eigen of nieuwere uitslag, dan vervangt die 'm voor iedereen.</p>`
     : "";
 
   const kaarten = [

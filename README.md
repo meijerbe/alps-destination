@@ -10,6 +10,10 @@ Geen build-stap, geen dependencies, geen API-sleutel. `index.html` bevat de opma
 de stijl en `js/` de logica als losse ES-modules (`<script type="module">`) — rechtstreeks door de
 browser geladen, niets te bouwen.
 
+Ernaast staat `trailrun.html`: een tweede, losse pagina die niets met het weer te maken heeft — een
+finishtijd-schatter voor Mayrhofen Ultraks. Zelfde repo, zelfde stijl, geen gedeelde state; zie
+[trailrun.html — een losse pagina](#trailrunhtml--een-losse-pagina) verderop.
+
 ## Wat er in zit
 
 **Kaart** — de Alpenboog als rasterkaart, opgedeeld in 32 regio's. Elke cel hoort bij het
@@ -51,9 +55,8 @@ opbouw van de score: welk onderdeel de score trekt en welk onderdeel hem tegenho
 buien in plaats van naar een goede week.
 
 *Kaart*, *Lijstje*, *Per dag* en *Onder de motorkap* zitten samen onder de bovenste schakelaar
-**Waar naartoe** — dat gaat over het kiezen van een bestemming. **Paklijst**, **Boodschappen** en
-**Trailrun** zijn eigen tabbladen ernaast: dat gaat over wat je meeneemt en wat je gaat lopen, niet
-over waar je heen gaat.
+**Waar naartoe** — dat gaat over het kiezen van een bestemming. **Paklijst** en **Boodschappen**
+zijn eigen tabbladen ernaast: dat gaat over wat je meeneemt, niet over waar je heen gaat.
 
 **Onder de motorkap** — de twee API-verzoeken die de pagina doet, de onbewerkte dagwaarden zoals
 Open-Meteo ze teruggeeft, en de hele rekensom van ruwe waarde via normalisatie en weging naar de
@@ -69,29 +72,44 @@ zelf toegevoegd item ook een vinkje per persoon. Elk item heeft een notitieveld.
 **Boodschappen** — een losse lijst, geen relatie met de paklijst en geen weerlogica: typen, Enter,
 klaar. Afgevinkte producten zakken naar onderen; *Wis afgevinkte* ruimt ze in één keer op.
 
-**Trailrun** — schat de finishtijden voor Mayrhofen Ultraks (RK50, MUZ30, MUZ14). Staat helemaal los
-van het weerdashboard; het deelt alleen de pagina. Je vult per persoon één loop in waarvan de tijd
-bekend is, en de app rekent die om naar de wedstrijd: hoogtemeters worden effectieve kilometers, de
-tijd wordt over die afstand uitgerekt (Riegel), en er komt een terrein- en techniekfactor bij. De
-uitkomst is geen getal maar een venster — met de kloktijd erbij, want de drie afstanden starten op
-verschillende tijden en de vraag aan de finish is *wanneer staan we daar*. Er zitten vijf grafieken
-onder: de finishvensters op de klok, de kansverdeling per persoon, een tabel, een warmtekaart met
-onderlinge kansen ("wie is er eerder binnen"), en een histogram van een eerdere editie als je de
-uitslag erin plakt. Hoe het rekent staat onderaan het tabblad zelf, formule en al.
-
-Er zit met opzet geen verzonnen veld in de app: alleen echte uitslagen. *Probeer automatisch op te
-halen* haalt de uitslag van Rate My Trail rechtstreeks op in je eigen browser — dat lukt alleen als
-die site dat van een andere site toelaat (CORS), en dat weet je pas als je er echt op klikt. Lukt het
-niet, dan blijft plakken de weg die altijd werkt: de link ernaast opent de goede pagina, alles
-selecteren en hieronder plakken. Er worden alleen tijden bewaard, geen namen, en de lijst staat
-gedeeld (`race_results`), dus één van jullie hoeft het maar één keer te doen. Let op wélke bron je
-gebruikt: de tijdwaarneming, D-U-V en Rate My Trail hebben iedereen die finishte, UTMB en ITRA alleen
-wie in hun ranglijst meetelt — voor de MUZ30 van 2025 scheelt dat 288 tegenover 412 finishers, en dus
-in spreiding.
-
 Zonder Supabase (zie hieronder) blijven vinkjes, notities, eigen paklijst-items en de boodschappen-
 lijst per browser bewaard. Mét Supabase staat alles gedeeld en zie je elkaars wijzigingen vanzelf
 verschijnen, zonder te hoeven verversen.
+
+## trailrun.html — een losse pagina
+
+Schat de finishtijden voor Mayrhofen Ultraks (RK50, MUZ30, MUZ14): `trailrun.html`, met een eigen
+opstartscript (`js/trailrun-main.js`) en eigen DOM-events (`js/race-ui.js`). Staat écht los van het
+weerdashboard — andere pagina, geen gedeelde state, geen "wie ben jij" — en deelt alleen de stijl
+(`styles.css`) en het patroon (Supabase erachter, of anders per browser). Vanuit `index.html` linkt
+alleen de footer ernaartoe; vanaf `trailrun.html` linkt de kop terug.
+
+Je vult per persoon één loop in waarvan de tijd bekend is, en de pagina rekent die om naar de
+wedstrijd: hoogtemeters worden effectieve kilometers, de tijd wordt over die afstand uitgerekt
+(Riegel), en er komt een terrein- en techniekfactor bij. De uitkomst is geen getal maar een venster
+— met de kloktijd erbij, want de drie afstanden starten op verschillende tijden en de vraag aan de
+finish is *wanneer staan we daar*. Er zitten vijf grafieken onder: de finishvensters op de klok, de
+kansverdeling per persoon, een tabel, een warmtekaart met onderlinge kansen ("wie is er eerder
+binnen"), en een histogram van een eerdere editie. Hoe het rekent staat onderaan de pagina zelf,
+formule en al.
+
+**De uitslag van een eerdere editie** — er zit met opzet geen verzonnen veld in: alleen echte
+uitslagen. Voor de RK50 van 2025 staat er een meegeleverde uitslag in (`js/race-results-default.js`,
+316 finishers, bron D-U-V) — die staat er meteen, zonder dat iemand iets plakt, en blijft een bodem:
+plakt iemand een eigen of nieuwere uitslag, dan vervangt die 'm voor iedereen. Voor de andere
+wedstrijden en edities (nog) niet, en dan is plakken de weg. *Probeer automatisch op te halen* haalt
+de uitslag van Rate My Trail rechtstreeks op in je eigen browser — dat lukt alleen als die site dat
+van een andere site toelaat (CORS), en dat weet je pas als je er echt op klikt. Lukt het niet, dan
+blijft plakken de weg die altijd werkt: de link ernaast opent de goede pagina, alles selecteren en
+hieronder plakken. Er worden alleen tijden bewaard, geen namen, en een geplakte lijst staat gedeeld
+(`race_results`), dus één van jullie hoeft het maar één keer te doen. Let op wélke bron je gebruikt:
+de tijdwaarneming, D-U-V en Rate My Trail hebben iedereen die finishte, UTMB en ITRA alleen wie in
+hun ranglijst meetelt — voor de MUZ30 van 2025 scheelt dat 288 tegenover 412 finishers, en dus in
+spreiding.
+
+**Een uitslag toevoegen of aanvullen** — plak 'm op de pagina zelf (dat deelt 'm meteen met je
+reisgenoten), of voeg een regel toe aan `DEFAULT_RESULTS` in `js/race-results-default.js` met bron
+en datum erbij, dan geldt het voor iedereen vanaf de volgende deploy.
 
 ## Instellingen zitten in de URL
 
@@ -107,7 +125,8 @@ gekozen regio staan allemaal in de hash. Een specifieke weergave is dus te bookm
 `h` = `1` voor de historische bron (weglaten voor de voorspelling; `m=score` of `m=frz` samen met
 `h=1` valt terug op `rain`, die twee bestaan niet historisch),
 `g` = regionaam, `k` = dag binnen de periode (weglaten voor het gemiddelde),
-`t` = `map` | `rank` | `matrix` | `pack` | `shop` | `race` | `data`.
+`t` = `map` | `rank` | `matrix` | `pack` | `shop` | `data` (de trailrun-pagina heeft geen tabblad,
+en dus ook geen `t`-waarde — die is los, zie `trailrun.html`).
 
 ## Deployen op Vercel
 
@@ -138,7 +157,7 @@ Content-Security-Policy die `default-src
 `styles.css` en `js/*.js`, `cdn.jsdelivr.net` voor de Supabase-client, Google Fonts (css) en
 `fonts.gstatic.com` (de fontbestanden) voor de typografie, en `api.open-meteo.com`,
 `*.supabase.co` (ook `wss://`, voor Realtime) plus `de.ratemytrail.com` (voor *Probeer automatisch
-op te halen* op het trailrun-tabblad) voor data.
+op te halen* op de trailrun-pagina) voor data.
 
 > Zet je Vercel Web Analytics of Speed Insights aan, dan injecteert Vercel een script vanaf
 > `/_vercel/insights/…`. `script-src` staat al open voor `'self'`; voeg dan ook `'self'` toe aan
@@ -161,7 +180,8 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-111 browsertests over kaart, tabbladen, paklijst, boodschappen en de trailrun-schatter, op desktop en
+119 browsertests over kaart, tabbladen, paklijst, boodschappen en de trailrun-schatter (index.html
+én trailrun.html), op desktop en
 mobiel, in ongeveer vijfenveertig seconden. Open-Meteo en Supabase worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
 Daarnaast een ESLint-check (`npm run lint`) die alleen op `no-undef` en dode code let —
@@ -215,7 +235,11 @@ De logica staat in `js/`, één onderwerp per bestand:
 | `shopping.js` | de boodschappenlijst |
 | `race-data.js` | de drie wedstrijden, de knoppen van het loopmodel en de uitslagenbronnen |
 | `race-model.js` | het rekenmodel: effectieve km, Riegel, spreiding, onderlinge kansen |
-| `race.js` | het trailrun-tabblad: opslag, invulkaartjes en de grafieken |
+| `race.js` | trailrun.html: opslag, invulkaartjes en de grafieken |
+| `race-ui.js` | trailrun.html: alle DOM-events, los van `ui.js` (dat is voor index.html) |
+| `race-realtime.js` | trailrun.html: het Supabase Realtime-kanaal voor lopers en uitslag |
+| `race-results-default.js` | de meegeleverde uitslag (nu: RK50 2025) als bodem voor het histogram |
+| `trailrun-main.js` | opstartscript van trailrun.html — laadt, tekent, koppelt realtime aan |
 | `supabase-client.js` / `realtime.js` | de Supabase-verbinding en live sync |
 | `render.js` / `ui.js` / `main.js` | de render-regisseur, alle DOM-events, en het opstarten |
 
@@ -248,7 +272,7 @@ Meestal is maar één bestand relevant:
   ze bij te stellen — dat blijft per browser bewaard en overschrijft deze waarden. Klopt de folder
   echt niet, pas ze hier aan; dan geldt het voor iedereen.
 - **Het loopmodel** — de knoppen (`CLIMB`, `DUUR`, `GROND`, `TECH`) staan er vlak onder, met per
-  optie de factor die hij zet. De formules zelf staan in `race-model.js`, en het tabblad legt ze
+  optie de factor die hij zet. De formules zelf staan in `race-model.js`, en de pagina legt ze
   onderaan uit — pas je een factor aan, dan verandert die uitleg mee.
 - **Cache** — `CACHE_TTL` (30 min) in `state.js` bepaalt hoe lang een resultaat in
   `sessionStorage` blijft staan. De knop *Ververs* omzeilt de cache altijd.
@@ -284,7 +308,7 @@ een Supabase-project in, dan staat het gedeeld voor jullie allebei.
 
    Beide manieren zetten dezelfde vijf tabellen neer — `packing_state` (vinkjes/notities),
    `packing_custom_items` (zelf toegevoegde paklijst-regels), `shopping_items` (boodschappenlijst),
-   `race_runners` (de lopers van het trailrun-tabblad) en `race_results` (de geplakte uitslag van
+   `race_runners` (de lopers van de trailrun-pagina) en `race_results` (de geplakte uitslag van
    een eerdere editie, alleen de tijden) — elk met rijbeveiliging die de sleutel beperkt tot rijen
    van deze ene reis.
    Het script is veilig om zo vaak te draaien als je wilt, en controleert zichzelf: staat er iets

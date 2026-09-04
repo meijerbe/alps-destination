@@ -100,7 +100,6 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
   <button type="button" role="tab" id="top-dash" aria-selected="true" data-top="dash">Waar naartoe</button>
   <button type="button" role="tab" id="top-pack" aria-selected="false" data-top="pack" tabindex="-1">Paklijst<span class="count" id="packcount"></span></button>
   <button type="button" role="tab" id="top-shop" aria-selected="false" data-top="shop" tabindex="-1">Boodschappen<span class="count" id="shopcount"></span></button>
-  <button type="button" role="tab" id="top-race" aria-selected="false" data-top="race" tabindex="-1">Trailrun<span class="count" id="racecount"></span></button>
 </nav>
 
 <div class="kpis" id="kpis" aria-live="polite"></div>
@@ -254,81 +253,6 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
   <ul class="shoplist" id="shoplist"></ul>
 </section>
 
-<section id="panel-race" role="tabpanel" aria-labelledby="top-race" tabindex="0" hidden>
-  <h2 class="section">Ultraks — wie komt wanneer binnen</h2>
-  <p class="sectionsub">Drie afstanden, drie starttijden, en een gezelschap dat elkaar wil inschatten.
-  Vul per persoon één loop in waarvan de tijd bekend is; hieronder staat wat dat op de RK50, de MUZ30 of
-  de MUZ14 zou betekenen — met een venster eromheen, want een finishtijd is geen getal maar een gok met marges.
-  Staat er niets van jullie in, dan hoort er ook niets van jullie te staan: dit rekent alleen met wat je zelf invult.</p>
-
-  <div class="ctl" style="margin-bottom:20px">
-    <span class="lab" id="lab-climb">Hoe zwaar telt klimmen</span>
-    <div class="seg" id="climb" role="group" aria-labelledby="lab-climb"></div>
-  </div>
-
-  <h3 class="sub">De routes</h3>
-  <p class="subnote">Afstand en hoogtemeters van de officiële streckenpagina, editie 2026. Bijstellen mag —
-  een GPX-track telt bijna altijd iets anders dan de folder, en de rest van dit tabblad rekent met wat hier staat.</p>
-  <div class="courses" id="courses"></div>
-
-  <h3 class="sub">Wie loopt er mee</h3>
-  <p class="subnote" id="racesub">—</p>
-  <form class="shopadd raceadd" id="raceform">
-    <input type="text" id="raceinput" placeholder="+ naam toevoegen…" maxlength="40" aria-label="Naam van de loper">
-    <select class="pick" id="raceinputrace" aria-label="Welke wedstrijd"></select>
-    <button type="submit" aria-label="Toevoegen">+</button>
-  </form>
-  <div id="racelist"></div>
-
-  <h3 class="sub">Aan de finish</h3>
-  <p class="subnote">Elke balk is het venster waarin die persoon met 80% kans binnenkomt, met een streepje op de
-  verwachte tijd. Klokstanden, dus de verschillende starttijden zitten er al in — dit is de strook waarin je
-  bij de finish moet staan.</p>
-  <div class="timeline" id="racetimeline"></div>
-
-  <div class="scroller"><table class="dt" id="racetable"></table></div>
-  <p class="mnote" id="racenote"></p>
-
-  <h3 class="sub">Hoe zeker is dat</h3>
-  <p class="subnote">Dezelfde schattingen, maar dan als kansverdeling over de looptijd — hier zonder starttijden,
-  dus puur hoe lang iemand onderweg is. Een brede, lage berg betekent: dit weten we eigenlijk niet zo goed.
-  Een smalle piek betekent dat de referentieloop dicht bij deze wedstrijd ligt.</p>
-  <div class="timeline" id="racedensity"></div>
-
-  <h3 class="sub">Onderling</h3>
-  <p class="subnote">De kans dat de een eerder over de finish komt dan de ander, starttijden meegerekend.
-  Niet wie er harder loopt — wie er eerder klaar is.</p>
-  <div id="racehead"></div>
-
-  <h3 class="sub">Hoe deed het veld het</h3>
-  <p class="subnote">Dit is het enige stuk van dit tabblad dat niet uit een model komt maar uit de werkelijkheid,
-  en daarom het meest waard. Die lijsten staan niet als open data op te vragen, dus de knop hieronder is een
-  gok: hij probeert de uitslag rechtstreeks in je browser op te halen, en dat lukt alleen als de bron dat van
-  andere sites toelaat (CORS) — vaak niet. Lukt het niet, dan meldt de knop dat en plak je 'm zelf: de link
-  ernaast opent de pagina, daar alles selecteren en hieronder plakken. Alles wat op <code>u:mm:ss</code> lijkt
-  wordt eruit gevist, de rest (plaats, naam, land) mag blijven staan en wordt weggegooid — er worden alleen
-  tijden bewaard.</p>
-  <div class="pick2">
-    <div class="ctl">
-      <label class="lab" for="fieldrace">Wedstrijd</label>
-      <select class="pick" id="fieldrace"></select>
-    </div>
-    <div class="ctl">
-      <label class="lab" for="fieldyear">Editie</label>
-      <select class="pick" id="fieldyear"></select>
-    </div>
-  </div>
-  <p class="fieldlink">
-    <button type="button" class="uitslaglink" id="fieldfetch">Probeer automatisch op te halen</button>
-    <span id="fieldlinktext"></span>
-  </p>
-  <textarea id="fieldpaste" class="paste" rows="4" placeholder="1  Anna Huber  AUT  3:12:44&#10;2  Lukas Mair  AUT  3:20:01&#10;…"></textarea>
-  <div id="racefield"></div>
-
-  <h3 class="sub">Hoe dit rekent</h3>
-  <ul class="caveats" id="racehow"></ul>
-</section>
-
 <section id="panel-data" role="tabpanel" aria-labelledby="tab-data" tabindex="0" hidden>
   <h2 class="section">Ruwe data</h2>
   <p class="sectionsub">Precies wat er binnenkomt bij Open-Meteo, en wat er daarna mee gebeurt. Zo is elke score na te rekenen in plaats van te moeten geloven.</p>
@@ -373,7 +297,8 @@ en de paklijst past zich aan op wat er voorspeld wordt. Bedoeld om te bepalen wa
 
 <footer>
   Data: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0), best-match model, geen API-sleutel nodig.
-  Score is een hulpmiddel, geen voorspelling — check bij twijfel de kaarten zelf. Veel plezier, A&amp;B.
+  Score is een hulpmiddel, geen voorspelling — check bij twijfel de kaarten zelf.
+  Loop je ook de Ultraks mee? Zie de <a href="trailrun.html">finishtijd-schatter</a>. Veel plezier, A&amp;B.
 </footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
