@@ -19,6 +19,11 @@
 
 export const TOUR = {
   naam: "Greina — van hut naar hut",
+  // Eén GPX van de hele tocht? Zet 'm in routes/ en vul het pad hier in —
+  // js/route-split.js zoekt er per dag het juiste stuk uit, en dan komen
+  // afstand, hoogtemeters en profiel overal uit dat bestand.
+  // Bijvoorbeeld: gpx: "routes/greina-2026.gpx"
+  gpx: null,
   ondertitel: "Drie nachten boven de tweeduizend, dwars over de hoogvlakte",
   gebied: "Val Medel · Greina · Val Blenio",
   centrum: [46.622, 8.955],
@@ -51,7 +56,9 @@ export const HUTTEN = [
     personen: 2,
     status: "Bevestigd",
     site: "https://capannamotterascio.casticino.ch/",
-    note: "Op de Alpe Motterascio, aan de zuidrand van de Greina — Ticino-kant van de waterscheiding."
+    tel: "+41 91 872 16 22",
+    note: "Op de Alpe Motterascio, aan de zuidrand van de Greina — Ticino-kant van de waterscheiding. "
+      + "Open van 13 juni tot 10 oktober 2026."
   },
   {
     id: "scaletta",

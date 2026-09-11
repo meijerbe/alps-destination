@@ -48,7 +48,11 @@ function kaartje(e, i){
   const d = e.def;
   const hut = HUTTEN.find(h => h.id === d.slaap);
   const g = d.gepland;
-  const meet = `Deze lijn meet ${km1(e.stats.km)} km, +${getal(e.stats.gain)} / −${getal(e.stats.loss)} m`;
+  const echt = !e.route.gebouwd;
+  const meet = echt
+    ? `De track meet ${km1(e.stats.km)} km, +${getal(e.stats.gain)} / −${getal(e.stats.loss)} m`
+    : `Deze lijn meet ${km1(e.stats.km)} km, +${getal(e.stats.gain)} / −${getal(e.stats.loss)} m`;
+  const nuance = echt ? "" : " — een getrokken lijn snijdt de bochten af";
 
   const wpts = e.route.waypoints.filter(w => w.name).map(w =>
     `<li><b>${esc(w.name)}</b> <span class="wele">${w.ele != null ? Math.round(w.ele) + " m" : ""}</span>`
@@ -65,7 +69,7 @@ function kaartje(e, i){
 
     <div class="stagestats">${stats4(e).map(([k, v]) =>
       `<div class="sstat"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>
-    <p class="statsrc">${g ? `Planning: ${esc(g.bron)}. ${meet} — een getrokken lijn snijdt de bochten af.` : `${meet}; de tijd is een boektijd (300 m stijgen of 4 km per uur).`}</p>
+    <p class="statsrc">${g ? `Planning: ${esc(g.bron)}. ${meet}${nuance}.` : `${meet}; de tijd is een boektijd (300 m stijgen of 4 km per uur).`}</p>
 
     ${profielSvg(e.route, e.stats)}
     <p class="phint" id="phint-${esc(d.id)}"></p>
@@ -95,6 +99,7 @@ function hutkaartje(h){
     <p class="hutmeta">Nacht van ${lang(h.nacht)} · ${h.personen} personen</p>
     <p class="hutres">Reservering <b>${esc(h.reservering)}</b> — ${esc(h.status.toLowerCase())}</p>
     <p class="hutnote">${esc(h.note)}</p>
+    ${h.tel ? `<p class="hutmeta">Hut: <a href="tel:${esc(h.tel.replace(/\s/g, ""))}">${esc(h.tel)}</a></p>` : ""}
     <p><a href="${esc(h.site)}" target="_blank" rel="noopener">website van de hut</a></p>
   </div>`;
 }
@@ -184,4 +189,4 @@ function downloadAlles(){
 const herkomst = e => e.route.gebouwd
   ? "Lijn getrokken langs de genoemde tussenpunten door de pagina zelf — geen opgenomen track. "
     + "Navigeer op de wegwijzers en de landkaart."
-  : `Uit ${e.def.gpx}.`;
+  : `Uit ${e.def.gpx || TOUR.gpx || "de meegeleverde GPX"}.`;

@@ -100,6 +100,43 @@ test("elke dag is als GPX te downloaden, met hoogte en tussenpunten erin", async
   expect(gpx).toContain("<ele>2355</ele>");
 });
 
+// Eén GPX van de hele tocht, zoals je 'm uit komoot exporteert: vier tracks
+// achter elkaar. De hoeken zijn niet echt — het gaat erom dat de pagina er de
+// juiste dag uit knipt en er daarna mee rekent in plaats van met haar eigen lijn.
+function heleTochtGpx() {
+  const dagen = [
+    [[46.6733, 8.8568, 1329], [46.6620, 8.8890, 1600], [46.6405, 8.9138, 2524]],
+    [[46.6405, 8.9138, 2524], [46.6500, 8.9850, 1875], [46.5942, 9.0050, 2171]],
+    [[46.5942, 9.0050, 2171], [46.6125, 8.9606, 2355], [46.6078, 8.9403, 2205]],
+    [[46.6078, 8.9403, 2205], [46.5975, 8.9270, 1890]]
+  ];
+  const trk = d => `<trk><trkseg>${d.map(([lat, lon, ele]) =>
+    `<trkpt lat="${lat}" lon="${lon}"><ele>${ele}</ele></trkpt>`).join("")}</trkseg></trk>`;
+  return `<?xml version="1.0"?><gpx version="1.1" creator="test"
+    xmlns="http://www.topografix.com/GPX/1/1">${dagen.map(trk).join("")}</gpx>`;
+}
+
+test("één GPX van de hele tocht wordt per dag opgeknipt", async ({ page }) => {
+  // de pagina vraagt om TOUR.gpx zodra die is ingevuld; hier zetten we 'm aan
+  // en serveren het bestand zelf
+  await page.route("**/js/tour-data.js", async r => {
+    const bron = await r.fetch();
+    const js = (await bron.text()).replace("gpx: null,", 'gpx: "routes/heel.gpx",');
+    await r.fulfill({ status: 200, contentType: "text/javascript", body: js });
+  });
+  await page.route("**/routes/heel.gpx", r =>
+    r.fulfill({ status: 200, contentType: "application/gpx+xml", body: heleTochtGpx() }));
+
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+
+  // dag 2 komt nu uit het bestand: dat zegt "de track meet", niet "deze lijn meet"
+  await expect(page.locator("#stage-d2 .statsrc")).toContainText("De track meet");
+  await expect(page.locator("#stage-d2 .statsrc")).not.toContainText("snijdt de bochten af");
+  await expect(page.locator(".stage")).toHaveCount(4);
+  await expect(page.locator("#map path.leaflet-interactive")).toHaveCount(8);
+});
+
 test("het hoogteprofiel aanwijzen geeft kilometer en hoogte", async ({ page }) => {
   await page.goto(TOCHT);
   await page.waitForSelector("#stage-d1 .profile");

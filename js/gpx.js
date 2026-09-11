@@ -34,20 +34,43 @@ function point(el){
   return { lat, lon, ele };
 }
 
-/* GPX-tekst → { name, desc, points, waypoints }. Gooit bij onleesbare XML. */
+/* GPX-tekst → { name, desc, points, tracks, waypoints }. Gooit bij onleesbare XML.
+
+   `points` is alles achter elkaar — handig als het bestand één etappe is.
+   `tracks` houdt de opdeling vast zoals die in het bestand staat: één blok
+   per <trk> (en anders per <trkseg>). Wie een tocht van meerdere dagen in
+   één bestand exporteert, krijgt van komoot en consorten meestal precies
+   die opdeling terug, en dan hoeft er niet geknipt te worden. */
 export function parseGpx(xml){
   const doc = new window.DOMParser().parseFromString(xml, "application/xml");
   if(doc.getElementsByTagName("parsererror").length) throw new Error("geen geldige GPX");
   const root = doc.documentElement;
   if(!root || root.nodeName.toLowerCase() !== "gpx") throw new Error("geen GPX-bestand");
 
-  const points = [];
-  for(const tag of ["trkpt", "rtept"]){
-    if(points.length) break;
-    for(const el of doc.getElementsByTagName(tag)){
-      const p = point(el);
-      if(p) points.push(p);
+  const punten = el => Array.from(el.getElementsByTagName("trkpt")).map(point).filter(Boolean);
+
+  const tracks = [];
+  for(const trk of doc.getElementsByTagName("trk")){
+    const naam = text(trk, "name");
+    const segs = Array.from(trk.getElementsByTagName("trkseg"));
+    // één <trk> met losse segmenten is meestal gewoon één doorlopende track
+    // met gaten in de opname — die plakken we aan elkaar; meerdere <trk>'s
+    // zijn wél bedoeld als aparte stukken
+    const pts = segs.length ? segs.flatMap(punten) : punten(trk);
+    if(pts.length > 1) tracks.push({ naam, points: pts });
+  }
+  // een <trk> met meerdere segmenten en verder niets: dan zijn de segmenten
+  // de enige opdeling die er is, dus die bieden we alsnog aan
+  if(tracks.length === 1){
+    const segs = Array.from(doc.getElementsByTagName("trkseg")).map(punten).filter(p => p.length > 1);
+    if(segs.length > 1){
+      tracks.length = 0;
+      segs.forEach(pts => tracks.push({ naam: "", points: pts }));
     }
+  }
+  if(!tracks.length){
+    const rte = Array.from(doc.getElementsByTagName("rtept")).map(point).filter(Boolean);
+    if(rte.length > 1) tracks.push({ naam: "", points: rte });
   }
 
   const waypoints = [];
@@ -62,7 +85,8 @@ export function parseGpx(xml){
   return {
     name: (meta && text(meta, "name")) || (trk && text(trk, "name")) || "",
     desc: (meta && text(meta, "desc")) || "",
-    points,
+    points: tracks.flatMap(t => t.points),
+    tracks,
     waypoints
   };
 }
