@@ -137,6 +137,35 @@ test("één GPX van de hele tocht wordt per dag opgeknipt", async ({ page }) => 
   await expect(page.locator("#map path.leaflet-interactive")).toHaveCount(8);
 });
 
+// Een échte komoot-export (fixtures/komoot-voorbeeld.gpx): één doorlopende
+// track van 1433 punten, Medelserhütte → Motterascio → Capanna Adula, met
+// komoots eigen waypoints erin ("Motterascio Hut", niet "Capanna Motterascio
+// CAS"). Hij dekt onze dag 2 en verder niet: dag 1, 3 en 4 horen dus gewoon
+// hun eigen getrokken lijn te houden.
+test("een echte komoot-export levert de dag die erin zit, en laat de rest met rust", async ({ page }) => {
+  await page.route("**/js/tour-data.js", async r => {
+    const bron = await r.fetch();
+    const js = (await bron.text()).replace("gpx: null,", 'gpx: "routes/voorbeeld.gpx",');
+    await r.fulfill({ status: 200, contentType: "text/javascript", body: js });
+  });
+  await page.route("**/routes/voorbeeld.gpx", r =>
+    r.fulfill({ status: 200, contentType: "application/gpx+xml", path: "fixtures/komoot-voorbeeld.gpx" }));
+
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+
+  // dag 2 komt uit de track — en die is 18,2 km, niet de 17,6 km die je
+  // overhoudt als je op onze eigen hutcoördinaten knipt in plaats van op de
+  // gelijknamige waypoints uit het bestand
+  await expect(page.locator("#stage-d2 .statsrc")).toContainText("De track meet 18,2 km");
+  // de track zakt in Val Sumvitg tot 1387 m — dat hoort in het profiel te staan
+  await expect(page.locator("#stage-d2 .profile")).toHaveAttribute("aria-label", /van 138\d tot 249\d meter/);
+
+  for (const id of ["d1", "d3", "d4"]) {
+    await expect(page.locator(`#stage-${id} .statsrc`)).toContainText("Deze lijn meet");
+  }
+});
+
 test("het hoogteprofiel aanwijzen geeft kilometer en hoogte", async ({ page }) => {
   await page.goto(TOCHT);
   await page.waitForSelector("#stage-d1 .profile");

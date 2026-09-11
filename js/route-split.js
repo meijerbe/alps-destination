@@ -21,8 +21,42 @@
 import { dist } from "./gpx.js";
 
 const MAX_AFSTAND = 1500;      // meter die een hut van de track mag liggen
+const MAX_NAAM = 2000;         // zover mag een gelijknamig waypoint ernaast liggen
 
-const eersteLaatste = e => [e.punten[0], e.punten.at(-1)];
+/* Woorden die in elke huttennaam voorkomen en dus niets onderscheiden. */
+const RUIS = new Set(["capanna", "camona", "hutte", "huette", "cabane", "rifugio",
+  "refuge", "berghaus", "hut", "sac", "cas", "sat", "alpe"]);
+
+const woorden = naam => new Set(
+  String(naam || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().split(/[^a-z0-9]+/)
+    .filter(w => w.length >= 4 && !RUIS.has(w))
+);
+
+/* Heet dit waypoint uit het bestand hetzelfde als dit tussenpunt van ons?
+   "Capanna Motterascio CAS" en "Motterascio Hut" horen bij elkaar,
+   "Capanna Motterascio" en "Capanna Scaletta" niet — vandaar dat de
+   woorden die in élke huttennaam zitten niet meetellen. */
+function zelfdePlek(a, b){
+  const wa = woorden(a), wb = woorden(b);
+  for(const w of wa) if(wb.has(w)) return true;
+  return false;
+}
+
+/* Het punt waar we willen knippen. Noemt het bestand de hut zelf bij naam,
+   dan is dát het punt — die staat exacter dan onze eigen opgave, en het
+   scheelt een paar honderd meter aan begin en eind van elke etappe. */
+function knippunt(eigen, wpts){
+  const kandidaten = (wpts || [])
+    .filter(w => zelfdePlek(w.name, eigen.naam))
+    .map(w => ({ w, d: dist(w, eigen) }))
+    .filter(k => k.d <= MAX_NAAM)
+    .sort((a, b) => a.d - b.d);
+  return kandidaten.length ? kandidaten[0].w : eigen;
+}
+
+const eersteLaatste = (e, wpts) =>
+  [knippunt(e.punten[0], wpts), knippunt(e.punten.at(-1), wpts)];
 
 /* Index van het punt dat het dichtst bij `doel` ligt, vanaf `vanaf`. */
 function dichtstbij(points, doel, vanaf = 0){
@@ -35,10 +69,10 @@ function dichtstbij(points, doel, vanaf = 0){
 }
 
 /* Geval 1: losse tracks aan etappes koppelen. */
-function perTrack(tracks, etappes){
+function perTrack(tracks, etappes, wpts){
   const vrij = tracks.slice();
   return etappes.map(def => {
-    const [start, eind] = eersteLaatste(def);
+    const [start, eind] = eersteLaatste(def, wpts);
     let beste = null;
     vrij.forEach((t, idx) => {
       const kop = t.points[0], staart = t.points.at(-1);
@@ -54,11 +88,11 @@ function perTrack(tracks, etappes){
 }
 
 /* Geval 2: één doorlopende track in stukken knippen bij de hutten. */
-function doorknippen(points, etappes){
+function doorknippen(points, etappes, wpts){
   const uit = [];
   let vanaf = 0;
   for(const def of etappes){
-    const [start, eind] = eersteLaatste(def);
+    const [start, eind] = eersteLaatste(def, wpts);
     const a = dichtstbij(points, start, vanaf);
     const b = dichtstbij(points, eind, a.i + 1);
     if(a.d > MAX_AFSTAND || b.d > MAX_AFSTAND || b.i - a.i < 2){ uit.push(null); continue; }
@@ -95,9 +129,10 @@ function hoogteBijschatten(points, punten){
    tour-data.js blijven de waypoints: dat zijn de namen die de pagina
    toont, en die staan los van de track zelf. */
 export function splitsTocht(route, etappes){
+  const wpts = route.waypoints || [];
   const stukken = (route.tracks && route.tracks.length >= etappes.length)
-    ? perTrack(route.tracks, etappes)
-    : doorknippen(route.points, etappes);
+    ? perTrack(route.tracks, etappes, wpts)
+    : doorknippen(route.points, etappes, wpts);
 
   return stukken.map((points, i) => {
     if(!points || points.length < 2) return null;

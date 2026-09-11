@@ -147,7 +147,8 @@ dag langsgaat, niet om blind op te navigeren — dat staat ook op de pagina zelf
 
 Heb je wél een echte track, dan gaat die vóór. Eén GPX van de hele tocht kan ook: zet 'm in `routes/`,
 vul `gpx` in bij `TOUR`, en `js/route-split.js` knipt 'm per dag op — op de losse `<trk>`'s als die er
-zijn, en anders bij het trackpunt dat het dichtst bij elke hut ligt, in volgorde. Eén bestand per
+zijn, en anders bij het trackpunt dat het dichtst bij elke hut ligt, in volgorde (en op de `<wpt>` uit
+het bestand zelf als die de hut bij naam noemt). Eén bestand per
 etappe kan net zo goed (`gpx:` op de etappe, dat wint van het tochtbestand). Dan komen afstand,
 hoogtemeters en profiel daaruit; lukt het ophalen niet, dan valt de pagina stil terug op de punten.
 Zie [`routes/README.md`](routes/README.md).
@@ -245,7 +246,7 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-135 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
+137 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
 huttentocht (index.html, trailrun.html én huttentocht.html), op desktop en
 mobiel, in ongeveer een minuut. Open-Meteo, Supabase en de kaarttegels worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.

@@ -20,6 +20,12 @@ geknipt bij het punt dat het dichtst bij elke hut ligt, in volgorde — zodat ee
 voorkomt (eind van de ene dag, begin van de volgende) niet in de war raakt. Ligt een hut verder dan
 1,5 km van de track, dan wordt die dag overgeslagen en blijft de getrokken lijn staan.
 
+Staat de hut als `<wpt>` in het bestand, dan wordt er op dát punt geknipt in plaats van op de
+coördinaat uit `tour-data.js` — namen hoeven niet letterlijk gelijk te zijn ("Motterascio Hut" en
+"Capanna Motterascio CAS" vinden elkaar; woorden die in élke huttennaam zitten, zoals *capanna* en
+*hütte*, tellen daarbij niet mee). Dat scheelt de paar honderd meter aan begin en eind die je anders
+kwijtraakt aan een coördinaat die nét ergens anders ligt.
+
 **Of één bestand per dag:**
 
 1. Zet het bestand hier neer, bijvoorbeeld `2026-09-13-medelserhuette-motterascio.gpx`.

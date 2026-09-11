@@ -108,8 +108,8 @@ export const ETAPPES = [
       { naam:"Medelserhütte SAC", ele:2524, lat:46.6405, lon:8.9138, type:"hut" },
       { naam:"Alp Lavaz", ele:2270, lat:46.6440, lon:8.9330, note:"Uitgestrekte alp onder de hut" },
       { naam:"Val Lavaz omlaag", ele:2050, lat:46.6470, lon:8.9600 },
-      { naam:"Val Sumvitg, laagste punt", ele:1875, lat:46.6500, lon:8.9850, note:"Beek oversteken; hierna weer omhoog" },
-      { naam:"Klim naar Terri", ele:2050, lat:46.6420, lon:8.9980 },
+      { naam:"Val Sumvitg, laagste punt", ele:1390, lat:46.6569, lon:8.9845, note:"Diep in het dal; hierna ruim 750 m weer omhoog" },
+      { naam:"Klim naar Terri", ele:1800, lat:46.6450, lon:8.9950 },
       { naam:"Terrihütte SAC", ele:2170, lat:46.6344, lon:9.0051, type:"hut", note:"Bewaakt — de plek voor de middagpauze" },
       { naam:"Muot la Greina", ele:2220, lat:46.6230, lon:8.9980, note:"Rand van de hoogvlakte" },
       { naam:"Plaun la Greina", ele:2250, lat:46.6150, lon:8.9900, note:"De vlakte zelf, met de meanders van de Rein da Sumvitg" },
@@ -123,12 +123,14 @@ export const ETAPPES = [
     zwaarte: "T3",
     zwaarteNote: "veeleisend bergwandelpad; korte blootgestelde stukken",
     gepland: { afstand: "18,5 km", tijd: "8 u 18", stijgen: 1080, dalen: 1350, bron: "komoot-planning" },
-    verhaal: "De lange dag. Eerst omlaag over de uitgestrekte Alp Lavaz, dieper Val Sumvitg in tot het "
-      + "laagste punt rond 1875 m, en dan weer omhoog naar de Terrihütte — dé plek voor de middagpauze. "
+    verhaal: "De lange dag, en onderschat hem niet: hij duikt Val Sumvitg in tot rond de 1400 meter — "
+      + "ruim elfhonderd meter onder de hut — en klimt daarna ruim 750 meter terug omhoog naar de "
+      + "Terrihütte, dé plek voor de middagpauze. "
       + "Daarna om Muot la Greina heen de hoogvlakte op: Plaun la Greina met de meanders van de Rein da Sumvitg, "
       + "vlak vóór de Greinapas linksaf over Crap la Crusch (2268 m) en zo naar de Alpe Motterascio.",
-    let: "Twee keer flink klimmen na een lange afdaling. De boektijden tellen op tot ±7 uur, komoot houdt "
-      + "8 u 18 aan — plan de pauze bij de Terrihütte en beslis dáár of je doorgaat of blijft.",
+    let: "De 1080 hoogtemeters zitten bijna allemaal ná de lange afdaling, met een volle rugzak en een "
+      + "halve dag in de benen. Komoot houdt 8 u 18 aan — plan de pauze bij de Terrihütte en beslis dáár "
+      + "of je doorgaat of blijft.",
     tip: "De hoge variant over de Fuorcla Sura da Lavaz (2703 m) is korter maar wit-blauw-wit en gaat over "
       + "de resten van de Lavaz-gletsjer. Niet met een volle rugzak en niet zonder goede omstandigheden."
   },
