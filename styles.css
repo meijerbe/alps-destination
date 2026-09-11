@@ -652,6 +652,9 @@ footer a{color:var(--slate)}
   .leaflet-bar a,.leaflet-control-layers{background:var(--paper);color:var(--rock)}
 }
 @media (max-width:560px){
+  /* op een smal scherm loopt de bronvermelding over twee regels en ligt de
+     schaalbalk eronder — die tillen we er net boven */
+  .leaflet-bottom.leaflet-left{bottom:26px}
   .stagestats{grid-template-columns:repeat(2,1fr)}
   .stage{padding:14px 14px 12px}
   #map{height:clamp(300px,52vh,440px)}
@@ -659,3 +662,25 @@ footer a{color:var(--slate)}
 .laagmix{display:flex;flex-direction:column;gap:5px;flex:0 1 210px;min-width:150px}
 .laagmix input[type=range]{width:100%;accent-color:var(--dry);margin:0}
 .laagmix input[type=range]:disabled{opacity:.4}
+
+/* offline meenemen en de live positie */
+.livestand{font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--slate);margin:0 0 6px;min-height:1.4em}
+.livestand.err{color:var(--err)}
+.offline{margin:0 0 10px;background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:10px 14px;box-shadow:var(--shadow)}
+.offline summary{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--slate);cursor:pointer}
+.offline .subnote{margin:10px 0 8px}
+.offlinestand{font-family:var(--mono);font-size:11.5px;color:var(--ink3);margin:0 0 10px;line-height:1.6}
+.offline .progress{margin:0 0 10px}
+.offline .packbtns{margin-bottom:4px}
+.offline .packbtns button{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:7px 12px;
+  border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--rock);cursor:pointer}
+.offline .packbtns button[disabled]{opacity:.45;cursor:progress}
+
+@media print{
+  .mapbox,.maprow,.offline,.livestand,.stagebtns,#daypick,.controls{display:none!important}
+  .stage{opacity:1!important;break-inside:avoid;border-color:var(--line)!important;box-shadow:none}
+  .wpts[open] .wptlist,.wpts .wptlist{display:block}
+  .profile{max-height:120px}
+}

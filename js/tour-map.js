@@ -33,6 +33,7 @@ const swiss = (laag, ext, pane) => L.tileLayer(
 
 let map = null;
 let lagen = {};
+let onderlaag = null;      // de laag die er altijd onder ligt
 let bovenlaag = null;      // de laag waar de doorzichtigheidsschuif op werkt
 let etappes = [];          // [{ def, route, stats }]
 let lijnen = [];           // Leaflet-polylines, zelfde volgorde als etappes
@@ -102,7 +103,7 @@ export function initMap(lijst){
   map.getPane("wegen").style.pointerEvents = "none";
 
   // de onderlaag: OpenTopoMap, ligt er altijd onder
-  L.tileLayer("https://tile.opentopomap.org/{z}/{x}/{y}.png",
+  onderlaag = L.tileLayer("https://tile.opentopomap.org/{z}/{x}/{y}.png",
     { maxZoom: 18, maxNativeZoom: 17, attribution: OSM, pane: "onderlaag" }).addTo(map);
 
   lagen = {
@@ -196,27 +197,40 @@ export function wijsAan(punt){
   else dot = L.circleMarker(ll, { radius: 6, color: "#fff", weight: 2, fillColor: "#B4462F", fillOpacity: 1 }).addTo(map);
 }
 
-/* "Waar ben ik" — vraagt pas toestemming als je erop drukt. */
-export function locateMe(opStatus){
+/* De tegelsjablonen van wat er nu ligt — dat is wat offline opgeslagen
+   moet worden als je de kaart wil meenemen. */
+export function tegelBronnen(){
+  const uit = [];
+  if(onderlaag) uit.push(onderlaag._url);
+  if(bovenlaag && map.hasLayer(bovenlaag)) uit.push(bovenlaag._url);
+  return uit;
+}
+
+/* Waar we zelf staan. `volgen` schuift de kaart mee zodra je uit beeld
+   dreigt te lopen — maar niet zolang je hem net met de hand verschoven
+   hebt staan kijken, want dan trek je 'm onder je vandaan. */
+export function zetIk(lat, lon, nauwkeurig, volgen){
   if(!map) return;
-  if(!navigator.geolocation){ opStatus("Deze browser geeft geen locatie door."); return; }
-  opStatus("Locatie zoeken…");
-  navigator.geolocation.getCurrentPosition(pos => {
-    const ll = [pos.coords.latitude, pos.coords.longitude];
-    if(ikLaag) map.removeLayer(ikLaag);
-    ikLaag = L.layerGroup([
-      L.circle(ll, { radius: Math.max(pos.coords.accuracy || 0, 10), color: "#3E8FA8", weight: 1, fillOpacity: .12 }),
-      L.circleMarker(ll, { radius: 7, color: "#fff", weight: 2, fillColor: "#3E8FA8", fillOpacity: 1 })
-    ]).addTo(map);
-    map.setView(ll, Math.max(map.getZoom(), 14));
-    const h = pos.coords.altitude;
-    opStatus("Hier sta je" + (h != null ? ` — ±${Math.round(h)} m hoog` : "")
-      + (pos.coords.accuracy ? ` (±${Math.round(pos.coords.accuracy)} m nauwkeurig)` : ""));
-  }, err => {
-    opStatus(err.code === 1
-      ? "Geen toestemming voor locatie — zet het aan in de browserinstellingen."
-      : "Locatie niet gevonden. Buiten en met zicht op de hemel lukt het meestal wel.");
-  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+  const ll = [lat, lon];
+  if(!ikLaag){
+    ikLaag = {
+      ring: L.circle(ll, { radius: Math.max(nauwkeurig || 0, 10), color: "#3E8FA8", weight: 1, fillOpacity: .12 }).addTo(map),
+      stip: L.circleMarker(ll, { radius: 7, color: "#fff", weight: 2, fillColor: "#3E8FA8", fillOpacity: 1 }).addTo(map)
+    };
+  } else {
+    ikLaag.ring.setLatLng(ll).setRadius(Math.max(nauwkeurig || 0, 10));
+    ikLaag.stip.setLatLng(ll);
+  }
+  ikLaag.stip.bringToFront();
+  if(volgen && !map.getBounds().pad(-0.25).contains(ll)) map.panTo(ll, { animate: true });
+}
+
+export function wisIk(){
+  if(ikLaag && map){
+    map.removeLayer(ikLaag.ring);
+    map.removeLayer(ikLaag.stip);
+  }
+  ikLaag = null;
 }
 
 /* Leaflet moet opnieuw meten als de kaart van grootte verandert. */

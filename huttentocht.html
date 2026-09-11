@@ -62,6 +62,24 @@ Hij opent op de dag van vandaag.</p>
     <button type="button" id="gpxalles">GPX hele tocht</button>
   </div>
 </div>
+<p class="livestand" id="livestand"></p>
+
+<details class="offline" id="offlinebox">
+  <summary>Offline meenemen</summary>
+  <p class="subnote">De pagina zelf staat na één bezoek al op je telefoon. De kaarttegels niet — die
+  komen binnen terwijl je rondkijkt. Sla ze hier vooruit op: alleen de strook waar de route doorheen
+  loopt, op de zoomniveaus waar je onderweg iets aan hebt. Doe dat thuis, op wifi.</p>
+  <p class="offlinestand" id="offlinestand">Kijken wat er al staat…</p>
+  <div class="progress" id="offlineprog" hidden>
+    <div class="track"><div class="fill" id="offlinefill" style="width:0"></div></div>
+    <div class="txt" id="offlinetxt">—</div>
+  </div>
+  <div class="packbtns">
+    <button type="button" id="offlinehaal">Kaart van deze tocht opslaan</button>
+    <button type="button" id="offlinewis">Wissen</button>
+  </div>
+</details>
+
 <p class="mnote" id="maphint">Onder ligt altijd OpenTopoMap; daar bovenop de Landeskarte van swisstopo. Schuif <em>onderlaag doorlaten</em> naar links om het reliëf eronder erdoorheen te laten komen. Rechtsboven zitten ook de luchtfoto en het complete wandelwegennet. Klik of tik eerst op de kaart als je met het scrollwiel wil zoomen.</p>
 
 <h3 class="sub">De dagen</h3>
@@ -90,8 +108,10 @@ bel op tijd, ze koken op het aantal koppen dat er staat.</p>
   CC-BY-SA); daar bovenop de Landeskarte van swisstopo (open overheidsdata), met de schuif ertussen.
   Getekend met Leaflet, dat als kopie in de repo staat en dus niet van een CDN hoeft te komen. Valt
   swisstopo weg, dan kijk je gewoon verder op de onderlaag.</li>
-  <li><b>De tegels hebben wél bereik nodig.</b> De tekst, de profielen en de reserveringsnummers staan
-  in de pagina zelf en blijven staan zonder verbinding — open hem dus één keer voor je het dal uit loopt.</li>
+  <li><b>Offline werkt hij ook.</b> Na één bezoek staat de pagina zelf op je telefoon. De kaarttegels
+  kun je met <em>offline meenemen</em> vooruit opslaan — een strook langs de route, niet de halve Alpen.
+  Wat je niet hebt opgeslagen blijft onderweg gewoon leeg; de lijn, het profiel en de nummers staan er
+  dan nog steeds.</li>
   <li><b>T2 en T3</b> zijn de SAC-schaal: T2 is een bergwandelpad met stevig schoeisel, T3 vraagt een
   vaste stap en her en der de handen erbij.</li>
 </ul>

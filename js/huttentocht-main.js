@@ -12,8 +12,10 @@ import { parseGpx, measure } from "./gpx.js";
 import { bouwRoute } from "./route-build.js";
 import { splitsTocht } from "./route-split.js";
 import { ETAPPES, TOUR } from "./tour-data.js";
-import { initMap, locateMe, hermeet, mengLagen } from "./tour-map.js";
-import { render, kiesDag, dagVanVandaag } from "./tour-ui.js";
+import { initMap, hermeet, mengLagen } from "./tour-map.js";
+import { render, kiesDag, dagVanVandaag, huidigeDag } from "./tour-ui.js";
+import { koppelLive } from "./tour-live.js";
+import { startOffline } from "./tour-offline.js";
 
 /* Een GPX ophalen en lezen; `null` als dat om welke reden dan ook niet lukt.
    Een ontbrekend of stuk bestand mag de pagina niet omver halen — dan
@@ -58,6 +60,10 @@ async function start(){
     kiesDag(dagVanVandaag(), false);
     hermeet();
 
+    koppelLive(etappes, huidigeDag);
+    // de GPX-bestanden die deze tocht gebruikt horen ook in de offline-voorraad
+    startOffline(etappes, [TOUR.gpx, ...ETAPPES.map(e => e.gpx)].filter(Boolean));
+
     $("tourstatus").textContent = "";
     $("tourstatus").hidden = true;
   } catch (err) {
@@ -68,7 +74,6 @@ async function start(){
   }
 }
 
-$("locate").addEventListener("click", () => locateMe(txt => { $("maphint").textContent = txt; }));
 $("laagmix").addEventListener("input", ev => mengLagen(+ev.target.value));
 window.addEventListener("resize", hermeet);
 

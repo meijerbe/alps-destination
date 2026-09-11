@@ -13,6 +13,10 @@ const PIXEL = Buffer.from(
 test.beforeEach(async ({ page }) => {
   await page.route(/geo\.admin\.ch|opentopomap\.org/, r =>
     r.fulfill({ status: 200, contentType: "image/png", body: PIXEL }));
+  // De service worker gaat vóór page.route zitten en zou de modules uit zijn
+  // eigen voorraad serveren — dan komen de stubs hieronder er niet meer aan te
+  // pas. Standaard dus uit; de test die er juist over gaat zet hem weer aan.
+  await page.route("**/sw.js", r => r.abort());
 });
 
 test("de vier dagen staan er, met kaart, profiel en cijfers", async ({ page }) => {
@@ -177,6 +181,66 @@ test("het hoogteprofiel aanwijzen geeft kilometer en hoogte", async ({ page }) =
 
   await expect(page.locator("#phint-d1")).toContainText("km");
   await expect(page.locator("#phint-d1")).toContainText("m");
+});
+
+test("offline meenemen: de strook tegels langs de route, niet de halve Alpen", async ({ page }) => {
+  await page.unroute("**/sw.js");          // hier willen we de worker juist wél
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+
+  // het blok staat er en meldt wat er opgeslagen staat
+  await expect(page.locator("#offlinebox")).toBeVisible();
+  await expect(page.locator("#offlinestand")).toContainText(/opgeslagen|internet/i);
+
+  // de tegelwiskunde: een strook langs de route, en fors minder dan het
+  // omhullende vierkant van dezelfde route
+  const som = await page.evaluate(async () => {
+    const { tegelsLangs, tegelVan, tegelBreedte } = await import("/js/tiles.js");
+    const { ETAPPES } = await import("/js/tour-data.js");
+    const { bouwRoute } = await import("/js/route-build.js");
+    const punten = ETAPPES.flatMap(e => bouwRoute(e.punten).points);
+    const strook = tegelsLangs(punten, [12, 13, 14, 15], 1);
+
+    const bij = z => strook.filter(t => t.z === z);
+    const vierkant = z => {
+      const hoeken = punten.map(p => tegelVan(p.lon, p.lat, z));
+      const xs = hoeken.map(t => t.x), ys = hoeken.map(t => t.y);
+      return (Math.max(...xs) - Math.min(...xs) + 1) * (Math.max(...ys) - Math.min(...ys) + 1);
+    };
+    return { totaal: strook.length, strook15: bij(15).length, vak15: vierkant(15), breedte15: tegelBreedte(15) };
+  });
+
+  expect(som.totaal).toBeGreaterThan(50);
+  expect(som.totaal).toBeLessThan(1500);          // blijft een redelijke download
+  expect(som.strook15).toBeLessThan(som.vak15);   // de strook is zuiniger dan het vak
+  expect(som.breedte15).toBeGreaterThan(700);     // ±840 m per tegel op deze breedtegraad
+  expect(som.breedte15).toBeLessThan(1000);
+});
+
+test("waar ben ik: hoe ver ben je, en wat ligt er nog voor je", async ({ page, context }) => {
+  await context.grantPermissions(["geolocation"]);
+  // Alp Sura, halverwege de klim van dag 1 (die dag staat vanzelf open:
+  // de tocht is nog niet begonnen)
+  await context.setGeolocation({ latitude: 46.6520, longitude: 8.9010 });
+
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+  await page.locator("#locate").click();
+
+  await expect(page.locator("#livestand")).toContainText(/Km \d/);
+  await expect(page.locator("#livestand")).toContainText("klimmen");
+  await expect(page.locator("#livestand")).toContainText("volgende:");
+  await expect(page.locator("#locate")).toHaveText("Volgen uit");
+  await expect(page.locator("#map .leaflet-overlay-pane path")).toHaveCount(10);  // 8 lijnstukken + de ring en de stip van je positie
+
+  // een eind van de route af hoort dat erbij te staan
+  await context.setGeolocation({ latitude: 46.6620, longitude: 8.9300 });
+  await expect(page.locator("#livestand")).toContainText("van de lijn van vandaag af");
+
+  // en uit is uit
+  await page.locator("#locate").click();
+  await expect(page.locator("#locate")).toHaveText("Waar ben ik");
+  await expect(page.locator("#livestand")).toHaveText("");
 });
 
 test("de pagina laadt zonder fouten in de console", async ({ page }) => {

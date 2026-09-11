@@ -129,17 +129,6 @@ export function measure(points){
   };
 }
 
-/* Het punt op de track dat het dichtst bij een tussenpunt ligt — zo weten
-   we waar een hut of pas op het profiel hoort te staan. */
-export function nearestIndex(points, target){
-  let best = 0, bd = Infinity;
-  points.forEach((p, i) => {
-    const d = dist(p, target);
-    if(d < bd){ bd = d; best = i; }
-  });
-  return best;
-}
-
 /* Grove zwaarte-inschatting als er geen boektijd bekend is: DIN 33466 —
    300 hoogtemeters stijgen of 500 dalen per uur, 4 km/u vlak, en van de
    twee sommen de grootste plus de helft van de kleinste. */

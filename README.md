@@ -131,7 +131,24 @@ geen weerdata, geen Supabase, alleen de stijl gedeeld. De pagina opent vanzelf o
 De schuif *onderlaag doorlaten* regelt de doorzichtigheid van de bovenlaag, zodat je het reliëf van
 OpenTopoMap er zo ver doorheen kunt laten komen als je wil. Valt swisstopo helemaal weg (geen bereik,
 tegelserver stuk), dan haalt de pagina na tien mislukte tegels de bovenlaag weg en kijk je verder op
-de onderlaag. *Waar ben ik* zet je eigen positie erbij — dat vraagt pas om toestemming als je erop drukt.
+de onderlaag.
+
+**Waar ben ik** (`js/tour-live.js`) zet je positie op de kaart en houdt hem bij — dat vraagt pas om
+toestemming als je erop drukt, en gaat uit als je het nog eens indrukt of de pagina weglegt. Er komt
+één regel onder de kaart die zegt wat je halverwege een klim wil weten: op welke kilometer van de dag
+je staat, hoeveel er nog ligt, hoeveel klimmen daar nog in zit en welk benoemd punt er als eerste
+aankomt. Sta je meer dan 250 m van de lijn af, dan zegt hij dát in plaats van een resterende afstand
+die vanaf jouw plek toch niet klopt. Een tijdelijke fout (een dal in lopen, geen fix) zet het volgen
+niet uit — alleen een geweigerde toestemming doet dat.
+
+**Offline meenemen** (`sw.js`, `js/tour-offline.js`, `js/tiles.js`) — het punt van een pagina voor
+onderweg. Een service worker legt de pagina zelf in een voorraad (stale-while-revalidate, dus een
+nieuwe versie zit er bij het volgende bezoek vanzelf in). De kaarttegels staan in een aparte voorraad,
+die je met één knop vooruit kunt vullen: niet het hele vierkant om de route, maar de strook tegels waar
+de lijn doorheen loopt plus één tegel rand, op zoom 12 tot en met 15 — voor deze tocht een paar honderd
+tegels in plaats van een paar duizend. Wissen kan apart, zonder de pagina zelf kwijt te raken. Alles
+wat er niet bij hoort (Open-Meteo, Supabase, de andere pagina's) laat de worker met rust, zodat het
+weerdashboard gewoon live blijft.
 
 **Leaflet staat als kopie in de repo** (`vendor/leaflet/`, versie 1.9.4, BSD). Geen CDN: op een
 hut zonder bereik wil je niet dat de kaartcode van een vreemde server moet komen. De tegels komen
@@ -246,7 +263,7 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-137 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
+141 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
 huttentocht (index.html, trailrun.html én huttentocht.html), op desktop en
 mobiel, in ongeveer een minuut. Open-Meteo, Supabase en de kaarttegels worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
@@ -311,6 +328,8 @@ De logica staat in `js/`, één onderwerp per bestand:
 | `route-split.js` | huttentocht.html: één GPX van de hele tocht per dag opknippen |
 | `gpx.js` | huttentocht.html: GPX lezen én schrijven, afstand, stijgen/dalen, boektijd |
 | `tour-map.js` | huttentocht.html: de Leaflet-kaart, de lagen, de lijnen en de spelden |
+| `tour-live.js` | huttentocht.html: je eigen positie en hoever je op de dag bent |
+| `tour-offline.js` / `tiles.js` | huttentocht.html: de kaart offline meenemen, en welke tegels dat zijn |
 | `tour-profile.js` | huttentocht.html: het hoogteprofiel als SVG, en het aanwijzen ervan |
 | `tour-ui.js` | huttentocht.html: de dagkiezer, de etappekaartjes en de GPX-knoppen |
 | `huttentocht-main.js` | opstartscript van huttentocht.html — routes opbouwen, kaart, kaartjes |

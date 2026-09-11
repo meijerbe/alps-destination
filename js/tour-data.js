@@ -24,8 +24,6 @@ export const TOUR = {
   // afstand, hoogtemeters en profiel overal uit dat bestand.
   // Bijvoorbeeld: gpx: "routes/greina-2026.gpx"
   gpx: null,
-  ondertitel: "Drie nachten boven de tweeduizend, dwars over de hoogvlakte",
-  gebied: "Val Medel · Greina · Val Blenio",
   centrum: [46.622, 8.955],
   zoom: 12
 };
