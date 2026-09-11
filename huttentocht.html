@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A&amp;B op reis — huttentocht Greina</title>
+<meta name="description" content="De Greina-huttentocht dag voor dag: Curaglia, Medelserhütte, Capanna Motterascio en Capanna Scaletta op de landkaart van swisstopo, met hoogteprofiel, tussenpunten, reserveringen en een GPX per dag.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FAF4EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#181410" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="A&amp;B op reis — huttentocht Greina">
+<meta property="og:description" content="Drie nachten boven de tweeduizend, dwars over de Greina-hoogvlakte. Elke dag op de wandelkaart, met profiel en tussenpunten.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23FAF4EA'/%3E%3Ccircle cx='23.5' cy='9' r='3.6' fill='%23E08A33'/%3E%3Cpath d='M2 25 L11 11 L17 20 L20 16 L30 25 Z' fill='%233D6B5C'/%3E%3Cpath d='M8 27 L14 15 L20 27 Z' fill='%23E08A33'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://wmts.geo.admin.ch">
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"></noscript>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+<div class="topline">
+  <p class="eyebrow">A&amp;B op reis · Huttentocht</p>
+  <a class="refresh" href="./">&larr; Weerdashboard</a>
+</div>
+
+<div class="herotext trailhero">
+  <h1>Greina — van hut naar hut</h1>
+  <p class="tagline">Drie nachten boven de tweeduizend, dwars over de hoogvlakte</p>
+</div>
+
+<p class="lede">12 tot 15 september 2026, van Val Medel over de Greina naar Val Blenio. Deze pagina is voor
+onderweg: per dag de route op de landkaart van swisstopo — dezelfde kaart als op de gele wegwijzers —
+met hoogteprofiel, de verwachting op huthoogte, de tussenpunten op een rij en de reserveringsnummers
+van de hutten erbij. De route is onze eigen komoot-planning, per dag opgeknipt.
+Hij opent op de dag van vandaag.</p>
+
+<p class="status" id="tourstatus">Routes opbouwen…</p>
+
+<div class="controls">
+  <div class="ctl">
+    <span class="lab" id="lab-dag">Welke dag</span>
+    <div class="seg" id="daypick" role="group" aria-labelledby="lab-dag"></div>
+  </div>
+</div>
+
+<div class="mapbox">
+  <div id="map"></div>
+</div>
+<div class="maprow">
+  <p class="mapnow" id="mapnow">—</p>
+  <label class="laagmix" for="laagmix">
+    <span class="lab">Onderlaag doorlaten</span>
+    <input type="range" id="laagmix" min="0" max="100" value="100" step="5">
+  </label>
+  <div class="packbtns">
+    <button type="button" id="locate">Waar ben ik</button>
+    <button type="button" id="gpxalles">GPX hele tocht</button>
+  </div>
+</div>
+<p class="livestand" id="livestand"></p>
+
+<details class="offline" id="offlinebox">
+  <summary>Offline meenemen</summary>
+  <p class="subnote">De pagina zelf staat na één bezoek al op je telefoon. De kaarttegels niet — die
+  komen binnen terwijl je rondkijkt. Sla ze hier vooruit op: alleen de strook waar de route doorheen
+  loopt, op de zoomniveaus waar je onderweg iets aan hebt. Doe dat thuis, op wifi.</p>
+  <p class="offlinestand" id="offlinestand">Kijken wat er al staat…</p>
+  <div class="progress" id="offlineprog" hidden>
+    <div class="track"><div class="fill" id="offlinefill" style="width:0"></div></div>
+    <div class="txt" id="offlinetxt">—</div>
+  </div>
+  <div class="packbtns">
+    <button type="button" id="offlinehaal">Kaart van deze tocht opslaan</button>
+    <button type="button" id="offlinewis">Wissen</button>
+  </div>
+</details>
+
+<p class="mnote" id="maphint">Onder ligt altijd OpenTopoMap; daar bovenop de Landeskarte van swisstopo. Schuif <em>onderlaag doorlaten</em> naar links om het reliëf eronder erdoorheen te laten komen. Rechtsboven zitten ook de luchtfoto en het complete wandelwegennet. Klik of tik eerst op de kaart als je met het scrollwiel wil zoomen.</p>
+
+<h3 class="sub">De dagen</h3>
+<p class="subnote">Schuif met de muis of je vinger over een hoogteprofiel: op de kaart loopt er een stip mee.</p>
+<div id="stages"></div>
+
+<h3 class="sub">De hutten</h3>
+<p class="subnote">Zoals ze op hut-reservation.org staan. Afzeggen of verzetten doe je bij de hut zelf —
+bel op tijd, ze koken op het aantal koppen dat er staat.</p>
+<div class="hutgrid" id="hutlist"></div>
+
+<h3 class="sub">Waar deze lijnen vandaan komen</h3>
+<ul class="caveats">
+  <li><b>De lijnen komen uit onze eigen komoot-planning</b> — één export van Curaglia tot Campo (Blenio),
+  die de pagina per dag opknipt bij de hutten. Afstand, hoogtemeters en het profiel komen dus uit die
+  route zelf. Het blijft een geplande lijn, geen opgenomen spoor: navigeer op de wit-rode markeringen,
+  de wegwijzers en de landkaart.</li>
+  <li><b>De looptijden zijn die van komoot</b>, uit de planning zelf. Dat is een schatting voor een
+  onbepaalde wandelaar met een lichte rugzak — met een volle rugzak en pauzes erbij loopt het op. De
+  afstand en de hoogtemeters eronder zijn wél gemeten, aan de track.</li>
+  <li><b>Een andere route erin zetten mag.</b> Zet het GPX-bestand in <code>routes/</code> en verwijs er
+  in <code>js/tour-data.js</code> naar. Andersom kan ook: elke dag is met één knop als GPX te
+  downloaden, om in komoot of de swisstopo-app te openen.</li>
+  <li><b>De kaart is gestapeld, en open.</b> Onderop ligt altijd OpenTopoMap (OpenStreetMap-data,
+  CC-BY-SA); daar bovenop de Landeskarte van swisstopo (open overheidsdata), met de schuif ertussen.
+  Getekend met Leaflet, dat als kopie in de repo staat en dus niet van een CDN hoeft te komen. Valt
+  swisstopo weg, dan kijk je gewoon verder op de onderlaag.</li>
+  <li><b>Offline werkt hij ook.</b> Na één bezoek staat de pagina zelf op je telefoon. De kaarttegels
+  kun je met <em>offline meenemen</em> vooruit opslaan — een strook langs de route, niet de halve Alpen.
+  Wat je niet hebt opgeslagen blijft onderweg gewoon leeg; de lijn, het profiel en de nummers staan er
+  dan nog steeds.</li>
+  <li><b>De verwachting komt van Open-Meteo</b>, opgevraagd op de hoogte van de hut zelf — dat scheelt
+  bij 2500 m makkelijk een paar graden. Het vriespunt is het laagste uur van de dag. Zonder bereik
+  blijft de laatst opgehaalde verwachting staan, met erbij hoe oud die is; kijk dan naar de datum
+  voordat je erop plant.</li>
+  <li><b>T2 en T3</b> zijn de SAC-schaal: T2 is een bergwandelpad met stevig schoeisel, T3 vraagt een
+  vaste stap en her en der de handen erbij.</li>
+</ul>
+
+<noscript>
+  <p class="status err">Deze pagina bouwt de kaart en de profielen met JavaScript. Zet JavaScript aan.</p>
+</noscript>
+
+<footer>
+  Kaart: <a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener">swisstopo</a> en
+  <a href="https://opentopomap.org/" target="_blank" rel="noopener">OpenTopoMap</a> (© OpenStreetMap-bijdragers, CC-BY-SA),
+  getekend met <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a>.
+  Reserveringen via <a href="https://www.hut-reservation.org/" target="_blank" rel="noopener">hut-reservation.org</a>.
+  Terug naar <a href="./">het weerdashboard</a>. Mooie dagen, A&amp;B.
+</footer>
+</div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script type="module" src="js/huttentocht-main.js"></script>
+</body>
+</html>

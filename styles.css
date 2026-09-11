@@ -568,3 +568,132 @@ footer a{color:var(--slate)}
   .packgrid{columns:2}
   body{background:#fff}
 }
+
+/* ---------- huttentocht.html: kaart, etappekaartjes, profielen ---------- */
+.mapbox{border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);background:var(--paper)}
+#map{height:clamp(340px,56vh,620px);width:100%;background:var(--sink)}
+.maprow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:12px 0 6px}
+.mapnow{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--ink3);margin:0;flex:1 1 220px}
+
+/* de spelden op de kaart */
+.pin{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;
+  background:var(--paper);border:2px solid var(--slate);color:var(--rock);
+  font-family:var(--mono);font-size:13px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.pin-hut{border-color:var(--dry);background:var(--dry);color:#fff;font-size:15px}
+.pin-pass{border-color:var(--slate);background:var(--paper);color:var(--slate);font-weight:600}
+.pin-start,.pin-finish{border-color:var(--rock);background:var(--paper);font-size:16px}
+.pin-tussen{width:9px;height:9px;border-width:1.5px;border-color:var(--slate);background:var(--paper);box-shadow:none}
+
+/* Leaflet in de huisstijl */
+.leaflet-container{font-family:var(--body);background:var(--sink)}
+.leaflet-control-attribution{font-size:9.5px;background:rgba(255,252,246,.82)}
+.leaflet-popup-content{font-size:12.5px;line-height:1.5}
+.leaflet-popup-content a,.leaflet-control-attribution a{color:var(--slate)}
+.leaflet-bar a,.leaflet-control-layers{border-radius:8px!important}
+
+/* één etappe */
+.stage{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 18px 14px;
+  margin:0 0 16px;box-shadow:var(--shadow);opacity:.55;transition:opacity .2s ease}
+.stage.on{opacity:1;border-color:var(--dry)}
+.stagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.stagedate{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin:0 0 2px}
+.stagetitle{font-family:var(--disp);font-size:clamp(19px,3vw,24px);font-weight:600;letter-spacing:-.01em;margin:0 0 10px;line-height:1.15}
+.tgrade{flex:none;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.06em;
+  border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--slate)}
+.stagestats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 8px}
+.sstat{background:var(--sink);border-radius:9px;padding:7px 9px;min-width:0}
+.sstat .k{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.6}
+.sstat .v{display:block;font-family:var(--mono);font-size:15px;font-weight:600;margin-top:2px}
+.statsrc{font-family:var(--mono);font-size:10px;color:var(--ink4);margin:0 0 12px;line-height:1.5}
+
+.profile{display:block;width:100%;height:auto;touch-action:pan-y}
+.pgrid{stroke:var(--line);stroke-width:1}
+.pax{fill:var(--ink4);font-family:var(--mono);font-size:9px}
+.parea{fill:var(--dry);opacity:.16}
+.pline{fill:none;stroke:var(--dry);stroke-width:2;stroke-linejoin:round}
+.pmark{stroke:var(--slate);stroke-width:1;stroke-dasharray:2 3;opacity:.7}
+.pdotfix{fill:var(--slate)}
+.phair{stroke:var(--rock);stroke-width:1;opacity:.5}
+.pdot{fill:var(--err);stroke:#fff;stroke-width:2}
+.phint{font-family:var(--mono);font-size:11px;color:var(--ink3);min-height:1.4em;margin:2px 0 10px}
+
+.stagetext{font-size:14px;color:var(--ink2);margin:0 0 10px;max-width:70ch}
+.stagelet,.stagetip{font-size:13.5px;margin:0 0 10px;padding:9px 12px;border-radius:10px;max-width:70ch}
+.stagelet{background:rgba(180,70,47,.09);border-left:3px solid var(--err)}
+.stagetip{background:rgba(61,107,92,.08);border-left:3px solid var(--slate)}
+.wpts{margin:4px 0 12px}
+.wpts summary{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--slate);cursor:pointer}
+.wptlist{list-style:none;margin:10px 0 0;padding:0;border-left:2px solid var(--line)}
+.wptlist li{padding:6px 0 6px 14px;position:relative;font-size:13.5px}
+.wptlist li::before{content:"";position:absolute;left:-5px;top:12px;width:8px;height:8px;border-radius:50%;
+  background:var(--paper);border:2px solid var(--slate)}
+.wele{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:6px}
+.wnote{display:block;font-size:12.5px;color:var(--ink3)}
+.stagehut{font-family:var(--mono);font-size:11px;color:var(--ink3);margin:0 0 12px;line-height:1.6}
+.stagebtns{display:flex;flex-wrap:wrap;gap:8px}
+.stagebtns button{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:7px 12px;
+  border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--rock);cursor:pointer}
+.stagebtns button:hover{border-color:var(--slate)}
+.stagebtns button:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
+
+.hutgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.hutcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.hutcard h4{font-family:var(--disp);font-size:19px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+.hutcard p{margin:0 0 6px;font-size:13px}
+.hutmeta{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.hutres{font-family:var(--mono);font-size:11.5px;color:var(--slate)}
+.hutnote{color:var(--ink2)}
+.hutcard a{color:var(--slate)}
+
+@media (prefers-color-scheme: dark){
+  .leaflet-control-attribution{background:rgba(34,28,21,.82);color:var(--ink2)}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--paper);color:var(--rock)}
+  .leaflet-bar a,.leaflet-control-layers{background:var(--paper);color:var(--rock)}
+}
+@media (max-width:560px){
+  /* op een smal scherm loopt de bronvermelding over twee regels en ligt de
+     schaalbalk eronder — die tillen we er net boven */
+  .leaflet-bottom.leaflet-left{bottom:26px}
+  .stagestats{grid-template-columns:repeat(2,1fr)}
+  .stage{padding:14px 14px 12px}
+  #map{height:clamp(300px,52vh,440px)}
+}
+.laagmix{display:flex;flex-direction:column;gap:5px;flex:0 1 210px;min-width:150px}
+.laagmix input[type=range]{width:100%;accent-color:var(--dry);margin:0}
+.laagmix input[type=range]:disabled{opacity:.4}
+
+/* offline meenemen en de live positie */
+.livestand{font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--slate);margin:0 0 6px;min-height:1.4em}
+.livestand.err{color:var(--err)}
+.offline{margin:0 0 10px;background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:10px 14px;box-shadow:var(--shadow)}
+.offline summary{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--slate);cursor:pointer}
+.offline .subnote{margin:10px 0 8px}
+.offlinestand{font-family:var(--mono);font-size:11.5px;color:var(--ink3);margin:0 0 10px;line-height:1.6}
+.offline .progress{margin:0 0 10px}
+.offline .packbtns{margin-bottom:4px}
+.offline .packbtns button{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:7px 12px;
+  border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--rock);cursor:pointer}
+.offline .packbtns button[disabled]{opacity:.45;cursor:progress}
+
+@media print{
+  .mapbox,.maprow,.offline,.livestand,.stagebtns,#daypick,.controls{display:none!important}
+  .stage{opacity:1!important;break-inside:avoid;border-color:var(--line)!important;box-shadow:none}
+  .wpts[open] .wptlist,.wpts .wptlist{display:block}
+  .profile{max-height:120px}
+}
+
+/* de verwachting per hut */
+.weer{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:0 0 12px;padding:9px 12px;
+  background:var(--sink);border-radius:10px;font-size:13px;line-height:1.5}
+.wsym{font-size:17px;line-height:1}
+.wkop{font-weight:600}
+.wcijfers{font-family:var(--mono);font-size:11.5px;color:var(--ink2)}
+.wcijfers b{font-size:13px;color:var(--rock)}
+.wsneeuw{flex:1 0 100%;font-size:12.5px;color:var(--err);font-weight:600}
+.wbron{flex:1 0 100%;font-family:var(--mono);font-size:10px;color:var(--ink4)}
+.wleeg{font-family:var(--mono);font-size:11px;color:var(--ink4)}
+.hutweer{font-family:var(--mono);font-size:11px;color:var(--slate)}
+.hutweer:empty{display:none}
