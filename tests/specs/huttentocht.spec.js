@@ -243,7 +243,80 @@ test("waar ben ik: hoe ver ben je, en wat ligt er nog voor je", async ({ page, c
   await expect(page.locator("#livestand")).toHaveText("");
 });
 
+// Open-Meteo geeft bij meerdere locaties een array terug, één blok per plek.
+// Hier vier plekken × de vier dagen van de tocht, met opzet één dag waarop het
+// vriespunt onder het hoogste punt van die etappe zakt.
+function weerAntwoord() {
+  const dagen = ["2026-09-11", "2026-09-12", "2026-09-13", "2026-09-14", "2026-09-15"];
+  const uren = dagen.flatMap(d => Array.from({ length: 24 }, (_, h) =>
+    `${d}T${String(h).padStart(2, "0")}:00`));
+  const plek = (frz) => ({
+    daily: {
+      time: dagen,
+      weather_code: [3, 61, 95, 71, 0],
+      temperature_2m_max: [12, 9, 7, 2, 11],
+      temperature_2m_min: [4, 2, 1, -3, 3],
+      precipitation_sum: [0, 4.2, 11, 6, 0],
+      precipitation_probability_max: [10, 70, 90, 80, 5],
+      wind_speed_10m_max: [12, 28, 41, 30, 9],
+      wind_gusts_10m_max: [20, 47, 72, 55, 15],
+      sunrise: dagen.map(d => `${d}T07:01`),
+      sunset: dagen.map(d => `${d}T19:47`)
+    },
+    hourly: { time: uren, freezing_level_height: uren.map((t) => t.startsWith("2026-09-14") ? frz : 3400) }
+  });
+  return [plek(2000), plek(2000), plek(2000), plek(2000)];
+}
+
+test("de verwachting per hut staat op elke dag, met hoogte en vriespunt", async ({ page }) => {
+  let gevraagd = null;
+  await page.route("**/api.open-meteo.com/**", r => {
+    gevraagd = r.request().url();
+    return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(weerAntwoord()) });
+  });
+
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+
+  // hij vraagt het op de hoogte van de hut, niet op rasterhoogte
+  await expect.poll(() => gevraagd).toContain("elevation=");
+  expect(gevraagd).toContain("2524");
+  expect(gevraagd).toContain("freezing_level_height");
+
+  const d2 = page.locator("#weer-d2");
+  await expect(d2).toContainText("onweer");
+  await expect(d2).toContainText("11,0 mm");
+  await expect(d2).toContainText("wind 41–72 km/u");
+  await expect(d2).toContainText("licht 07:01–19:47");
+  await expect(d2.locator(".wbron")).toContainText("Capanna Motterascio CAS, 2171 m");
+  await expect(d2).toContainText("nergens te schuilen");
+
+  // dag 3 (14 sep): vriespunt op 2000 m, en die etappe gaat over de Greinapas
+  await expect(page.locator("#weer-d3")).toContainText("Boven 2000 m kan het sneeuwen");
+
+  // en op het hutkaartje de nacht die je daar doorbrengt
+  await expect(page.locator("#hutweer-scaletta")).toContainText("Die nacht");
+});
+
+test("zonder bereik blijft de laatst opgehaalde verwachting staan", async ({ page }) => {
+  await page.route("**/api.open-meteo.com/**", r =>
+    r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(weerAntwoord()) }));
+  await page.goto(TOCHT);
+  await expect(page.locator("#weer-d2")).toContainText("onweer");
+
+  // nu valt het netwerk weg: wat er stond hoort te blijven staan, met de
+  // ouderdom erbij in plaats van een leeg vak
+  await page.unroute("**/api.open-meteo.com/**");
+  await page.route("**/api.open-meteo.com/**", r => r.abort());
+  await page.reload();
+  await page.waitForSelector(".stage");
+  await expect(page.locator("#weer-d2")).toContainText("onweer");
+  await expect(page.locator("#weer-d2 .wbron")).toContainText("bijgewerkt");
+});
+
 test("de pagina laadt zonder fouten in de console", async ({ page }) => {
+  await page.route("**/api.open-meteo.com/**", r =>
+    r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
   const fouten = [];
   // de webfonts komen van Google; in een testomgeving zonder internet is dat
   // geen paginafout, dus die ene melding filteren we eruit

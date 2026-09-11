@@ -16,6 +16,7 @@ import { initMap, hermeet, mengLagen } from "./tour-map.js";
 import { render, kiesDag, dagVanVandaag, huidigeDag } from "./tour-ui.js";
 import { koppelLive } from "./tour-live.js";
 import { startOffline } from "./tour-offline.js";
+import { startWeer } from "./tour-weer.js";
 
 /* Een GPX ophalen en lezen; `null` als dat om welke reden dan ook niet lukt.
    Een ontbrekend of stuk bestand mag de pagina niet omver halen — dan
@@ -61,6 +62,7 @@ async function start(){
     hermeet();
 
     koppelLive(etappes, huidigeDag);
+    startWeer(etappes);
     // de GPX-bestanden die deze tocht gebruikt horen ook in de offline-voorraad
     startOffline(etappes, [TOUR.gpx, ...ETAPPES.map(e => e.gpx)].filter(Boolean));
 

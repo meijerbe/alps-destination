@@ -40,6 +40,8 @@ const SCHIL_BESTANDEN = [
   "./js/tour-ui.js",
   "./js/tour-live.js",
   "./js/tour-offline.js",
+  "./js/tour-weer.js",
+  "./js/net.js",
   "./js/huttentocht-main.js"
 ];
 

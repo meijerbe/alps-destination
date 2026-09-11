@@ -141,6 +141,23 @@ aankomt. Sta je meer dan 250 m van de lijn af, dan zegt hij dát in plaats van e
 die vanaf jouw plek toch niet klopt. Een tijdelijke fout (een dal in lopen, geen fix) zet het volgen
 niet uit — alleen een geweigerde toestemming doet dat.
 
+**De verwachting per hut** (`js/tour-weer.js`) — één verzoek aan Open-Meteo voor alle eindpunten van
+de tocht tegelijk, met `elevation` op de hoogte van de hut. Dat scheelt echt iets: het model rekent
+anders op een rasterhoogte die bij een hut van 2524 m honderden meters mis kan zitten, en dat is
+precies het verschil tussen regen en natte sneeuw. Slikt de API dat rijtje hoogtes niet, dan vraagt
+de pagina het nog eens zonder en zet er *(rasterhoogte)* bij, zodat je weet wat je ziet.
+
+Per dag: het weerbeeld, max/min, neerslag met kans, wind met stoten, het vriespuntniveau en hoe laat
+het licht is. Het vriespunt is het laagste uur van die dag — dat is het niveau waar je je op kleedt,
+niet het gemiddelde — en zakt het onder het hoogste punt van de etappe, dan staat dat er als
+waarschuwing bij. Net als bij onweer, want op de Greina is nergens te schuilen. Op de hutkaartjes
+staat de nacht die je daar doorbrengt.
+
+De laatste ophaal blijft in `localStorage` staan met het tijdstip erbij. Op een hut zonder bereik zie
+je dan de verwachting van gisteravond met *bijgewerkt 14 uur geleden* eronder, in plaats van een leeg
+vak. De service worker laat Open-Meteo met opzet met rust: een verwachting uit een cache serveren
+zonder dat je het weet, is erger dan geen verwachting.
+
 **Offline meenemen** (`sw.js`, `js/tour-offline.js`, `js/tiles.js`) — het punt van een pagina voor
 onderweg. Een service worker legt de pagina zelf in een voorraad (stale-while-revalidate, dus een
 nieuwe versie zit er bij het volgende bezoek vanzelf in). De kaarttegels staan in een aparte voorraad,
@@ -263,7 +280,7 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-141 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
+145 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
 huttentocht (index.html, trailrun.html én huttentocht.html), op desktop en
 mobiel, in ongeveer een minuut. Open-Meteo, Supabase en de kaarttegels worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
@@ -329,6 +346,7 @@ De logica staat in `js/`, één onderwerp per bestand:
 | `gpx.js` | huttentocht.html: GPX lezen én schrijven, afstand, stijgen/dalen, boektijd |
 | `tour-map.js` | huttentocht.html: de Leaflet-kaart, de lagen, de lijnen en de spelden |
 | `tour-live.js` | huttentocht.html: je eigen positie en hoever je op de dag bent |
+| `tour-weer.js` | huttentocht.html: de verwachting per hut, op hoogte, met vriespunt |
 | `tour-offline.js` / `tiles.js` | huttentocht.html: de kaart offline meenemen, en welke tegels dat zijn |
 | `tour-profile.js` | huttentocht.html: het hoogteprofiel als SVG, en het aanwijzen ervan |
 | `tour-ui.js` | huttentocht.html: de dagkiezer, de etappekaartjes en de GPX-knoppen |

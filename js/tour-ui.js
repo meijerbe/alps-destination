@@ -71,6 +71,8 @@ function kaartje(e, i){
       `<div class="sstat"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>
     <p class="statsrc">${g ? `Planning: ${esc(g.bron)}. ${meet}${nuance}.` : `${meet}; de tijd is een boektijd (300 m stijgen of 4 km per uur).`}</p>
 
+    <div class="weer" id="weer-${esc(d.id)}"><span class="wleeg">Verwachting ophalen…</span></div>
+
     ${profielSvg(e.route, e.stats)}
     <p class="phint" id="phint-${esc(d.id)}"></p>
 
@@ -98,6 +100,7 @@ function hutkaartje(h){
     <p class="hutmeta">${h.hoogte} m${h.ook ? ` · ${esc(h.ook)}` : ""}</p>
     <p class="hutmeta">Nacht van ${lang(h.nacht)} · ${h.personen} personen</p>
     <p class="hutres">Reservering <b>${esc(h.reservering)}</b> — ${esc(h.status.toLowerCase())}</p>
+    <p class="hutweer" id="hutweer-${esc(h.id)}"></p>
     <p class="hutnote">${esc(h.note)}</p>
     ${h.tel ? `<p class="hutmeta">Hut: <a href="tel:${esc(h.tel.replace(/\s/g, ""))}">${esc(h.tel)}</a></p>` : ""}
     <p><a href="${esc(h.site)}" target="_blank" rel="noopener">website van de hut</a></p>
