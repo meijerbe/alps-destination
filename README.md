@@ -10,9 +10,11 @@ Geen build-stap, geen dependencies, geen API-sleutel. `index.html` bevat de opma
 de stijl en `js/` de logica als losse ES-modules (`<script type="module">`) — rechtstreeks door de
 browser geladen, niets te bouwen.
 
-Ernaast staat `trailrun.html`: een tweede, losse pagina die niets met het weer te maken heeft — een
-finishtijd-schatter voor Mayrhofen Ultraks. Zelfde repo, zelfde stijl, geen gedeelde state; zie
-[trailrun.html — een losse pagina](#trailrunhtml--een-losse-pagina) verderop.
+Ernaast staan twee losse pagina's met dezelfde stijl maar zonder gedeelde state:
+`trailrun.html`, een finishtijd-schatter voor Mayrhofen Ultraks (zie
+[trailrun.html — een losse pagina](#trailrunhtml--een-losse-pagina)), en `huttentocht.html`, de
+Greina-huttentocht op een wandelkaart met een overzicht per dag (zie
+[huttentocht.html — de tocht op de kaart](#huttentochthtml--de-tocht-op-de-kaart)).
 
 ## Wat er in zit
 
@@ -111,6 +113,67 @@ spreiding.
 reisgenoten), of voeg een regel toe aan `DEFAULT_RESULTS` in `js/race-results-default.js` met bron
 en datum erbij, dan geldt het voor iedereen vanaf de volgende deploy.
 
+## huttentocht.html — de tocht op de kaart
+
+De Greina-huttentocht van 12 tot 15 september 2026, bedoeld om onderweg open te hebben:
+`huttentocht.html`, met een eigen opstartscript (`js/huttentocht-main.js`). Weer een losse pagina —
+geen weerdata, geen Supabase, alleen de stijl gedeeld. De pagina opent vanzelf op de dag van vandaag.
+
+**De kaart is gestapeld**, en alles eraan is open. Van onder naar boven, elk in een eigen Leaflet-pane:
+
+| laag | wat | waarom |
+| --- | --- | --- |
+| `onderlaag` (z 190) | OpenTopoMap (OSM-data ODbL, weergave CC-BY-SA) | ligt er altijd onder: nooit een leeg vlak als de bovenlaag hapert of nog laadt, en buiten Zwitserland meteen de hele kaart |
+| `tilePane` (z 200) | Landeskarte van swisstopo, of de luchtfoto (open overheidsdata) | de kaart waar in Zwitserland op gewandeld wordt, met de wandelwegen erin |
+| `wegen` (z 350) | het complete wandelwegennet van swisstopo | optioneel, onder onze eigen lijnen door |
+| `overlayPane` (z 400) | onze routes, hutten en passen | |
+
+De schuif *onderlaag doorlaten* regelt de doorzichtigheid van de bovenlaag, zodat je het reliëf van
+OpenTopoMap er zo ver doorheen kunt laten komen als je wil. Valt swisstopo helemaal weg (geen bereik,
+tegelserver stuk), dan haalt de pagina na tien mislukte tegels de bovenlaag weg en kijk je verder op
+de onderlaag. *Waar ben ik* zet je eigen positie erbij — dat vraagt pas om toestemming als je erop drukt.
+
+**Leaflet staat als kopie in de repo** (`vendor/leaflet/`, versie 1.9.4, BSD). Geen CDN: op een
+hut zonder bereik wil je niet dat de kaartcode van een vreemde server moet komen. De tegels komen
+wél van internet; de tekst, de profielen en de reserveringsnummers staan in de pagina zelf en
+blijven dus staan als je het dal uit loopt.
+
+**De routes komen uit tussenpunten, niet uit een track.** Per etappe staat er in `js/tour-data.js`
+een rijtje benoemde `punten` — hut, alp, pas, beek, met hoogte erbij. `js/route-build.js` vult die
+bij tot om de ±120 m een punt en rondt de hoeken af (Chaikin, dat schiet niet buiten de omhullende
+zoals een spline zou doen). Daaruit rolt de lijn op de kaart, het hoogteprofiel en de GPX die je met
+één knop kan downloaden. Het is nadrukkelijk **geen opgenomen track**: goed genoeg om te zien waar de
+dag langsgaat, niet om blind op te navigeren — dat staat ook op de pagina zelf.
+
+Heb je wél een echte track (komoot-export, swisstopo, een horloge), zet het GPX-bestand dan in
+`routes/` en geef bij die etappe `gpx: "routes/….gpx"` op. Dan komen afstand, hoogtemeters en profiel
+daaruit; lukt het ophalen niet, dan valt de pagina stil terug op de punten. Zie
+[`routes/README.md`](routes/README.md).
+
+**Een route of een hele tocht toevoegen** — plak een blok bij `ETAPPES` in `js/tour-data.js`:
+
+```js
+{
+  id: "d5", datum: "2026-09-16", bestand: "dag5-ergens-ergens",
+  punten: [
+    { naam:"Start", ele:1200, lat:46.1, lon:8.1, type:"start" },
+    { naam:"De pas", ele:2400, lat:46.2, lon:8.2, type:"pass" },
+    { naam:"De hut",  ele:2100, lat:46.3, lon:8.3, type:"hut" }
+  ],
+  van: "Start", naar: "De hut", zwaarte: "T2",
+  verhaal: "…"
+}
+```
+
+Meer hoeft er niet: de dagkiezer, de kaartlijn, het profiel en de GPX komen er vanzelf bij. `type`
+bepaalt alleen hoe de speld eruitziet (`hut`, `pass`, `start`, `finish`, of niets). `gepland` is
+optioneel — staat er een geplande afstand en tijd in (uit komoot, of een boektijd), dan staan die
+groot op het kaartje met de bron erbij, en staat eronder wat de lijn zélf meet. Staat het er niet,
+dan rekent de pagina een boektijd uit (DIN 33466: 300 hoogtemeters stijgen of 4 km per uur).
+
+De hutten met hun reserveringsnummers staan los in `HUTTEN`, de Terrihütte en de Greinapas als
+`POI` — die zijn geen etappe, maar horen wel op de kaart.
+
 ## Instellingen zitten in de URL
 
 Profiel, vooruitkijkperiode, maximale rijtijd, vertrekdag, kleurmetriek, bron, tabblad en de
@@ -180,9 +243,9 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-119 browsertests over kaart, tabbladen, paklijst, boodschappen en de trailrun-schatter (index.html
-én trailrun.html), op desktop en
-mobiel, in ongeveer vijfenveertig seconden. Open-Meteo en Supabase worden afgevangen, dus
+133 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
+huttentocht (index.html, trailrun.html én huttentocht.html), op desktop en
+mobiel, in ongeveer een minuut. Open-Meteo, Supabase en de kaarttegels worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
 Daarnaast een ESLint-check (`npm run lint`) die alleen op `no-undef` en dode code let —
 geen stijlregels, wel de klasse fout (een vergeten import) die anders pas in de browser
@@ -240,6 +303,13 @@ De logica staat in `js/`, één onderwerp per bestand:
 | `race-realtime.js` | trailrun.html: het Supabase Realtime-kanaal voor lopers en uitslag |
 | `race-results-default.js` | de meegeleverde uitslag (nu: RK50 2025) als bodem voor het histogram |
 | `trailrun-main.js` | opstartscript van trailrun.html — laadt, tekent, koppelt realtime aan |
+| `tour-data.js` | huttentocht.html: de etappes met hun tussenpunten, de hutten en de reserveringen |
+| `route-build.js` | huttentocht.html: tussenpunten → een vloeiende lijn (bijvullen + Chaikin) |
+| `gpx.js` | huttentocht.html: GPX lezen én schrijven, afstand, stijgen/dalen, boektijd |
+| `tour-map.js` | huttentocht.html: de Leaflet-kaart, de lagen, de lijnen en de spelden |
+| `tour-profile.js` | huttentocht.html: het hoogteprofiel als SVG, en het aanwijzen ervan |
+| `tour-ui.js` | huttentocht.html: de dagkiezer, de etappekaartjes en de GPX-knoppen |
+| `huttentocht-main.js` | opstartscript van huttentocht.html — routes opbouwen, kaart, kaartjes |
 | `supabase-client.js` / `realtime.js` | de Supabase-verbinding en live sync |
 | `render.js` / `ui.js` / `main.js` | de render-regisseur, alle DOM-events, en het opstarten |
 
