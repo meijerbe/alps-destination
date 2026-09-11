@@ -11,6 +11,8 @@ const types = {
   ".gpx": "application/gpx+xml", ".png": "image/png", ".svg": "image/svg+xml", ".md": "text/markdown; charset=utf-8"
 };
 
+let teller = 0;
+
 http.createServer((req, res) => {
   const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/+/, "") || "index.html";
   const file = path.join(root, rel);
@@ -18,6 +20,11 @@ http.createServer((req, res) => {
     res.writeHead(404).end("not found");
     return;
   }
-  res.writeHead(200, { "content-type": types[path.extname(file)] || "application/octet-stream" });
+  // Elk antwoord krijgt een eigen volgnummer mee. Daarmee kan een test zien of
+  // iets écht van de server kwam of uit de voorraad van de service worker.
+  res.writeHead(200, {
+    "content-type": types[path.extname(file)] || "application/octet-stream",
+    "x-vers": String(++teller)
+  });
   fs.createReadStream(file).pipe(res);
 }).listen(4173, "127.0.0.1");

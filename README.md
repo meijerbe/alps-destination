@@ -159,8 +159,13 @@ vak. De service worker laat Open-Meteo met opzet met rust: een verwachting uit e
 zonder dat je het weet, is erger dan geen verwachting.
 
 **Offline meenemen** (`sw.js`, `js/tour-offline.js`, `js/tiles.js`) — het punt van een pagina voor
-onderweg. Een service worker legt de pagina zelf in een voorraad (stale-while-revalidate, dus een
-nieuwe versie zit er bij het volgende bezoek vanzelf in). De kaarttegels staan in een aparte voorraad,
+onderweg. Een service worker legt de pagina zelf in een voorraad, maar serveert hem **niet** daaruit
+zolang er bereik is: eerst het netwerk, de voorraad is de terugval. Dat is bewust omgedraaid ten
+opzichte van het gebruikelijke cache-first. Met cache-first komt een nieuwe versie pas de volgende
+keer door, en kun je bij een halve voorraad een oude pagina met nieuwe modules krijgen — een stuk dat
+het niet doet, zonder dat je kunt zien waarom. Nu is wat je online ziet exact wat er op de server
+staat, en zonder bereik krijg je de laatste versie die je gezien hebt. Loopt er tóch iets vast, dan
+zet `?sw=uit` de worker uit en gooit alles wat hij bewaart weg. De kaarttegels staan in een aparte voorraad,
 die je met één knop vooruit kunt vullen: niet het hele vierkant om de route, maar de strook tegels waar
 de lijn doorheen loopt plus één tegel rand, op zoom 12 tot en met 15 — voor deze tocht een paar honderd
 tegels in plaats van een paar duizend. Wissen kan apart, zonder de pagina zelf kwijt te raken. Alles
@@ -281,7 +286,7 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-147 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
+151 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
 huttentocht (index.html, trailrun.html én huttentocht.html), op desktop en
 mobiel, in ongeveer een minuut. Open-Meteo, Supabase en de kaarttegels worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.
