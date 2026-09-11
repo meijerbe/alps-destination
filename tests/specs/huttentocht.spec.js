@@ -37,11 +37,39 @@ test("de vier dagen staan er, met kaart, profiel en cijfers", async ({ page }) =
     await expect(page.locator(`#stage-${id} .sstat`)).toHaveCount(4);
   }
 
-  // de planning uit komoot staat op dag 2, de eigen meting eronder
+  // dag 2 komt uit de komoot-planning: gemeten afstand, komoots looptijd
   const d2 = page.locator("#stage-d2");
-  await expect(d2).toContainText("18,5 km");
-  await expect(d2).toContainText("8 u 18");
-  await expect(d2.locator(".statsrc")).toContainText("Deze lijn meet");
+  await expect(d2).toContainText("18,2 km");
+  await expect(d2).toContainText("8 u 19");
+  await expect(d2.locator(".statsrc")).toContainText("uit de track");
+});
+
+// De echte tocht: routes/greina-2026.gpx, één doorlopende komoot-export van
+// Curaglia tot Campo (Blenio), met de drie hutten als <wpt>. Die cijfers zijn
+// het ijkpunt — wijzigt het bestand, dan hoort deze test te vallen.
+test("de tocht komt uit één komoot-export en valt in vier dagen uiteen", async ({ page }) => {
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+
+  const verwacht = [
+    ["d1", "8,2 km", "3 u 32", "1.142 m", "0 m"],
+    ["d2", "18,2 km", "8 u 19", "1.011 m", "1.249 m"],
+    ["d3", "7,4 km", "2 u 52", "217 m", "164 m"],
+    ["d4", "9,4 km", "3 u 23", "8 m", "1.012 m"]
+  ];
+  for (const [id, km, tijd, stijgen, dalen] of verwacht) {
+    const kaart = page.locator(`#stage-${id}`);
+    await expect(kaart.locator(".sstat").nth(0)).toContainText(km);
+    await expect(kaart.locator(".sstat").nth(1)).toContainText(tijd);
+    await expect(kaart.locator(".sstat").nth(2)).toContainText(stijgen);
+    await expect(kaart.locator(".sstat").nth(3)).toContainText(dalen);
+    await expect(kaart.locator(".statsrc")).toContainText("uit de track");
+  }
+
+  // dag 2 duikt echt Val Sumvitg in, en dag 4 loopt uit tot in het dal
+  await expect(page.locator("#stage-d2 .profile")).toHaveAttribute("aria-label", /van 1387 tot 2496/);
+  await expect(page.locator("#stage-d4 .profile")).toHaveAttribute("aria-label", /van 1208 tot 2225/);
+  await expect(page.locator("#stage-d4")).toContainText("Campo (Blenio)");
 });
 
 test("een dag kiezen licht die dag uit en zet de kaart erop", async ({ page }) => {
@@ -99,9 +127,9 @@ test("elke dag is als GPX te downloaden, met hoogte en tussenpunten erin", async
   const stream = await download.createReadStream();
   const gpx = (await stream.toArray()).map(String).join("");
   expect(gpx).toContain("<gpx version=\"1.1\"");
-  expect(gpx).toContain("Passo della Greina");
   expect(gpx.match(/<trkpt /g).length).toBeGreaterThan(20);
-  expect(gpx).toContain("<ele>2355</ele>");
+  // het tussenpunt zelf, met de hoogte die van de track komt
+  expect(gpx).toMatch(/<wpt[^>]*>\s*<ele>2350<\/ele>\s*<name>Passo della Greina<\/name>/);
 });
 
 // Eén GPX van de hele tocht, zoals je 'm uit komoot exporteert: vier tracks
@@ -125,7 +153,7 @@ test("één GPX van de hele tocht wordt per dag opgeknipt", async ({ page }) => 
   // en serveren het bestand zelf
   await page.route("**/js/tour-data.js", async r => {
     const bron = await r.fetch();
-    const js = (await bron.text()).replace("gpx: null,", 'gpx: "routes/heel.gpx",');
+    const js = (await bron.text()).replace(/gpx: "routes\/[^"]+",/, 'gpx: "routes/heel.gpx",');
     await r.fulfill({ status: 200, contentType: "text/javascript", body: js });
   });
   await page.route("**/routes/heel.gpx", r =>
@@ -134,8 +162,8 @@ test("één GPX van de hele tocht wordt per dag opgeknipt", async ({ page }) => 
   await page.goto(TOCHT);
   await page.waitForSelector(".stage");
 
-  // dag 2 komt nu uit het bestand: dat zegt "de track meet", niet "deze lijn meet"
-  await expect(page.locator("#stage-d2 .statsrc")).toContainText("De track meet");
+  // dag 2 komt nu uit het bestand: geen getrokken lijn meer
+  await expect(page.locator("#stage-d2 .statsrc")).toContainText("uit de track");
   await expect(page.locator("#stage-d2 .statsrc")).not.toContainText("snijdt de bochten af");
   await expect(page.locator(".stage")).toHaveCount(4);
   await expect(page.locator("#map path.leaflet-interactive")).toHaveCount(8);
@@ -149,7 +177,7 @@ test("één GPX van de hele tocht wordt per dag opgeknipt", async ({ page }) => 
 test("een echte komoot-export levert de dag die erin zit, en laat de rest met rust", async ({ page }) => {
   await page.route("**/js/tour-data.js", async r => {
     const bron = await r.fetch();
-    const js = (await bron.text()).replace("gpx: null,", 'gpx: "routes/voorbeeld.gpx",');
+    const js = (await bron.text()).replace(/gpx: "routes\/[^"]+",/, 'gpx: "routes/voorbeeld.gpx",');
     await r.fulfill({ status: 200, contentType: "text/javascript", body: js });
   });
   await page.route("**/routes/voorbeeld.gpx", r =>
@@ -161,7 +189,8 @@ test("een echte komoot-export levert de dag die erin zit, en laat de rest met ru
   // dag 2 komt uit de track — en die is 18,2 km, niet de 17,6 km die je
   // overhoudt als je op onze eigen hutcoördinaten knipt in plaats van op de
   // gelijknamige waypoints uit het bestand
-  await expect(page.locator("#stage-d2 .statsrc")).toContainText("De track meet 18,2 km");
+  await expect(page.locator("#stage-d2 .sstat").first()).toContainText("18,2 km");
+  await expect(page.locator("#stage-d2 .statsrc")).toContainText("uit de track");
   // de track zakt in Val Sumvitg tot 1387 m — dat hoort in het profiel te staan
   await expect(page.locator("#stage-d2 .profile")).toHaveAttribute("aria-label", /van 138\d tot 249\d meter/);
 
@@ -219,9 +248,9 @@ test("offline meenemen: de strook tegels langs de route, niet de halve Alpen", a
 
 test("waar ben ik: hoe ver ben je, en wat ligt er nog voor je", async ({ page, context }) => {
   await context.grantPermissions(["geolocation"]);
-  // Alp Sura, halverwege de klim van dag 1 (die dag staat vanzelf open:
-  // de tocht is nog niet begonnen)
-  await context.setGeolocation({ latitude: 46.6520, longitude: 8.9010 });
+  // Alp Sura, halverwege de klim van dag 1 — op de route zelf (die dag staat
+  // vanzelf open: de tocht is nog niet begonnen)
+  await context.setGeolocation({ latitude: 46.64889, longitude: 8.88953 });
 
   await page.goto(TOCHT);
   await page.waitForSelector(".stage");

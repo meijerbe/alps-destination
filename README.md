@@ -172,20 +172,22 @@ hut zonder bereik wil je niet dat de kaartcode van een vreemde server moet komen
 wél van internet; de tekst, de profielen en de reserveringsnummers staan in de pagina zelf en
 blijven dus staan als je het dal uit loopt.
 
-**De routes komen uit tussenpunten, niet uit een track.** Per etappe staat er in `js/tour-data.js`
-een rijtje benoemde `punten` — hut, alp, pas, beek, met hoogte erbij. `js/route-build.js` vult die
-bij tot om de ±120 m een punt en rondt de hoeken af (Chaikin, dat schiet niet buiten de omhullende
-zoals een spline zou doen). Daaruit rolt de lijn op de kaart, het hoogteprofiel en de GPX die je met
-één knop kan downloaden. Het is nadrukkelijk **geen opgenomen track**: goed genoeg om te zien waar de
-dag langsgaat, niet om blind op te navigeren — dat staat ook op de pagina zelf.
+**De route is onze eigen komoot-planning.** `routes/greina-2026.gpx` is één doorlopende export van
+Curaglia tot Campo (Blenio) — 43,2 km, 1844 punten, met de drie geboekte hutten als `<wpt>` erin.
+`js/route-split.js` knipt 'm bij die hutten in vier dagen, dus afstand, hoogtemeters en het profiel
+komen overal uit dat ene bestand. De looptijden komen ook uit de export: komoot zet tijdstempels in
+zijn planning, en het verschil tussen begin en eind van een etappe is zijn eigen schatting voor die
+dag (dag 2: 8 u 19 — precies wat de planning op het scherm liet zien).
 
-Heb je wél een echte track, dan gaat die vóór. Eén GPX van de hele tocht kan ook: zet 'm in `routes/`,
-vul `gpx` in bij `TOUR`, en `js/route-split.js` knipt 'm per dag op — op de losse `<trk>`'s als die er
-zijn, en anders bij het trackpunt dat het dichtst bij elke hut ligt, in volgorde (en op de `<wpt>` uit
-het bestand zelf als die de hut bij naam noemt). Eén bestand per
-etappe kan net zo goed (`gpx:` op de etappe, dat wint van het tochtbestand). Dan komen afstand,
-hoogtemeters en profiel daaruit; lukt het ophalen niet, dan valt de pagina stil terug op de punten.
-Zie [`routes/README.md`](routes/README.md).
+De `punten` per etappe zijn de benoemde plekken onderweg (hut, alp, pas, het diepste punt van de
+dag). Ze vullen de lijst *onderweg langs*, zetten een speld op de kaart en markeren het profiel, en
+ze zijn stuk voor stuk op de track vastgeklikt — coördinaat en hoogte komen van de route zelf.
+
+Valt het GPX-bestand weg, dan trekt `js/route-build.js` er weer een lijn doorheen langs diezelfde
+punten (bijvullen tot om de ±120 m een punt, hoeken afronden met Chaikin — dat schiet niet buiten de
+omhullende zoals een spline zou doen). Ruwer, en het kaartje zegt dat dan ook, maar de pagina blijft
+heel. Een andere route erin zetten kan net zo goed: één bestand voor de hele tocht (`gpx` op `TOUR`)
+of één per etappe (`gpx:` op de etappe, dat wint). Zie [`routes/README.md`](routes/README.md).
 
 **Een route of een hele tocht toevoegen** — plak een blok bij `ETAPPES` in `js/tour-data.js`:
 
@@ -203,10 +205,9 @@ Zie [`routes/README.md`](routes/README.md).
 ```
 
 Meer hoeft er niet: de dagkiezer, de kaartlijn, het profiel en de GPX komen er vanzelf bij. `type`
-bepaalt alleen hoe de speld eruitziet (`hut`, `pass`, `start`, `finish`, of niets). `gepland` is
-optioneel — staat er een geplande afstand en tijd in (uit komoot, of een boektijd), dan staan die
-groot op het kaartje met de bron erbij, en staat eronder wat de lijn zélf meet. Staat het er niet,
-dan rekent de pagina een boektijd uit (DIN 33466: 300 hoogtemeters stijgen of 4 km per uur).
+bepaalt alleen hoe de speld eruitziet (`hut`, `pass`, `start`, `finish`, of niets). `gepland.tijd` is
+optioneel — staat die er, dan is dat de looptijd op het kaartje, met de bron erbij. Staat het er
+niet, dan rekent de pagina een boektijd uit (DIN 33466: 300 hoogtemeters stijgen of 4 km per uur).
 
 De hutten met hun reserveringsnummers staan los in `HUTTEN`, de Terrihütte en de Greinapas als
 `POI` — die zijn geen etappe, maar horen wel op de kaart.
@@ -280,7 +281,7 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-145 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
+147 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
 huttentocht (index.html, trailrun.html én huttentocht.html), op desktop en
 mobiel, in ongeveer een minuut. Open-Meteo, Supabase en de kaarttegels worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.

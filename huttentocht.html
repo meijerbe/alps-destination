@@ -37,7 +37,7 @@
 <p class="lede">12 tot 15 september 2026, van Val Medel over de Greina naar Val Blenio. Deze pagina is voor
 onderweg: per dag de route op de landkaart van swisstopo — dezelfde kaart als op de gele wegwijzers —
 met hoogteprofiel, de verwachting op huthoogte, de tussenpunten op een rij en de reserveringsnummers
-van de hutten erbij.
+van de hutten erbij. De route is onze eigen komoot-planning, per dag opgeknipt.
 Hij opent op de dag van vandaag.</p>
 
 <p class="status" id="tourstatus">Routes opbouwen…</p>
@@ -94,17 +94,16 @@ bel op tijd, ze koken op het aantal koppen dat er staat.</p>
 
 <h3 class="sub">Waar deze lijnen vandaan komen</h3>
 <ul class="caveats">
-  <li><b>De lijnen zijn indicatief.</b> Ze zijn door deze pagina zelf getrokken langs de benoemde
-  tussenpunten — hutten, alpen, passen — en afgerond tot een vloeiende lijn. Het is geen opgenomen
-  track: hij geeft aan wáár de dag langsgaat, niet waar je voet precies hoort te staan. Navigeer op de
-  wit-rode markeringen, de wegwijzers en de landkaart.</li>
-  <li><b>De cijfers komen uit twee bronnen.</b> Staat er een planning bij (komoot, of de boektijd van de
-  hut), dan staat die groot op het kaartje. Wat de lijn op deze pagina zelf meet, staat er als klein
-  regeltje onder. Die twee lopen uiteen: komoot telt hoogtemeters royaler dan de kaart.</li>
-  <li><b>Een echte track erin zetten mag.</b> Zet het GPX-bestand in <code>routes/</code> en verwijs er
-  in <code>js/tour-data.js</code> naar met <code>gpx:</code>. Dan komen afstand, hoogtemeters en profiel
-  daaruit. Andersom kan ook: elke dag is met één knop als GPX te downloaden, om in komoot of de
-  swisstopo-app te openen.</li>
+  <li><b>De lijnen komen uit onze eigen komoot-planning</b> — één export van Curaglia tot Campo (Blenio),
+  die de pagina per dag opknipt bij de hutten. Afstand, hoogtemeters en het profiel komen dus uit die
+  route zelf. Het blijft een geplande lijn, geen opgenomen spoor: navigeer op de wit-rode markeringen,
+  de wegwijzers en de landkaart.</li>
+  <li><b>De looptijden zijn die van komoot</b>, uit de planning zelf. Dat is een schatting voor een
+  onbepaalde wandelaar met een lichte rugzak — met een volle rugzak en pauzes erbij loopt het op. De
+  afstand en de hoogtemeters eronder zijn wél gemeten, aan de track.</li>
+  <li><b>Een andere route erin zetten mag.</b> Zet het GPX-bestand in <code>routes/</code> en verwijs er
+  in <code>js/tour-data.js</code> naar. Andersom kan ook: elke dag is met één knop als GPX te
+  downloaden, om in komoot of de swisstopo-app te openen.</li>
   <li><b>De kaart is gestapeld, en open.</b> Onderop ligt altijd OpenTopoMap (OpenStreetMap-data,
   CC-BY-SA); daar bovenop de Landeskarte van swisstopo (open overheidsdata), met de schuif ertussen.
   Getekend met Leaflet, dat als kopie in de repo staat en dus niet van een CDN hoeft te komen. Valt

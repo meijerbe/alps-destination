@@ -1,12 +1,14 @@
-# routes/ — echte GPX-tracks
+# routes/ — de GPX van de tocht
 
-Leeg is prima. De huttentochtpagina trekt haar lijnen standaard zélf: per etappe staat er in
-[`js/tour-data.js`](../js/tour-data.js) een rijtje benoemde `punten` (hut, alp, pas, beek, met hoogte),
-en [`js/route-build.js`](../js/route-build.js) maakt daar een vloeiende lijn van. Goed genoeg om te zien
-waar de dag langsgaat — het is geen opgenomen track.
+Hier staat `greina-2026.gpx`: onze komoot-planning van Curaglia tot Campo (Blenio), in één stuk, met
+de drie geboekte hutten als `<wpt>`. `TOUR.gpx` in [`js/tour-data.js`](../js/tour-data.js) wijst
+ernaar en [`js/route-split.js`](../js/route-split.js) knipt 'm per dag op.
 
-Heb je wél een echte track (komoot-export, swisstopo, een horloge), dan gaat die vóór. Dat kan op
-twee manieren.
+Zonder zo'n bestand trekt de pagina zelf een lijn door de benoemde `punten` van elke etappe
+([`js/route-build.js`](../js/route-build.js)) — goed genoeg om te zien waar de dag langsgaat, maar
+geen opgenomen track, en het etappekaartje zegt dat er dan bij.
+
+Een andere of nieuwere track erin zetten kan op twee manieren.
 
 **Eén bestand voor de hele tocht** — zoals komoot een meerdaagse tour exporteert:
 

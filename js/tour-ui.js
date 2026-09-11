@@ -48,11 +48,16 @@ function kaartje(e, i){
   const d = e.def;
   const hut = HUTTEN.find(h => h.id === d.slaap);
   const g = d.gepland;
+  // Waar komen de cijfers op dit kaartje vandaan? Dat blijft zichtbaar:
+  // een echte track meet zichzelf, een getrokken lijn snijdt de bochten af,
+  // en de looptijd komt uit de planning of anders uit een boektijd.
   const echt = !e.route.gebouwd;
-  const meet = echt
-    ? `De track meet ${km1(e.stats.km)} km, +${getal(e.stats.gain)} / −${getal(e.stats.loss)} m`
-    : `Deze lijn meet ${km1(e.stats.km)} km, +${getal(e.stats.gain)} / −${getal(e.stats.loss)} m`;
-  const nuance = echt ? "" : " — een getrokken lijn snijdt de bochten af";
+  const meet = `${echt ? "De track" : "Deze lijn"} meet ${km1(e.stats.km)} km, `
+    + `+${getal(e.stats.gain)} / −${getal(e.stats.loss)} m${echt ? "" : " — een getrokken lijn snijdt de bochten af"}`;
+  const tijdbron = g ? `Tijd volgens ${esc(g.bron)}` : "De tijd is een boektijd (300 m stijgen of 4 km per uur)";
+  const herkomstzin = echt && g && !g.afstand
+    ? `${tijdbron}; afstand en hoogtemeters uit de track.`
+    : `${g ? `Planning: ${esc(g.bron)}. ` : ""}${meet}${g ? "." : `; ${tijdbron.toLowerCase()}.`}`;
 
   const wpts = e.route.waypoints.filter(w => w.name).map(w =>
     `<li><b>${esc(w.name)}</b> <span class="wele">${w.ele != null ? Math.round(w.ele) + " m" : ""}</span>`
@@ -69,7 +74,7 @@ function kaartje(e, i){
 
     <div class="stagestats">${stats4(e).map(([k, v]) =>
       `<div class="sstat"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>
-    <p class="statsrc">${g ? `Planning: ${esc(g.bron)}. ${meet}${nuance}.` : `${meet}; de tijd is een boektijd (300 m stijgen of 4 km per uur).`}</p>
+    <p class="statsrc">${herkomstzin}</p>
 
     <div class="weer" id="weer-${esc(d.id)}"><span class="wleeg">Verwachting ophalen…</span></div>
 
