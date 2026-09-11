@@ -343,6 +343,44 @@ test("zonder bereik blijft de laatst opgehaalde verwachting staan", async ({ pag
   await expect(page.locator("#weer-d2 .wbron")).toContainText("bijgewerkt");
 });
 
+test("de service worker serveert de verse pagina, niet die uit zijn voorraad", async ({ page }) => {
+  await page.unroute("**/sw.js");                       // hier willen we de worker wél
+  await page.route("**/api.open-meteo.com/**", r =>
+    r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
+
+  const eerste = await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+
+  // De testserver zet een volgnummer in elk antwoord. Komt de tweede keer
+  // hetzelfde nummer terug, dan diende de worker zijn eigen kopie op; een
+  // nieuw nummer betekent dat hij netjes naar de server is gegaan.
+  const tweede = await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+  expect(await page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  expect(tweede.headers()["x-vers"]).not.toBe(eerste.headers()["x-vers"]);
+});
+
+test("?sw=uit zet de offline-voorraad uit, als noodrem", async ({ page }) => {
+  await page.unroute("**/sw.js");
+  await page.route("**/api.open-meteo.com/**", r =>
+    r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
+
+  await page.goto(TOCHT);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  expect(await page.evaluate(() => navigator.serviceWorker.getRegistrations().then(r => r.length)))
+    .toBeGreaterThan(0);
+
+  // ?sw=uit schrijft de worker uit en herlaadt naar ?sw=weg; pas op die verse
+  // pagina, zonder worker ertussen, gaat de voorraad eraan
+  await page.goto(TOCHT + "?sw=uit");
+  await page.waitForURL(/sw=weg/);
+  await expect(page.locator("#offlinestand")).toContainText("uitgezet");
+  expect(await page.evaluate(() => navigator.serviceWorker.getRegistrations().then(r => r.length))).toBe(0);
+  expect(await page.evaluate(() => caches.keys().then(k => k.filter(n => n.startsWith("ab-huttentocht-")).length)))
+    .toBe(0);
+});
+
 test("de pagina laadt zonder fouten in de console", async ({ page }) => {
   await page.route("**/api.open-meteo.com/**", r =>
     r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));

@@ -4,11 +4,17 @@
 
    Twee voorraden, bewust gescheiden:
 
-   SCHIL   de pagina zelf: HTML, stijl, de modules, Leaflet. Klein, en
-           wordt bij installatie in één keer opgehaald. Serveren gaat
-           uit de voorraad, met op de achtergrond een verse ophaal
-           (stale-while-revalidate), zodat een nieuwe versie er bij het
-           volgende bezoek vanzelf in zit.
+   SCHIL   de pagina zelf: HTML, stijl, de modules, Leaflet. Bij
+           installatie in één keer opgehaald, maar met bereik gaat het
+           net zo goed gewoon naar het netwerk: de voorraad is de
+           terugval, niet de eerste bron. Dat is hier bewust omgedraaid.
+           Cache-first zou betekenen dat een nieuwe versie pas de
+           volgende keer doorkomt, en dat je bij een halve voorraad een
+           oude pagina met nieuwe modules kunt krijgen (of andersom) —
+           een stuk pagina dat het niet doet, zonder dat je kunt zien
+           waarom. Zolang er bereik is, is wat je ziet dus exact wat er
+           op de server staat; zonder bereik krijg je de laatste versie
+           die je gezien hebt.
    TEGELS  de kaarttegels. Die groeien met wat je bekijkt, en kunnen op
            verzoek van de pagina vooruit worden opgehaald voor de hele
            route. Wissen kan apart, zonder de pagina zelf kwijt te raken.
@@ -18,7 +24,7 @@
    mee, zodat het weerdashboard gewoon live blijft.
 ================================================================== */
 
-const SCHIL = "ab-huttentocht-schil-v1";
+const SCHIL = "ab-huttentocht-schil-v2";
 const TEGELS = "ab-huttentocht-tegels-v1";
 
 const SCHIL_BESTANDEN = [
@@ -74,16 +80,27 @@ self.addEventListener("activate", ev => {
   })());
 });
 
-/* Uit de voorraad serveren, en ondertussen een verse halen voor de
-   volgende keer. Lukt het ophalen niet, dan merk je daar niets van. */
-async function uitVoorraadEnVerversen(req, cacheNaam){
+/* Eerst het netwerk, de voorraad als terugval. Lukt het ophalen, dan gaat
+   het antwoord meteen de voorraad in voor de volgende keer zonder bereik. */
+async function netEerstDanVoorraad(req, cacheNaam){
   const c = await caches.open(cacheNaam);
-  const uit = await c.match(req, { ignoreSearch: true });
-  const vers = fetch(req).then(res => {
-    if(res && (res.ok || res.type === "opaque")) c.put(req, res.clone());
+  try {
+    const res = await fetch(req);
+    if(res && res.ok) c.put(req, res.clone());
     return res;
-  }).catch(() => null);
-  return uit || (await vers) || new Response("offline", { status: 503 });
+  } catch {
+    const uit = await c.match(req, { ignoreSearch: true });
+    if(uit) return uit;
+    // een navigatie die niet in de voorraad staat (bijvoorbeeld /huttentocht
+    // terwijl het bestand als huttentocht.html bewaard is) valt terug op de
+    // pagina zelf
+    if(req.mode === "navigate"){
+      const pagina = await c.match(new URL("./huttentocht.html", self.location).href);
+      if(pagina) return pagina;
+    }
+    return new Response("Geen bereik, en deze pagina staat nog niet in de voorraad.",
+      { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  }
 }
 
 /* Tegels: eerst de voorraad. Die veranderen niet, dus een keer opgehaald
@@ -114,15 +131,11 @@ self.addEventListener("fetch", ev => {
   if(req.method !== "GET") return;
   const url = new URL(req.url);
 
+  // tegels veranderen niet en zijn het zwaarst: die blijven uit de voorraad
   if(isTegel(url)){ ev.respondWith(tegel(req)); return; }
-  if(isPagina(req, url)){
-    ev.respondWith((async () =>
-      (await caches.match("./huttentocht.html")) || uitVoorraadEnVerversen(req, SCHIL))());
-    return;
-  }
-  if(isSchil(url)){ ev.respondWith(uitVoorraadEnVerversen(req, SCHIL)); return; }
-  if(url.origin === self.location.origin && url.pathname.startsWith("/routes/")){
-    ev.respondWith(uitVoorraadEnVerversen(req, SCHIL));
+  if(isPagina(req, url) || isSchil(url)
+     || (url.origin === self.location.origin && url.pathname.startsWith("/routes/"))){
+    ev.respondWith(netEerstDanVoorraad(req, SCHIL));
   }
   // al het andere: niet aankomen
 });
