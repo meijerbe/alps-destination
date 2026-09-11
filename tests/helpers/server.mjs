@@ -14,8 +14,24 @@ const types = {
 let teller = 0;
 
 http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/+/, "") || "index.html";
-  const file = path.join(root, rel);
+  const [pad, query] = req.url.split("?");
+  const rel = decodeURIComponent(pad).replace(/^\/+/, "");
+
+  // Vercel draait met cleanUrls: /x.html wordt 308'd naar /x, en /x serveert
+  // x.html. Dat hier nabootsen, want die omleiding is geen detail — een
+  // service worker die een omgeleid antwoord bewaart en dat later voor een
+  // navigatie teruggeeft, levert een harde netwerkfout op. Zonder deze
+  // nabootsing zien de tests dat nooit.
+  if (rel.endsWith(".html")) {
+    res.writeHead(308, { location: "/" + rel.slice(0, -5) + (query ? "?" + query : "") }).end();
+    return;
+  }
+  const kaal = rel || "index";
+  const kandidaat = path.join(root, kaal);
+  const file = fs.existsSync(kandidaat) && !fs.statSync(kandidaat).isDirectory()
+    ? kandidaat
+    : path.join(root, kaal + ".html");
+
   if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     res.writeHead(404).end("not found");
     return;

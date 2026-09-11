@@ -165,7 +165,15 @@ opzichte van het gebruikelijke cache-first. Met cache-first komt een nieuwe vers
 keer door, en kun je bij een halve voorraad een oude pagina met nieuwe modules krijgen — een stuk dat
 het niet doet, zonder dat je kunt zien waarom. Nu is wat je online ziet exact wat er op de server
 staat, en zonder bereik krijg je de laatste versie die je gezien hebt. Loopt er tóch iets vast, dan
-zet `?sw=uit` de worker uit en gooit alles wat hij bewaart weg. De kaarttegels staan in een aparte voorraad,
+zet `?sw=uit` de worker uit en gooit alles wat hij bewaart weg.
+
+Eén ding is daarbij een valkuil met een eigen naam waard. Vercel draait met `cleanUrls`, dus
+`/huttentocht.html` wordt doorgestuurd naar `/huttentocht`. Bewaart de worker dát antwoord en geeft
+hij het later terug voor een navigatie, dan weigert de browser het botweg — een navigatie heeft
+redirect-modus *manual*, en een omgeleid antwoord is daar een harde fout (`net::ERR_FAILED`). De
+pagina laadt dan niet meer, terwijl de rest van de site het gewoon doet. Daarom wordt elk antwoord
+zonder omleiding opnieuw opgebouwd vóór het de voorraad in gaat. De testserver bootst die omleiding
+na, juist zodat dit soort dingen in de tests zichtbaar wordt en niet pas op de hosted site. De kaarttegels staan in een aparte voorraad,
 die je met één knop vooruit kunt vullen: niet het hele vierkant om de route, maar de strook tegels waar
 de lijn doorheen loopt plus één tegel rand, op zoom 12 tot en met 15 — voor deze tocht een paar honderd
 tegels in plaats van een paar duizend. Wissen kan apart, zonder de pagina zelf kwijt te raken. Alles
@@ -286,7 +294,7 @@ npx playwright install chromium   # eenmalig
 npm test
 ```
 
-151 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
+153 browsertests over kaart, tabbladen, paklijst, boodschappen, de trailrun-schatter en de
 huttentocht (index.html, trailrun.html én huttentocht.html), op desktop en
 mobiel, in ongeveer een minuut. Open-Meteo, Supabase en de kaarttegels worden afgevangen, dus
 er is geen netwerk en geen echte database nodig en de uitkomst is altijd hetzelfde.

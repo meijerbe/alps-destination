@@ -361,6 +361,30 @@ test("de service worker serveert de verse pagina, niet die uit zijn voorraad", a
   expect(tweede.headers()["x-vers"]).not.toBe(eerste.headers()["x-vers"]);
 });
 
+// Dit is de test die de storing op de echte site zou hebben gevangen. De
+// server stuurt /huttentocht.html door naar /huttentocht (cleanUrls, net als
+// Vercel). Bewaart de worker dat omgeleide antwoord en geeft hij het later
+// terug voor een navigatie, dan weigert de browser het — en dan laadt de
+// pagina niet meer, ook niet mét bereik.
+test("zonder netwerk laadt de pagina uit de voorraad, via de omgeleide URL", async ({ page, context }) => {
+  await page.unroute("**/sw.js");
+  await page.route("**/api.open-meteo.com/**", r =>
+    r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
+
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+
+  await context.setOffline(true);
+  try {
+    await page.goto(TOCHT);
+    await expect(page.locator(".stage").first()).toBeVisible();
+    await expect(page.locator("#stage-d2")).toContainText("Motterascio");
+  } finally {
+    await context.setOffline(false);
+  }
+});
+
 test("?sw=uit zet de offline-voorraad uit, als noodrem", async ({ page }) => {
   await page.unroute("**/sw.js");
   await page.route("**/api.open-meteo.com/**", r =>

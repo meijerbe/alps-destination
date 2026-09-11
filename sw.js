@@ -60,12 +60,34 @@ const isSchil = url =>
   url.origin === self.location.origin &&
   SCHIL_BESTANDEN.some(p => url.pathname === new URL(p, self.location).pathname);
 
+/* Een antwoord dat via een omleiding binnenkwam mag je niet zomaar bewaren.
+   Vercel draait met cleanUrls en stuurt /huttentocht.html door naar
+   /huttentocht; bewaar je dát antwoord en geef je het later terug voor een
+   navigatie, dan weigert de browser het botweg — een navigatie heeft
+   redirect-modus "manual", en een omgeleid antwoord is daar een harde fout.
+   De pagina laadt dan niet meer, en de enige uitweg is de voorraad zelf.
+   Dus maken we er een schoon antwoord van, met dezelfde inhoud. */
+async function schoon(res){
+  if(!res || !res.redirected) return res;
+  return new Response(await res.blob(), {
+    status: res.status, statusText: res.statusText, headers: res.headers
+  });
+}
+
+/* Ophalen en bewaren, met de omleiding eruit. */
+async function bewaar(c, pad){
+  try {
+    const res = await fetch(pad, { cache: "reload" });
+    if(res && res.ok) await c.put(pad, await schoon(res));
+  } catch { /* één ontbrekend bestand mag de installatie niet slopen */ }
+}
+
 self.addEventListener("install", ev => {
   ev.waitUntil((async () => {
     const c = await caches.open(SCHIL);
-    // één voor één, zodat één ontbrekend bestand niet de hele installatie
-    // laat klappen
-    await Promise.all(SCHIL_BESTANDEN.map(p => c.add(p).catch(() => {})));
+    await Promise.all(SCHIL_BESTANDEN.map(p => bewaar(c, p)));
+    // de pagina ook onder zijn nette URL, want dat is wat de browser vraagt
+    await bewaar(c, "./huttentocht");
     await self.skipWaiting();
   })());
 });
@@ -86,7 +108,7 @@ async function netEerstDanVoorraad(req, cacheNaam){
   const c = await caches.open(cacheNaam);
   try {
     const res = await fetch(req);
-    if(res && res.ok) c.put(req, res.clone());
+    if(res && res.ok) c.put(req, await schoon(res.clone()));
     return res;
   } catch {
     const uit = await c.match(req, { ignoreSearch: true });
@@ -184,5 +206,5 @@ self.addEventListener("message", ev => {
   else if(d.type === "stand") ev.waitUntil(stand(bron));
   else if(d.type === "wisTegels") ev.waitUntil(caches.delete(TEGELS).then(() => stand(bron)));
   else if(d.type === "haalExtra") ev.waitUntil(caches.open(SCHIL)
-    .then(c => Promise.all((d.urls || []).map(u => c.add(u).catch(() => {})))));
+    .then(c => Promise.all((d.urls || []).map(u => bewaar(c, u)))));
 });
