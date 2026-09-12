@@ -34,7 +34,7 @@ test("de vier dagen staan er, met kaart, profiel en cijfers", async ({ page }) =
   // elke dag heeft een profiel en vier cijfers
   for (const id of ["d1", "d2", "d3", "d4"]) {
     await expect(page.locator(`#stage-${id} .profile`)).toBeVisible();
-    await expect(page.locator(`#stage-${id} .sstat`)).toHaveCount(4);
+    await expect(page.locator(`#stage-${id} .dagcijfers .sstat`)).toHaveCount(4);
   }
 
   // dag 2 komt uit de komoot-planning: gemeten afstand, komoots looptijd
@@ -59,10 +59,10 @@ test("de tocht komt uit één komoot-export en valt in vier dagen uiteen", async
   ];
   for (const [id, km, tijd, stijgen, dalen] of verwacht) {
     const kaart = page.locator(`#stage-${id}`);
-    await expect(kaart.locator(".sstat").nth(0)).toContainText(km);
-    await expect(kaart.locator(".sstat").nth(1)).toContainText(tijd);
-    await expect(kaart.locator(".sstat").nth(2)).toContainText(stijgen);
-    await expect(kaart.locator(".sstat").nth(3)).toContainText(dalen);
+    await expect(kaart.locator(".dagcijfers .sstat").nth(0)).toContainText(km);
+    await expect(kaart.locator(".dagcijfers .sstat").nth(1)).toContainText(tijd);
+    await expect(kaart.locator(".dagcijfers .sstat").nth(2)).toContainText(stijgen);
+    await expect(kaart.locator(".dagcijfers .sstat").nth(3)).toContainText(dalen);
     await expect(kaart.locator(".statsrc")).toContainText("uit de track");
   }
 
@@ -70,6 +70,51 @@ test("de tocht komt uit één komoot-export en valt in vier dagen uiteen", async
   await expect(page.locator("#stage-d2 .profile")).toHaveAttribute("aria-label", /van 1387 tot 2496/);
   await expect(page.locator("#stage-d4 .profile")).toHaveAttribute("aria-label", /van 1208 tot 2225/);
   await expect(page.locator("#stage-d4")).toContainText("Campo (Blenio)");
+});
+
+// De noordelijke variant op dag 1 staat er als afweging, niet als route: er
+// ligt geen track onder, dus het kaartje hoort dat te zeggen en er hoort géén
+// vijfde lijn op de kaart bij te komen.
+test("dag 1 draagt de noordelijke variant als afweging, zonder eigen lijn", async ({ page }) => {
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+
+  const v = page.locator("#stage-d1 .variant");
+  await expect(v).toHaveCount(1);
+  await v.locator("summary").click();
+
+  await expect(v).toContainText("Fuorcla da Vallesa");
+  await expect(v).toContainText("Fuorcla da Stavelatsch");
+  await expect(v).toContainText("6 u 30");
+  await expect(v.locator(".varcijfers .sstat")).toHaveCount(4);
+  await expect(v).toContainText("Er ligt geen track onder deze route");
+
+  // nog steeds vier dagen op de kaart, niet vijf
+  await expect(page.locator("#map path.leaflet-interactive")).toHaveCount(8);
+});
+
+// Op 15 september lopen we het dal uit aan de verkeerde kant van de Lukmanier.
+// Welke bus dat wordt, en welke tijden hard zijn, hoort op de pagina te staan.
+test("de terugreis naar de auto staat erop, met de bus en de herkomst van de tijden", async ({ page }) => {
+  await page.goto(TOCHT);
+  await page.waitForSelector(".stage");
+
+  const t = page.locator("#terugreis");
+  await expect(t.locator(".been")).toHaveCount(2);
+  await expect(t).toContainText("Campo (Blenio), Paese → Olivone, Posta");
+  await expect(t).toContainText("90.481");
+  await expect(t).toContainText("14.45");
+
+  // de harde tijden van PostAuto, en het feit dat de rest afgeleid is
+  await expect(t).toContainText("16.11");
+  await expect(t).toContainText("afgeleid");
+
+  // de Bus Alpin vanaf Pian Geirett is een losse draad, geen plan
+  await expect(t).toContainText("Bus Alpin");
+  await expect(t).toContainText("dinsdag");
+
+  // dag 4 verwijst ernaar en noemt de bus die we moeten hebben
+  await expect(page.locator("#stage-d4")).toContainText("14.45");
 });
 
 test("een dag kiezen licht die dag uit en zet de kaart erop", async ({ page }) => {

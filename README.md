@@ -225,6 +225,32 @@ niet, dan rekent de pagina een boektijd uit (DIN 33466: 300 hoogtemeters stijgen
 De hutten met hun reserveringsnummers staan los in `HUTTEN`, de Terrihütte en de Greinapas als
 `POI` — die zijn geen etappe, maar horen wel op de kaart.
 
+**Een route die we bekeken maar niet lopen** komt als `varianten` bij de etappe te staan, en klapt
+op het dagkaartje open als *Alternatief*. Voor dag 1 is dat de noordelijke aanloop naar de
+Medelserhütte: niet door Val Plattas, maar bij Pardatsch omhoog naar de Fuorcla da Vallesa (2629 m),
+aan de noordkant om de toppen heen door Val Vallesa, en over de Fuorcla da Stavelatsch (2593 m) van
+bovenaf op de hut af — T3, 6 u 30, ruim driehonderd hoogtemeters meer dan de gewone route. Met het
+voor, het tegen en ons oordeel erbij (mooi, maar niet op de dag vóór de 8 u 19 van dag 2).
+
+Er komt met opzet **geen lijn op de kaart** bij zo'n variant. We hebben er geen track van, en een
+zelf getrokken lijn over een T3-pas suggereert een precisie die er niet is; de cijfers zijn die van
+de bron, en die bronnen staan eronder. Wil je hem wél lopen, dan hoort er eerst een echte GPX in
+`routes/` en een gewone etappe omheen.
+
+**Terug naar de auto** (`TERUGREIS` in `js/tour-data.js`) — de auto staat in Curaglia, wij komen op
+15 september in Campo (Blenio) het dal uit, aan de Ticino-kant van de Lukmanier. Dat is lijn 135 van
+Autolinee Bleniesi naar Olivone en daar over op het Postauto over de pas (dienstregelingsveld
+90.481), dat maar vier keer per dag rijdt. Per been staat erbij waar de tijden vandaan komen, en dat
+is hier het hele punt: wat PostAuto over de doorgaande bus publiceert (uit Biasca om 8.11, 10.11,
+14.11 en 16.11, in Disentis om 9.57, 11.57, 15.57 en 17.57) is hard, de tijden in Olivone en
+Curaglia zijn daaruit afgeleid — Olivone ligt ongeveer 33 minuten na Biasca, Curaglia elf minuten
+vóór Disentis. Genoeg om te weten dat je de bus van ± 14.45 uit Olivone wil hebben en dat ± 16.45 de
+laatste is; niet genoeg om je er op de minuut op te verlaten.
+
+De halte Pian Geirett van het Bus Alpin staat er als losse draad bij, niet als plan: die zou de hele
+daling door Val Camadra schelen, maar de bronnen spreken elkaar tegen over september en 15 september
+is een dinsdag. Reserveren is er sowieso verplicht, tot een uur voor vertrek.
+
 ## Instellingen zitten in de URL
 
 Profiel, vooruitkijkperiode, maximale rijtijd, vertrekdag, kleurmetriek, bron, tabblad en de

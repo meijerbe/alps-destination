@@ -9,7 +9,7 @@
 import { $, esc } from "./dom.js";
 import { boektijd, uren, toGpx, bewaarGpx } from "./gpx.js";
 import { profielSvg, koppelProfiel } from "./tour-profile.js";
-import { ETAPPES, HUTTEN, TOUR } from "./tour-data.js";
+import { ETAPPES, HUTTEN, TERUGREIS, TOUR } from "./tour-data.js";
 import { showDay, wijsAan } from "./tour-map.js";
 
 const DAG = ["zo", "ma", "di", "wo", "do", "vr", "za"];
@@ -72,7 +72,7 @@ function kaartje(e, i){
       <span class="tgrade" title="${esc(d.zwaarteNote || "")}">${esc(d.zwaarte || "")}</span>
     </header>
 
-    <div class="stagestats">${stats4(e).map(([k, v]) =>
+    <div class="stagestats dagcijfers">${stats4(e).map(([k, v]) =>
       `<div class="sstat"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>
     <p class="statsrc">${herkomstzin}</p>
 
@@ -86,6 +86,7 @@ function kaartje(e, i){
     ${d.terugweg ? `<p class="stagetext"><b>Terug:</b> ${esc(d.terugweg)}</p>` : ""}
     ${d.let ? `<p class="stagelet"><b>Let op</b> — ${esc(d.let)}</p>` : ""}
     ${d.tip ? `<p class="stagetip"><b>Optie</b> — ${esc(d.tip)}</p>` : ""}
+    ${(d.varianten || []).map(variantBlok).join("")}
 
     <details class="wpts"><summary>Onderweg langs (${e.route.waypoints.length})</summary>
       <ul class="wptlist">${wpts}</ul></details>
@@ -97,6 +98,32 @@ function kaartje(e, i){
       <button type="button" data-gpx="${i}">GPX voor deze dag</button>
     </div>
   </article>`;
+}
+
+/* Een route die we bekeken maar niet gelopen hebben. Er hoort met opzet
+   geen lijn op de kaart bij: we hebben er geen track van, en een zelf
+   getrokken lijn over een T3-pas wekt een precisie die er niet is. Dus
+   de cijfers, het oordeel, en waar ze vandaan komen. */
+function variantBlok(v){
+  const cijfers = [["Lopen", v.tijd], ["Stijgen", v.stijgen], ["Dalen", v.dalen], ["Zwaarte", v.zwaarte]]
+    .filter(([, w]) => w)
+    .map(([k, w]) => `<div class="sstat"><span class="k">${k}</span><span class="v">${esc(w)}</span></div>`)
+    .join("");
+
+  return `<details class="variant">
+    <summary>Alternatief — ${esc(v.naam)}</summary>
+    ${v.kort ? `<p class="varkort">${esc(v.kort)}</p>` : ""}
+    ${cijfers ? `<div class="stagestats varcijfers">${cijfers}</div>` : ""}
+    ${v.via ? `<p class="varvia">${v.via.map(esc).join(" · ")}</p>` : ""}
+    ${v.markering ? `<p class="varmeta">Gemarkeerd als ${esc(v.markering)}.</p>` : ""}
+    ${v.wat ? `<p class="stagetext">${esc(v.wat)}</p>` : ""}
+    ${v.voor ? `<p class="stagetip"><b>Ervoor</b> — ${esc(v.voor)}</p>` : ""}
+    ${v.tegen ? `<p class="stagelet"><b>Ertegen</b> — ${esc(v.tegen)}</p>` : ""}
+    ${v.oordeel ? `<p class="varoordeel"><b>Ons oordeel</b> — ${esc(v.oordeel)}</p>` : ""}
+    ${v.bronnen ? `<p class="varmeta">Nagekeken bij ${v.bronnen.map(b =>
+      `<a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.naam)}</a>`).join(", ")}.
+      Er ligt geen track onder deze route: de cijfers zijn die van de bron, niet van een gemeten lijn.</p>` : ""}
+  </details>`;
 }
 
 function hutkaartje(h){
@@ -112,6 +139,34 @@ function hutkaartje(h){
   </div>`;
 }
 
+/* ------------------------------------------------------------------
+   Terug naar de auto. Eén been per bus, en per been staat erbij of de
+   tijden uit een dienstregeling komen of eruit zijn afgeleid — op deze
+   tocht is dat het verschil tussen "we halen hem" en "we denken dat we
+   hem halen".
+------------------------------------------------------------------- */
+function terugreisBlok(t){
+  const benen = t.benen.map((b, i) => `<li class="been">
+    <p class="beennaam"><span class="beennr">${i + 1}</span> ${esc(b.naam)}</p>
+    <p class="beenlijn">${esc(b.lijn)}${b.duur ? ` · ${esc(b.duur)}` : ""}</p>
+    <p class="beentijd">${esc(b.tijden)}</p>
+    <p class="beenbron">${b.bron === "afgeleid"
+      ? "Biasca en Disentis staan zo in de dienstregeling; Olivone en Curaglia zijn daaruit afgeleid."
+      : "Tijden per rit: zie de dienstregeling hieronder."}</p>
+  </li>`).join("");
+
+  const checks = t.checks.map(c =>
+    `<li><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.naam)}</a></li>`).join("");
+
+  return `<p class="terugauto">${esc(t.auto)}</p>
+    <p class="terugmik"><b>Mikken op</b> — ${esc(t.mikpunt)}</p>
+    <ol class="benen">${benen}</ol>
+    <p class="stagetext">${esc(t.marge)}</p>
+    <p class="stagelet"><b>${esc(t.losdraad.naam)}</b> — ${esc(t.losdraad.tekst)}</p>
+    <details class="terugcheck"><summary>Zelf nakijken</summary>
+      <ul class="checklist">${checks}</ul></details>`;
+}
+
 export function render(lijst){
   etappes = lijst;
 
@@ -121,6 +176,7 @@ export function render(lijst){
 
   $("stages").innerHTML = etappes.map(kaartje).join("");
   $("hutlist").innerHTML = HUTTEN.map(hutkaartje).join("");
+  $("terugreis").innerHTML = terugreisBlok(TERUGREIS);
 
   etappes.forEach(e => {
     const svg = document.querySelector(`#stage-${e.def.id} .profile`);

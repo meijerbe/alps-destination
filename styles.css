@@ -637,6 +637,43 @@ footer a{color:var(--slate)}
 .stagebtns button:hover{border-color:var(--slate)}
 .stagebtns button:focus-visible{outline:2px solid var(--dry);outline-offset:2px}
 
+/* Een alternatieve route op een etappekaartje: dichtgeklapt één regel,
+   open de cijfers, het voor en tegen en waar ze vandaan komen. */
+.variant{margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:0 12px}
+.variant summary{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--slate);cursor:pointer;padding:10px 0}
+.variant[open] summary{border-bottom:1px solid var(--line);margin-bottom:12px}
+.variant .stagestats{margin-bottom:10px}
+.varkort{font-size:13.5px;color:var(--ink2);margin:0 0 10px}
+.varvia{font-family:var(--mono);font-size:11px;color:var(--ink3);line-height:1.8;margin:0 0 8px}
+.varmeta{font-size:12.5px;color:var(--ink3);margin:0 0 10px}
+.varmeta a{color:var(--slate)}
+.varoordeel{font-size:13.5px;margin:0 0 12px;padding:9px 12px;border-radius:10px;max-width:70ch;
+  background:rgba(224,138,51,.10);border-left:3px solid var(--dry)}
+
+/* Terug naar de auto: de bussen als genummerde benen onder elkaar. */
+.terug{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  box-shadow:var(--shadow)}
+.terugauto{font-size:14px;color:var(--ink2);margin:0 0 10px;max-width:70ch}
+.terugmik{font-size:13.5px;margin:0 0 14px;padding:9px 12px;border-radius:10px;max-width:70ch;
+  background:rgba(224,138,51,.10);border-left:3px solid var(--dry)}
+.benen{list-style:none;margin:0 0 14px;padding:0}
+.been{padding:0 0 14px 0;border-bottom:1px solid var(--line);margin-bottom:14px}
+.been:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.beennaam{font-family:var(--disp);font-size:16px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+.beennr{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+  border-radius:50%;background:var(--slate);color:var(--paper);font-family:var(--mono);font-size:11px;
+  margin-right:6px;vertical-align:1px}
+.beenlijn{font-family:var(--mono);font-size:11px;color:var(--slate);margin:0 0 6px;line-height:1.6}
+.beentijd{font-size:13.5px;color:var(--ink2);margin:0 0 4px;max-width:70ch}
+.beenbron{font-size:12px;color:var(--ink3);margin:0;max-width:70ch}
+.terugcheck{margin:12px 0 0}
+.terugcheck summary{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--slate);cursor:pointer}
+.checklist{margin:10px 0 0;padding-left:18px;font-size:13px}
+.checklist li{margin-bottom:6px}
+.checklist a{color:var(--slate)}
+
 .hutgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .hutcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
 .hutcard h4{font-family:var(--disp);font-size:19px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
@@ -682,6 +719,8 @@ footer a{color:var(--slate)}
   .mapbox,.maprow,.offline,.livestand,.stagebtns,#daypick,.controls{display:none!important}
   .stage{opacity:1!important;break-inside:avoid;border-color:var(--line)!important;box-shadow:none}
   .wpts[open] .wptlist,.wpts .wptlist{display:block}
+  .variant[open]>*,.variant>*{display:block}
+  .terugcheck[open] .checklist,.terugcheck .checklist{display:block}
   .profile{max-height:120px}
 }
 
